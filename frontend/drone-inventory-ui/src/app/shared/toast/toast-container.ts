@@ -1,15 +1,23 @@
 import { Component, inject } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { ToastService } from './toast.service';
 
 /** Renders the toasts of the ToastService in the corner of the screen. Rendered once in the app shell. */
 @Component({
   selector: 'app-toast-container',
+  imports: [HlmButton],
   template: `
-    <div class="toast-stack">
+    <div class="fixed right-4 bottom-4 z-50 flex max-w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
       @for (toast of toastService.toasts(); track toast.id) {
-        <div class="toast" role="alert">
-          <span class="toast-message">{{ toast.message }}</span>
+        <div
+          class="toast border-destructive/40 bg-destructive/10 text-foreground border-l-destructive flex items-start gap-3 rounded-md border border-l-4 p-3 text-sm shadow-md"
+          role="alert"
+        >
+          <span class="toast-message flex-1 pt-1">{{ toast.message }}</span>
           <button
+            hlmBtn
+            variant="ghost"
+            size="icon-sm"
             type="button"
             class="toast-close"
             aria-label="Close notification"
@@ -20,43 +28,6 @@ import { ToastService } from './toast.service';
         </div>
       }
     </div>
-  `,
-  styles: `
-    .toast-stack {
-      position: fixed;
-      right: 1rem;
-      bottom: 1rem;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      max-width: min(360px, calc(100vw - 2rem));
-    }
-
-    .toast {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      background: #8a1c1c;
-      color: #fff;
-      box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
-    }
-
-    .toast-message {
-      flex: 1;
-    }
-
-    .toast-close {
-      border: 0;
-      background: none;
-      color: inherit;
-      font-size: 1.25rem;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0 0.25rem;
-    }
   `,
 })
 export class ToastContainer {
