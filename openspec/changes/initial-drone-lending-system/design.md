@@ -55,6 +55,20 @@ JSON over REST under `/api`. Error bodies use ProblemDetails.
 | `GET /api/loans/active` | active loan rows | 200 | |
 | `GET /api/loans/history` | returned loan rows | 200 | |
 
+Response shapes (JSON, camelCase, enums as strings, dates as ISO `yyyy-MM-dd`):
+
+| Endpoint | Body |
+|---|---|
+| `POST /api/drones` (201, `Location: /api/drones/{id}`) | `{ id, name, description \| null }` |
+| `GET /api/drones` | `[{ id, name, description \| null, availability: "Available" \| "Loaned" }]` ordered by name, ignoring case |
+| `POST /api/student-groups` (201, `Location: /api/student-groups/{id}`) | `{ id, name }` |
+| `GET /api/student-groups` | `[{ id, name }]` ordered by name, ignoring case |
+| `POST /api/loans` (201), `GET /api/loans/{id}`, `POST /api/loans/{id}/return` | Loan: `{ id, droneId, studentGroupId, status: "Active" \| "Returned", loanDate, returnDate \| null, items: [{ type: "Battery" \| "Propeller", quantity }] }` |
+| `GET /api/loans/active` | `[{ id, group, drone, batteries, propellers, loanDate }]`, `group` and `drone` are names |
+| `GET /api/loans/history` | `[{ id, group, drone, batteries, propellers, loanDate, returnDate }]`, `group` and `drone` are names |
+
+Names (drone, student group) are trimmed and at most 100 characters; a drone `description` is trimmed, a blank one is stored as `null`, at most 500 characters. A violation is a 400 with field errors, a duplicate name a 409. The `Location` header of the create responses points to a route that does not exist (no get-by-id for drones and groups).
+
 There is deliberately no `DELETE` route for loans, drones or groups. A `DELETE /api/loans/{id}` therefore answers `405 Method Not Allowed`, because the `GET` route on the same path exists.
 
 Validation details: the create-drone body rejects unknown members (`JsonUnmappedMemberHandling.Disallow`), which rejects a supplied `status`. Enums are serialised as strings and an unknown `type` is a 400. `quantity` is a JSON integer; a fractional or negative value is a 400.

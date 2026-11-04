@@ -7,7 +7,7 @@ Lend drones with batteries and propellers to student groups, take them back, and
 ## ADDED Requirements
 
 ### Requirement: Loan a drone
-Per REQ-004 the system SHALL loan an available drone to an existing student group by creating a `Loan` with status `Active`, the drone, the group and a `LoanDate`. The `LoanDate` SHALL be the current date and SHALL NOT be supplied by the caller. A loan SHALL be rejected when the drone or the student group does not exist.
+Per REQ-004 the system SHALL loan an available drone to an existing student group by creating a `Loan` with status `Active`, the drone, the group and a `LoanDate`. The `LoanDate` SHALL be the current date and SHALL NOT be supplied by the caller. A loan SHALL be rejected when the drone or the student group does not exist. The response SHALL contain the `Id`, the drone and group `Id`s, the status, the `LoanDate`, the `ReturnDate` (empty while active) and the accessory items.
 
 #### Scenario: Loan an available drone
 - **GIVEN** the drone "TELLO-07" is available
@@ -138,7 +138,7 @@ Per REQ-009 the system SHALL set the `ReturnDate` of a loan to the current date 
 - **THEN** the loan has no return date
 
 ### Requirement: Show active loans
-Per REQ-007 the system SHALL list all active loans with group, drone, batteries, propellers and loan date. The accessory columns SHALL show the quantity of that type and 0 when the loan has no item of that type. The loan date SHALL be displayed as `dd.MM.yyyy`. Returned loans SHALL NOT be listed.
+Per REQ-007 the system SHALL list all active loans with group, drone, batteries, propellers and loan date. The accessory columns SHALL show the quantity of that type and 0 when the loan has no item of that type. The loan date SHALL be displayed as `dd.MM.yyyy`. Returned loans SHALL NOT be listed. Each row SHALL carry the loan `Id`, and group and drone as names.
 
 #### Scenario: Active loan list matches the reference example
 - **GIVEN** "TELLO-02" is loaned to "Group 1" with 3 batteries and 4 propellers on 19.08.2026
@@ -163,7 +163,7 @@ Per REQ-007 the system SHALL list all active loans with group, drone, batteries,
 - **THEN** an empty list is returned
 
 ### Requirement: Show loan history
-Per REQ-010 the system SHALL list returned loans as a history with group, drone, batteries, propellers, loan date and return date, both displayed as `dd.MM.yyyy`. Active loans SHALL NOT be part of the history.
+Per REQ-010 the system SHALL list returned loans as a history with group, drone, batteries, propellers, loan date and return date, both displayed as `dd.MM.yyyy`. Active loans SHALL NOT be part of the history. Each row SHALL carry the loan `Id`, and group and drone as names.
 
 #### Scenario: Returned loan stays in history
 - **GIVEN** "TELLO-07" was loaned to "Group 3" and returned
