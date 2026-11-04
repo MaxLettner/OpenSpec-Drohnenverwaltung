@@ -116,10 +116,25 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
         }
 
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
-        loan.Status = LoanStatus.Returned;
-        loan.ReturnDate = today < loan.LoanDate ? loan.LoanDate : today;
-        await db.SaveChangesAsync();
-        return ReturnLoanResult.Returned(loan);
+        var returnDate = today < loan.LoanDate ? loan.LoanDate : today;
+
+        // Atomic: the row changes only while it is still Active, so of several simultaneous returns
+        // exactly one affects a row and the first ReturnDate is never overwritten.
+        var affected = await db.Loans
+            .Where(l => l.Id == id && l.Status == LoanStatus.Active)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(l => l.Status, LoanStatus.Returned)
+                .SetProperty(l => l.ReturnDate, returnDate));
+
+        // Drop the stale tracked copy, then answer from what is stored.
+        db.ChangeTracker.Clear();
+        if (affected == 0)
+        {
+            // Another return won after the check above (or the loan vanished).
+            return await GetAsync(id) is null ? ReturnLoanResult.Missing(id) : ReturnLoanResult.AlreadyReturned(id);
+        }
+
+        return ReturnLoanResult.Returned((await GetAsync(id))!);
     }
 
     private static Dictionary<string, string[]> ValidateItems(IReadOnlyList<LoanItemInput?>? items)

@@ -211,6 +211,48 @@ public class LoanReturnTests
     }
 
     [Fact]
+    public async Task REQ_008_REQ_009_Simultaneous_returns_the_conditional_update_decides()
+    {
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        var (_, _, loanId) = await LoanAsync(client);
+        // The service's check saw an Active loan; right before its update the other return "wins"
+        // with a ReturnDate different from the one the service would write (today).
+        factory.BeforeNextNonQuery = connection =>
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText =
+                $"UPDATE Loans SET Status = 'Returned', ReturnDate = '2026-03-14' WHERE Id = {loanId}";
+            Assert.Equal(1, command.ExecuteNonQuery());
+        };
+
+        var response = await client.PostAsync($"/api/loans/{loanId}/return", null);
+
+        await AssertProblemAsync(response, HttpStatusCode.Conflict, $"Loan {loanId} is already returned.");
+        var stored = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
+        Assert.Equal("Returned", stored.GetProperty("status").GetString());
+        Assert.Equal("2026-03-14", stored.GetProperty("returnDate").GetString());
+    }
+
+    [Fact]
+    public async Task REQ_008_REQ_009_Simultaneous_returns_in_parallel_give_one_success_and_one_conflict()
+    {
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        var (_, _, loanId) = await LoanAsync(client);
+
+        var responses = await Task.WhenAll(
+            client.PostAsync($"/api/loans/{loanId}/return", null),
+            client.PostAsync($"/api/loans/{loanId}/return", null));
+
+        Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK);
+        Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Conflict);
+        var stored = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
+        Assert.Equal("Returned", stored.GetProperty("status").GetString());
+        Assert.Equal(ApiFactory.Today.ToString("yyyy-MM-dd"), stored.GetProperty("returnDate").GetString());
+    }
+
+    [Fact]
     public async Task REQ_009_ReturnDate_is_never_before_a_future_LoanDate()
     {
         using var factory = new ApiFactory();
