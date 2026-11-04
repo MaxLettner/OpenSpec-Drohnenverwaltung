@@ -36,6 +36,30 @@ public static class LoanEndpoints
     {
         var group = app.MapGroup("/api/loans");
         group.MapPost("/", CreateAsync);
+        // {id:int}: a non-integer id does not match and ends as a 404 ProblemDetails.
+        group.MapGet("/{id:int}", GetAsync);
+        group.MapPost("/{id:int}/return", ReturnAsync);
+    }
+
+    private static async Task<IResult> GetAsync(int id, LoanService loans)
+    {
+        var loan = await loans.GetAsync(id);
+        return loan is null
+            ? Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: $"No loan with Id {id} exists.")
+            : Results.Ok(LoanResponse.From(loan));
+    }
+
+    private static async Task<IResult> ReturnAsync(int id, LoanService loans)
+    {
+        var result = await loans.ReturnAsync(id);
+        if (result.Conflict is not null)
+        {
+            return Results.Problem(statusCode: StatusCodes.Status409Conflict, detail: result.Conflict);
+        }
+
+        return result.Loan is null
+            ? Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: result.NotFound)
+            : Results.Ok(LoanResponse.From(result.Loan));
     }
 
     private static async Task<IResult> CreateAsync(CreateLoanRequest request, LoanService loans)

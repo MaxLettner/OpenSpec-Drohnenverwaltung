@@ -32,7 +32,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 7. Returning (backend) — REQ-008, REQ-009
 
-- [ ] 7.1 Implement `POST /api/loans/{id}/return` (status `Returned`, `ReturnDate` set to the current date, not before `LoanDate`) and `GET /api/loans/{id}`; verify tests for the return, return-twice, unknown-loan, drone-loanable-again, ReturnDate-set and active-has-no-ReturnDate scenarios (#11)
+- [x] 7.1 Implement `POST /api/loans/{id}/return` (status `Returned`, `ReturnDate` set to the current date, not before `LoanDate`) and `GET /api/loans/{id}`; verify tests for the return, return-twice, unknown-loan, drone-loanable-again, ReturnDate-set and active-has-no-ReturnDate scenarios (#11)
 
 ## 8. Loan queries (backend) — REQ-007, REQ-010
 
