@@ -56,7 +56,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 11. Integration
 
-- [ ] 11.1 Document in `README.md` how to run backend, frontend and all tests; verify the documented commands start both apps and pass the tests from a clean checkout (#23)
+- [x] 11.1 Document in `README.md` how to run backend, frontend and all tests; verify the documented commands start both apps and pass the tests from a clean checkout (#23)
 - [ ] 11.2 Walk through the reference example (Group 3, TELLO-07, 4 batteries, 8 propellers: loan, list, return, history) against the running app; verify the result in the PR description with the observed outcome and fix or file anything that deviates (#24)
 
 ## Workflow follow-up
