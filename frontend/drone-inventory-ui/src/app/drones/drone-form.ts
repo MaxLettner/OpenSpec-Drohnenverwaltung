@@ -6,6 +6,11 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmTextarea } from '@spartan-ng/helm/textarea';
 import { CreateDroneRequest, Drone } from './drone.models';
 import { DroneService } from './drone.service';
 
@@ -18,79 +23,48 @@ import { DroneService } from './drone.service';
 @Component({
   selector: 'app-drone-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block' },
+  imports: [HlmButton, HlmCardImports, HlmInput, HlmLabel, HlmTextarea],
   template: `
-    <form class="drone-form" (submit)="onSubmit($event)">
-      <h2>Add drone</h2>
-
-      <div class="field">
-        <label for="drone-name">Name</label>
-        <input
-          id="drone-name"
-          type="text"
-          name="name"
-          maxlength="100"
-          required
-          [value]="name()"
-          (input)="onNameInput($event)"
-        />
+    <section hlmCard aria-labelledby="drone-form-title">
+      <div hlmCardHeader>
+        <h2 hlmCardTitle id="drone-form-title">Add drone</h2>
       </div>
+      <div hlmCardContent>
+        <form class="grid max-w-xl gap-4" (submit)="onSubmit($event)">
+          <div class="grid gap-2">
+            <label hlmLabel for="drone-name">Name</label>
+            <input
+              hlmInput
+              id="drone-name"
+              type="text"
+              name="name"
+              maxlength="100"
+              required
+              [value]="name()"
+              (input)="onNameInput($event)"
+            />
+          </div>
 
-      <div class="field">
-        <label for="drone-description">Description</label>
-        <textarea
-          id="drone-description"
-          name="description"
-          maxlength="500"
-          rows="3"
-          [value]="description()"
-          (input)="onDescriptionInput($event)"
-        ></textarea>
+          <div class="grid gap-2">
+            <label hlmLabel for="drone-description">Description</label>
+            <textarea
+              hlmTextarea
+              id="drone-description"
+              name="description"
+              maxlength="500"
+              rows="3"
+              [value]="description()"
+              (input)="onDescriptionInput($event)"
+            ></textarea>
+          </div>
+
+          <div>
+            <button hlmBtn type="submit" [disabled]="!canSubmit()">Create drone</button>
+          </div>
+        </form>
       </div>
-
-      <button type="submit" [disabled]="!canSubmit()">Create drone</button>
-    </form>
-  `,
-  styles: `
-    .drone-form {
-      display: grid;
-      gap: 0.75rem;
-      max-width: 36rem;
-      margin-bottom: 2rem;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 1.25rem;
-    }
-
-    .field {
-      display: grid;
-      gap: 0.25rem;
-    }
-
-    input,
-    textarea {
-      font: inherit;
-      padding: 0.4rem 0.5rem;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-    }
-
-    button {
-      justify-self: start;
-      font: inherit;
-      padding: 0.4rem 1rem;
-      border-radius: 4px;
-      border: 1px solid #1e4620;
-      background: #1e4620;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    </section>
   `,
 })
 export class DroneForm {
