@@ -9,6 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { ActiveLoanRow } from './loan.models';
+import { LoanForm } from './loan-form';
 import { LoanService } from './loan.service';
 
 type LoadState = 'loading' | 'loaded' | 'failed';
@@ -19,15 +20,16 @@ type LoadState = 'loading' | 'loaded' | 'failed';
  * in which order they come; a returned loan is removed from the list locally.
  * A failed request is reported by the global error toast, so the row simply stays.
  *
- * The loan form (task 10.4) is meant to sit in its own section above the active loan list.
- * After a loan was created, that form can call `loadActiveLoans()` to refresh the list.
+ * The loan form (REQ-004) sits above the list and calls `loadActiveLoans()` after a loan was created.
  */
 @Component({
   selector: 'app-loans-page',
-  imports: [DateDisplayPipe],
+  imports: [DateDisplayPipe, LoanForm],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1>Loans</h1>
+
+    <app-loan-form (loaned)="loadActiveLoans()" />
 
     <section aria-labelledby="active-loans-heading">
       <h2 id="active-loans-heading">Active loans</h2>

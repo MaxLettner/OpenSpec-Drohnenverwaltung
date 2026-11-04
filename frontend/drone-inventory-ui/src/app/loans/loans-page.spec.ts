@@ -1,8 +1,10 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Drone } from '../drones/drone.models';
 import { errorToastInterceptor } from '../shared/http/error-toast.interceptor';
 import { ToastService } from '../shared/toast/toast.service';
+import { StudentGroup } from '../student-groups/student-group.models';
 import { ActiveLoanRow, Loan } from './loan.models';
 import { LoansPage } from './loans-page';
 
@@ -57,10 +59,17 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
 
   afterEach(() => http.verify());
 
+  /** The loan form on the page requests the drones and student groups when it is created. */
+  function answerLoanFormLists(drones: Drone[] = [], groups: StudentGroup[] = []): void {
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush(drones);
+    http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(groups);
+  }
+
   /** Renders the page and answers its initial GET /api/loans/active with the given rows. */
   function loadRows(loans: ActiveLoanRow[]): void {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush(loans);
+    answerLoanFormLists();
     fixture.detectChanges();
   }
 
@@ -70,8 +79,65 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     expect(element().querySelector('table')).toBeNull();
 
     http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([]);
+    answerLoanFormLists();
     fixture.detectChanges();
     expect(element().textContent).not.toContain('Loading active loans...');
+  });
+
+  it('embeds the loan form above the active loan list (REQ-004)', () => {
+    loadRows([]);
+
+    const form = element().querySelector('app-loan-form');
+    const list = element().querySelector('#active-loans-heading');
+    expect(form).not.toBeNull();
+    expect(form!.compareDocumentPosition(list!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('refreshes the active loan list after the loan form created a loan (REQ-004)', () => {
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([group1Loan]);
+    answerLoanFormLists(
+      [{ id: 2, name: 'TELLO-07', description: null, availability: 'Available' }],
+      [{ id: 3, name: 'Group 3' }],
+    );
+    fixture.detectChanges();
+
+    const select = (id: string) => element().querySelector<HTMLSelectElement>(`#${id}`)!;
+    const input = (id: string) => element().querySelector<HTMLInputElement>(`#${id}`)!;
+    select('loan-drone').value = '2';
+    select('loan-drone').dispatchEvent(new Event('change'));
+    select('loan-group').value = '3';
+    select('loan-group').dispatchEvent(new Event('change'));
+    input('loan-batteries').value = '4';
+    input('loan-batteries').dispatchEvent(new Event('input'));
+    input('loan-propellers').value = '8';
+    input('loan-propellers').dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('app-loan-form button[type="submit"]')!.click();
+    http.expectOne({ method: 'POST', url: '/api/loans' }).flush(
+      {
+        id: 2,
+        droneId: 2,
+        studentGroupId: 3,
+        status: 'Active',
+        loanDate: '2026-08-19',
+        returnDate: null,
+        items: [
+          { type: 'Battery', quantity: 4 },
+          { type: 'Propeller', quantity: 8 },
+        ],
+      },
+      { status: 201, statusText: 'Created' },
+    );
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([]);
+    http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([group1Loan, group3Loan]);
+    fixture.detectChanges();
+
+    expect(rows()).toEqual([
+      'Group 1 | TELLO-02 | 3 | 4 | 19.08.2026',
+      'Group 3 | TELLO-07 | 4 | 8 | 19.08.2026',
+    ]);
   });
 
   it('renders the reference-example rows with accessories and loan date (REQ-007)', () => {
@@ -101,6 +167,7 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     http
       .expectOne({ method: 'GET', url: '/api/loans/active' })
       .flush({ title: 'Server error', status: 500 }, { status: 500, statusText: 'Server Error' });
+    answerLoanFormLists();
     fixture.detectChanges();
 
     expect(element().querySelector('table')).toBeNull();
