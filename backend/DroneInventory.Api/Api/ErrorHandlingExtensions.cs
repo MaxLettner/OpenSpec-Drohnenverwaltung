@@ -16,6 +16,8 @@ public static class ErrorHandlingExtensions
         {
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
             options.SerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+            // Numbers are numbers: a quoted "2" is not a quantity (REQ-006).
+            options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
         });
         return services;
     }

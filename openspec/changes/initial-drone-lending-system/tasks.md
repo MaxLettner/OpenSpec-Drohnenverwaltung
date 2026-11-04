@@ -28,7 +28,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 - [x] 6.1 Implement `LoanService` and `POST /api/loans` for an available drone and an existing group, with the current date as `LoanDate` via `TimeProvider`; verify tests for the loan-available-drone, unknown-group and unknown-drone scenarios (#8)
 - [x] 6.2 Reject loans for a drone that already has an active loan, including simultaneous requests (database constraint violation mapped to 409); verify tests for the second-loan and unavailable-drone scenarios, and for the simultaneous-attempts scenario by inserting an active loan directly behind the service's back and checking that the constraint violation is returned as 409 with exactly one active loan left (#9)
-- [ ] 6.3 Accept and validate `items` (`Battery`, `Propeller`, integer quantity >= 0, one item per type, items optional); verify tests for the accessories, negative, zero, fractional, unknown-type, repeated-type and no-accessories scenarios (#10)
+- [x] 6.3 Accept and validate `items` (`Battery`, `Propeller`, integer quantity >= 0, one item per type, items optional); verify tests for the accessories, negative, zero, fractional, unknown-type, repeated-type and no-accessories scenarios (#10)
 
 ## 7. Returning (backend) — REQ-008, REQ-009
 

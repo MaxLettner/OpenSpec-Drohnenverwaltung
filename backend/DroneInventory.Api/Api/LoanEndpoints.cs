@@ -1,11 +1,13 @@
-using System.Text.Json;
 using DroneInventory.Api.Application;
 using DroneInventory.Api.Domain;
 
 namespace DroneInventory.Api.Api;
 
-// Items is accepted and ignored for now; it is validated and stored in task 6.3 (REQ-006).
-public record CreateLoanRequest(int? DroneId, int? StudentGroupId, JsonElement? Items = null);
+// Type/Quantity are nullable so a missing member is a validation error, not a silent default (REQ-006).
+// Numeric types, unknown types and fractional quantities fail JSON binding and become a 400.
+public record LoanItemRequest(LoanItemType? Type, int? Quantity);
+
+public record CreateLoanRequest(int? DroneId, int? StudentGroupId, List<LoanItemRequest?>? Items = null);
 
 public record LoanItemResponse(LoanItemType Type, int Quantity);
 
@@ -54,7 +56,13 @@ public static class LoanEndpoints
             return Results.ValidationProblem(errors);
         }
 
-        var result = await loans.CreateAsync(request.DroneId!.Value, request.StudentGroupId!.Value);
+        var result = await loans.CreateAsync(request.DroneId!.Value, request.StudentGroupId!.Value,
+            request.Items?.Select(i => i is null ? null : new LoanItemInput(i.Type, i.Quantity)).ToList());
+        if (result.Invalid is not null)
+        {
+            return Results.ValidationProblem(result.Invalid.ToDictionary(e => e.Key, e => e.Value));
+        }
+
         if (result.Conflict is not null)
         {
             return Results.Problem(statusCode: StatusCodes.Status409Conflict, detail: result.Conflict);
