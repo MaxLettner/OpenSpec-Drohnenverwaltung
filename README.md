@@ -26,6 +26,16 @@ dotnet run --project backend/DroneInventory.Api
 - The launch profile sets `ASPNETCORE_ENVIRONMENT=Development`. In Development the app creates the SQLite database file on first start and applies the EF Core migrations at startup. The file is `backend/DroneInventory.Api/droneinventory.db` when started this way, and it is git-ignored.
 - In Development the OpenAPI document is served at **http://localhost:5035/openapi/v1.json**.
 
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/drones`, `GET /api/drones` | create a drone, list drones with derived availability |
+| `POST /api/student-groups`, `GET /api/student-groups` | create a student group, list student groups |
+| `POST /api/loans`, `GET /api/loans/{id}` | loan a drone (with optional `items`), look up a loan |
+| `POST /api/loans/{id}/return` | return a loan |
+| `GET /api/loans/active`, `GET /api/loans/history` | active loans, returned loans |
+
+Errors are returned as ProblemDetails (400, 404, 409). There is deliberately no delete endpoint. Details: `openspec/changes/initial-drone-lending-system/design.md` (D5).
+
 ## Run the frontend
 
 The frontend needs the backend running on port 5035.
