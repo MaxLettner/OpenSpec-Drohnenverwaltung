@@ -1,11 +1,14 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { errorToastInterceptor } from '../shared/http/error-toast.interceptor';
+import { ToastService } from '../shared/toast/toast.service';
 import { DronesPage } from './drones-page';
 
-describe('DronesPage (REQ-002)', () => {
+describe('DronesPage (REQ-001, REQ-002)', () => {
   let fixture: ComponentFixture<DronesPage>;
   let http: HttpTestingController;
+  let toasts: ToastService;
 
   const element = () => fixture.nativeElement as HTMLElement;
 
@@ -15,11 +18,27 @@ describe('DronesPage (REQ-002)', () => {
       Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent?.trim()),
     );
 
+  const nameInput = () => element().querySelector<HTMLInputElement>('#drone-name')!;
+  const descriptionInput = () =>
+    element().querySelector<HTMLTextAreaElement>('#drone-description')!;
+  const submitButton = () => element().querySelector<HTMLButtonElement>('button[type="submit"]')!;
+
+  /** Types into a field of the drone form the way the user does. */
+  function type(field: HTMLInputElement | HTMLTextAreaElement, value: string): void {
+    field.value = value;
+    field.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([errorToastInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     http = TestBed.inject(HttpTestingController);
+    toasts = TestBed.inject(ToastService);
     fixture = TestBed.createComponent(DronesPage);
   });
 
@@ -97,5 +116,63 @@ describe('DronesPage (REQ-002)', () => {
     expect(element().querySelector('table')).toBeNull();
     expect(element().textContent).not.toContain('No drones yet.');
     expect(element().textContent).not.toContain('Loading drones...');
+  });
+
+  it('shows a created drone in the list as Available (REQ-001)', () => {
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([]);
+    fixture.detectChanges();
+
+    type(nameInput(), 'TELLO-07');
+    type(descriptionInput(), 'SSID: TELLO-9FA21B');
+    submitButton().click();
+    fixture.detectChanges();
+
+    http
+      .expectOne({ method: 'POST', url: '/api/drones' })
+      .flush(
+        { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+        { status: 201, statusText: 'Created' },
+      );
+    http
+      .expectOne({ method: 'GET', url: '/api/drones' })
+      .flush([
+        { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+      ]);
+    fixture.detectChanges();
+
+    expect(rows()).toEqual([['TELLO-07', 'Available', 'SSID: TELLO-9FA21B']]);
+    expect(nameInput().value).toBe('');
+    expect(descriptionInput().value).toBe('');
+  });
+
+  it('keeps the entered values, shows the duplicate error and adds nothing on a duplicate name (REQ-001)', () => {
+    fixture.detectChanges();
+    http
+      .expectOne({ method: 'GET', url: '/api/drones' })
+      .flush([{ id: 2, name: 'TELLO-07', description: null, availability: 'Available' }]);
+    fixture.detectChanges();
+
+    type(nameInput(), 'tello-07');
+    type(descriptionInput(), 'second unit');
+    submitButton().click();
+    fixture.detectChanges();
+
+    http
+      .expectOne({ method: 'POST', url: '/api/drones' })
+      .flush(
+        { title: 'A drone with this name already exists.', status: 409 },
+        { status: 409, statusText: 'Conflict' },
+      );
+    fixture.detectChanges();
+
+    // No reload is requested: the list is left as it was.
+    http.expectNone({ method: 'GET', url: '/api/drones' });
+    expect(toasts.toasts().map((toast) => toast.message)).toEqual([
+      'A drone with this name already exists.',
+    ]);
+    expect(rows()).toEqual([['TELLO-07', 'Available', '—']]);
+    expect(nameInput().value).toBe('tello-07');
+    expect(descriptionInput().value).toBe('second unit');
   });
 });
