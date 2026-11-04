@@ -195,6 +195,39 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     expect(rows()).toEqual(['Group 3 | TELLO-07 | 4 | 8 | 19.08.2026']);
   });
 
+  it('Return flow still works: one return request and the row leaves the active list (REQ-008)', () => {
+    loadRows([group1Loan, group3Loan]);
+
+    returnButtons()[1].click();
+    fixture.detectChanges();
+
+    const requests = http.match({ method: 'POST', url: '/api/loans/2/return' });
+    expect(requests.length).toBe(1);
+    requests[0].flush({
+      id: 2,
+      droneId: 3,
+      studentGroupId: 3,
+      status: 'Returned',
+      loanDate: '2026-08-19',
+      returnDate: '2026-08-19',
+      items: [],
+    });
+    fixture.detectChanges();
+
+    expect(rows()).toEqual(['Group 1 | TELLO-02 | 3 | 4 | 19.08.2026']);
+    expect(element().textContent).not.toContain('TELLO-07');
+  });
+
+  it('shows the active loans in the shared table style inside a scroll wrapper (REQ-007)', () => {
+    loadRows([group1Loan]);
+
+    const table = element().querySelector(
+      'div[data-slot="table-container"] table[data-slot="table"]',
+    );
+    expect(table).not.toBeNull();
+    expect(returnButtons()[0].getAttribute('data-slot')).toBe('button');
+  });
+
   it('disables the return button of a row while its return request runs (REQ-008)', () => {
     loadRows([group1Loan, group3Loan]);
 

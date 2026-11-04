@@ -7,6 +7,9 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { ActiveLoanRow } from './loan.models';
 import { LoanForm } from './loan-form';
@@ -24,73 +27,69 @@ type LoadState = 'loading' | 'loaded' | 'failed';
  */
 @Component({
   selector: 'app-loans-page',
-  imports: [DateDisplayPipe, LoanForm],
+  imports: [DateDisplayPipe, LoanForm, HlmButton, HlmCardImports, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block space-y-6' },
   template: `
-    <h1>Loans</h1>
+    <h1 class="text-2xl font-semibold tracking-tight">Loans</h1>
 
     <app-loan-form (loaned)="loadActiveLoans()" />
 
-    <section aria-labelledby="active-loans-heading">
-      <h2 id="active-loans-heading">Active loans</h2>
-
-      @switch (state()) {
-        @case ('loading') {
-          <p>Loading active loans...</p>
-        }
-        @case ('loaded') {
-          @if (loans().length === 0) {
-            <p>No active loans.</p>
-          } @else {
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Group</th>
-                  <th scope="col">Drone</th>
-                  <th scope="col">Batteries</th>
-                  <th scope="col">Propellers</th>
-                  <th scope="col">Loan Date</th>
-                  <th scope="col">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (loan of loans(); track loan.id) {
-                  <tr>
-                    <td>{{ loan.group }}</td>
-                    <td>{{ loan.drone }}</td>
-                    <td>{{ loan.batteries }}</td>
-                    <td>{{ loan.propellers }}</td>
-                    <td>{{ loan.loanDate | dateDisplay }}</td>
-                    <td>
-                      <button
-                        type="button"
-                        [disabled]="returningIds().has(loan.id)"
-                        (click)="returnLoan(loan)"
-                      >
-                        Return
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+    <section hlmCard aria-labelledby="active-loans-heading">
+      <div hlmCardHeader>
+        <h2 hlmCardTitle id="active-loans-heading">Active loans</h2>
+      </div>
+      <div hlmCardContent>
+        @switch (state()) {
+          @case ('loading') {
+            <p class="text-sm text-muted-foreground">Loading active loans...</p>
+          }
+          @case ('loaded') {
+            @if (loans().length === 0) {
+              <p class="text-sm text-muted-foreground">No active loans.</p>
+            } @else {
+              <div hlmTableContainer>
+                <table hlmTable>
+                  <thead hlmTHead>
+                    <tr hlmTr>
+                      <th hlmTh scope="col">Group</th>
+                      <th hlmTh scope="col">Drone</th>
+                      <th hlmTh scope="col">Batteries</th>
+                      <th hlmTh scope="col">Propellers</th>
+                      <th hlmTh scope="col">Loan Date</th>
+                      <th hlmTh scope="col">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody hlmTBody>
+                    @for (loan of loans(); track loan.id) {
+                      <tr hlmTr>
+                        <td hlmTd>{{ loan.group }}</td>
+                        <td hlmTd>{{ loan.drone }}</td>
+                        <td hlmTd>{{ loan.batteries }}</td>
+                        <td hlmTd>{{ loan.propellers }}</td>
+                        <td hlmTd>{{ loan.loanDate | dateDisplay }}</td>
+                        <td hlmTd>
+                          <button
+                            hlmBtn
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            [disabled]="returningIds().has(loan.id)"
+                            (click)="returnLoan(loan)"
+                          >
+                            Return
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
           }
         }
-      }
+      </div>
     </section>
-  `,
-  styles: `
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      text-align: left;
-      padding: 0.5rem;
-      border-bottom: 1px solid #ddd;
-    }
   `,
 })
 export class LoansPage implements OnInit {
