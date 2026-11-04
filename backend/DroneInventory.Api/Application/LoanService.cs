@@ -22,6 +22,16 @@ public record CreateLoanResult(
     public static CreateLoanResult InvalidItems(IReadOnlyDictionary<string, string[]> errors) => new(null, null, null, errors);
 }
 
+/// <summary>Outcome of <see cref="LoanService.ReturnAsync"/>: the returned loan, or why not (unknown loan, already returned).</summary>
+public record ReturnLoanResult(Loan? Loan, string? NotFound, string? Conflict)
+{
+    public static ReturnLoanResult Returned(Loan loan) => new(loan, null, null);
+
+    public static ReturnLoanResult Missing(int id) => new(null, $"No loan with Id {id} exists.", null);
+
+    public static ReturnLoanResult AlreadyReturned(int id) => new(null, null, $"Loan {id} is already returned.");
+}
+
 /// <summary>One requested accessory. Null members and null list elements are reported as validation errors.</summary>
 public record LoanItemInput(LoanItemType? Type, int? Quantity);
 
@@ -80,6 +90,36 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
         }
 
         return CreateLoanResult.Created(loan);
+    }
+
+    // The loan with its items in a fixed order (Battery before Propeller), or null for an unknown Id.
+    public async Task<Loan?> GetAsync(int id)
+    {
+        var loan = await db.Loans.Include(l => l.Items).AsSplitQuery().FirstOrDefaultAsync(l => l.Id == id);
+        loan?.Items.Sort((a, b) => a.Type.CompareTo(b.Type));
+        return loan;
+    }
+
+    // REQ-008: an active loan becomes Returned (the drone is available again, as availability is derived).
+    // REQ-009: ReturnDate is today (UTC), never before the LoanDate. Only Status and ReturnDate change.
+    public async Task<ReturnLoanResult> ReturnAsync(int id)
+    {
+        var loan = await GetAsync(id);
+        if (loan is null)
+        {
+            return ReturnLoanResult.Missing(id);
+        }
+
+        if (loan.Status == LoanStatus.Returned)
+        {
+            return ReturnLoanResult.AlreadyReturned(id);
+        }
+
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        loan.Status = LoanStatus.Returned;
+        loan.ReturnDate = today < loan.LoanDate ? loan.LoanDate : today;
+        await db.SaveChangesAsync();
+        return ReturnLoanResult.Returned(loan);
     }
 
     private static Dictionary<string, string[]> ValidateItems(IReadOnlyList<LoanItemInput?>? items)
