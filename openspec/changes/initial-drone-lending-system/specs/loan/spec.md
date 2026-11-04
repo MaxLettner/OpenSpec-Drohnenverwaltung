@@ -7,7 +7,7 @@ Lend drones with batteries and propellers to student groups, take them back, and
 ## ADDED Requirements
 
 ### Requirement: Loan a drone
-Per REQ-004 the system SHALL loan an available drone to an existing student group by creating a `Loan` with status `Active`, the drone, the group and a `LoanDate`. The `LoanDate` SHALL be the current date and SHALL NOT be supplied by the caller. A loan SHALL be rejected when the drone or the student group does not exist. The response SHALL contain the `Id`, the drone and group `Id`s, the status, the `LoanDate`, the `ReturnDate` (empty while active) and the accessory items.
+Per REQ-004 the system SHALL loan an available drone to an existing student group by creating a `Loan` with status `Active`, the drone, the group and a `LoanDate`. The `LoanDate` SHALL be the current date in UTC and SHALL NOT be supplied by the caller. A loan SHALL be rejected when the drone or the student group does not exist. The response SHALL contain the `Id`, the drone and group `Id`s, the status, the `LoanDate`, the `ReturnDate` (empty while active) and the accessory items.
 
 #### Scenario: Loan an available drone
 - **GIVEN** the drone "TELLO-07" is available
@@ -124,7 +124,7 @@ Per REQ-008 the system SHALL set the status of an active loan to `Returned`, whi
 - **AND** the returned loan is unchanged
 
 ### Requirement: Store the return date
-Per REQ-009 the system SHALL set the `ReturnDate` of a loan to the current date when the loan is returned. An active loan SHALL have no `ReturnDate`. The `ReturnDate` SHALL NOT be before the `LoanDate` and SHALL be kept unchanged afterwards.
+Per REQ-009 the system SHALL set the `ReturnDate` of a loan to the current date in UTC when the loan is returned. An active loan SHALL have no `ReturnDate`. The `ReturnDate` SHALL NOT be before the `LoanDate` and SHALL be kept unchanged afterwards.
 
 #### Scenario: ReturnDate is set on return
 - **GIVEN** "TELLO-07" is loaned to "Group 3"
