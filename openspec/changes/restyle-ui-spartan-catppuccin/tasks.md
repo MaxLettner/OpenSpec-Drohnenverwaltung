@@ -27,7 +27,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 5. Integration
 
-- [ ] 5.1 Walk through the reference example (Group 3, TELLO-07, 4 batteries, 8 propellers: loan, list, return, history) in the running app in the Latte and the Macchiato theme and at 360 px width; verify with screenshots/observations in the PR description, check `ng build` against the budgets in `angular.json`, and fix or file anything that deviates — REQ-001 to REQ-010 (#68)
+- [x] 5.1 Walk through the reference example (Group 3, TELLO-07, 4 batteries, 8 propellers: loan, list, return, history) in the running app in the Latte and the Macchiato theme and at 360 px width; verify with screenshots/observations in the PR description, check `ng build` against the budgets in `angular.json`, and fix or file anything that deviates — REQ-001 to REQ-010 (#68)
 
 ## Workflow follow-up
 

@@ -1,11 +1,11 @@
 <header class="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
   <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
-    <span class="flex items-center gap-2 text-base font-semibold tracking-tight">
+    <span class="order-1 flex items-center gap-2 text-base font-semibold tracking-tight">
       <span class="size-2.5 rounded-full bg-primary" aria-hidden="true"></span>
       Drone Lending System
     </span>
 
-    <nav aria-label="Main navigation" class="flex flex-wrap gap-1">
+    <nav aria-label="Main navigation" class="order-3 flex w-full flex-wrap gap-1 sm:order-2 sm:w-auto">
       @for (link of links; track link.path) {
         <a
           [routerLink]="link.path"
@@ -18,7 +18,7 @@
       }
     </nav>
 
-    <div class="ml-auto flex gap-1" role="group" aria-label="Theme">
+    <div class="order-2 ml-auto flex gap-1 sm:order-3" role="group" aria-label="Theme">
       <button
         hlmBtn
         type="button"
