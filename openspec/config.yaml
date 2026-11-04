@@ -1,32 +1,45 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+context: |
+  Project: Drone Lending System (Drohnenverwaltung)
+  Backend: C#, ASP.NET Core 10 Web API, EF Core, SQLite (backend/DroneInventory.Api)
+  Frontend: Angular, TypeScript (frontend/drone-inventory-ui)
+  Frontend talks to the backend only via REST/JSON.
+  Source documents: requirements.md (REQ-001..REQ-010) and domain-model.md.
+  Ubiquitous language (use exactly these terms, no synonyms such as
+  rental, booking, issue): Drone, StudentGroup, Loan, LoanItem,
+  LoanStatus (Active | Returned), Availability (Available | Loaned).
+  Domain rules:
+  - A drone can only have one active loan.
+  - Only available drones can be loaned.
+  - Returning a loan makes the drone available again.
+  - Drone availability is derived from its active loan, never stored.
+  - Accessory quantities (Battery, Propeller) are whole numbers and must not be negative.
+  - Returned loans are kept forever (no deletion).
+  Out of scope: login/roles, item-level battery inventory, reservations,
+  damage management, reports/statistics/exports, edit/delete of drones,
+  groups or loans, search/filter/sort.
+  Business logic and validation live in the backend, never only in Angular.
+  Requirement IDs (REQ-xxx) must be kept in specs, tasks and issues.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Always state what is out of scope.
+  specs:
+    - Every requirement uses SHALL and has at least one Given/When/Then scenario.
+    - Describe behavior, not implementation details.
+    - Reference the REQ-xxx ID of the requirement in the requirement text.
+  tasks:
+    - Keep tasks small, independent and individually testable; one task becomes one GitHub issue.
+    - A requirement is not a task; split it into backend and frontend steps.
+    - Name the REQ-xxx IDs each task covers.
+    - Every Given/When/Then scenario needs a corresponding test task or test.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - Implement only the task or GitHub issue that was asked for, nothing else.
+      - Behavior changes require a spec change first.
+  archive:
+    guidance:
+      - Archive only when all tasks are implemented, tested and merged.
