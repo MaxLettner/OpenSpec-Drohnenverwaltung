@@ -14,12 +14,12 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 3. Pages
 
-- [ ] 3.1 Restyle `ToastContainer` with the error color tokens, keeping `ToastService`, `role="alert"` and the close button; verify component tests for the scenarios "Backend error is shown" and "Dismiss a notification" plus the existing toast and interceptor specs — REQ-001, REQ-003, REQ-004, REQ-008 (#61)
-- [ ] 3.2 Restyle the Drones page and drone form (card, label, input, textarea, button, table in a horizontal-scroll wrapper, availability badges with text); verify component tests for the scenarios "Available and loaned badges", "Form validation is unchanged" and the existing drone page and form specs still pass — REQ-001, REQ-002 (#62)
-- [ ] 3.3 Restyle the Student groups page (form card, list card, empty state); verify the existing student group specs still pass and a test checks the shared button and input styles are used — REQ-003 (#63)
-- [ ] 3.4 Restyle the loan form (styled native selects and number inputs, hints, error hint); verify the existing loan form specs still pass and a component test for the scenario "Loan flow still works" (one request with drone, group, 2 batteries, 4 propellers) — REQ-004, REQ-005, REQ-006 (#64)
-- [ ] 3.5 Restyle the Loans page (active loans card and table, return button, empty and loading states); verify the existing loans page specs still pass and a component test for the scenario "Return flow still works" — REQ-007, REQ-008 (#65)
-- [ ] 3.6 Restyle the History page (table card, empty and loading states); verify the existing history specs still pass and a test that all page tables share one style and sit in a horizontal-scroll wrapper for the scenarios "Same look on every page" and "Narrow viewport" — REQ-010 (#66)
+- [x] 3.1 Restyle `ToastContainer` with the error color tokens, keeping `ToastService`, `role="alert"` and the close button; verify component tests for the scenarios "Backend error is shown" and "Dismiss a notification" plus the existing toast and interceptor specs — REQ-001, REQ-003, REQ-004, REQ-008 (#61)
+- [x] 3.2 Restyle the Drones page and drone form (card, label, input, textarea, button, table in a horizontal-scroll wrapper, availability badges with text); verify component tests for the scenarios "Available and loaned badges", "Form validation is unchanged" and the existing drone page and form specs still pass — REQ-001, REQ-002 (#62)
+- [x] 3.3 Restyle the Student groups page (form card, list card, empty state); verify the existing student group specs still pass and a test checks the shared button and input styles are used — REQ-003 (#63)
+- [x] 3.4 Restyle the loan form (styled native selects and number inputs, hints, error hint); verify the existing loan form specs still pass and a component test for the scenario "Loan flow still works" (one request with drone, group, 2 batteries, 4 propellers) — REQ-004, REQ-005, REQ-006 (#64)
+- [x] 3.5 Restyle the Loans page (active loans card and table, return button, empty and loading states); verify the existing loans page specs still pass and a component test for the scenario "Return flow still works" — REQ-007, REQ-008 (#65)
+- [x] 3.6 Restyle the History page (table card, empty and loading states); verify the existing history specs still pass and a test that all page tables share one style and sit in a horizontal-scroll wrapper for the scenarios "Same look on every page" and "Narrow viewport" — REQ-010 (#66)
 
 ## 4. Rider on macOS
 
