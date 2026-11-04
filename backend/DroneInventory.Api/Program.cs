@@ -19,9 +19,15 @@ app.UseApiErrorHandling();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    // Creates the database file on first start and applies new migrations.
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
 }
 
 app.UseHttpsRedirection();
+
+app.MapStudentGroupEndpoints();
 
 app.Run();
 
