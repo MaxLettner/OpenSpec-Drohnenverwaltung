@@ -34,6 +34,7 @@ app.UseHttpsRedirection();
 app.MapStudentGroupEndpoints();
 app.MapDroneEndpoints();
 app.MapLoanEndpoints();
+app.MapLoanQueryEndpoints();
 
 app.Run();
 
