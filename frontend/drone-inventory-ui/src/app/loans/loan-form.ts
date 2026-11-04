@@ -236,6 +236,14 @@ export class LoanForm {
     this.loadStudentGroups();
   }
 
+  /**
+   * Reloads the drone list, e.g. after a loan was returned elsewhere on the page (REQ-008), so that
+   * the returned drone is offered again. The chosen group and the quantities stay as they are.
+   */
+  reloadDrones(): void {
+    this.loadDrones();
+  }
+
   protected onDroneChange(event: Event): void {
     this.selectedDroneId.set(readOptionId(event));
   }

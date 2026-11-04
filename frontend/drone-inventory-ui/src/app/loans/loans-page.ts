@@ -5,6 +5,7 @@ import {
   OnInit,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -24,6 +25,7 @@ type LoadState = 'loading' | 'loaded' | 'failed';
  * A failed request is reported by the global error toast, so the row simply stays.
  *
  * The loan form (REQ-004) sits above the list and calls `loadActiveLoans()` after a loan was created.
+ * After a return the page asks the form to reload its drones, so the returned drone is offered again.
  */
 @Component({
   selector: 'app-loans-page',
@@ -96,6 +98,8 @@ export class LoansPage implements OnInit {
   private readonly loanService = inject(LoanService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly loanForm = viewChild(LoanForm);
+
   protected readonly state = signal<LoadState>('loading');
   protected readonly loans = signal<readonly ActiveLoanRow[]>([]);
   /** Ids of the loans whose return request is running; their return button is disabled. */
@@ -133,6 +137,8 @@ export class LoansPage implements OnInit {
         next: () => {
           this.setReturning(loan.id, false);
           this.loans.update((rows) => rows.filter((row) => row.id !== loan.id));
+          // The drone is available again (REQ-008): let the loan form offer it without a reload.
+          this.loanForm()?.reloadDrones();
         },
         // The error interceptor has already shown the message; the row stays in the list.
         error: () => this.setReturning(loan.id, false),
