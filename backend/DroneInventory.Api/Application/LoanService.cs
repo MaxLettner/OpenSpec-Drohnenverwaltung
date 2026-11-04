@@ -46,7 +46,7 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
             DroneId = droneId,
             StudentGroupId = studentGroupId,
             Status = LoanStatus.Active,
-            LoanDate = DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime),
+            LoanDate = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime),
         };
         db.Loans.Add(loan);
         try
