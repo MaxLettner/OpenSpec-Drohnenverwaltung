@@ -49,7 +49,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 - [ ] 10.1 Drone list showing name, availability and description — REQ-002; verify a component test with a loaned and an available drone and the empty state (#17)
 - [ ] 10.2 Drone form — REQ-001; verify component tests that a created drone appears in the list and that a duplicate name error is shown (#18)
-- [ ] 10.3 Student group page with form and list — REQ-003; verify component tests for create, list and the duplicate error (#19)
+- [x] 10.3 Student group page with form and list — REQ-003; verify component tests for create, list and the duplicate error (#19)
 - [ ] 10.4 Loan form (drone from available drones, group, battery and propeller quantities) — REQ-004, REQ-005, REQ-006; verify component tests for a successful loan and for the backend rejections being displayed (#20)
 - [ ] 10.5 Active loan list with Group, Drone, Batteries, Propellers, Loan Date and a return action — REQ-007, REQ-008; verify component tests that the reference-example rows render and that returning removes the row (#21)
 - [ ] 10.6 Loan history list with both dates — REQ-010; verify a component test that returned loans render with loan date and return date (#22)
