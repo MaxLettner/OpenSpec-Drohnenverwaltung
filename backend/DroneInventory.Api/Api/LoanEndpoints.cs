@@ -55,6 +55,11 @@ public static class LoanEndpoints
         }
 
         var result = await loans.CreateAsync(request.DroneId!.Value, request.StudentGroupId!.Value);
+        if (result.Conflict is not null)
+        {
+            return Results.Problem(statusCode: StatusCodes.Status409Conflict, detail: result.Conflict);
+        }
+
         if (result.Loan is null)
         {
             return Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: result.NotFound);

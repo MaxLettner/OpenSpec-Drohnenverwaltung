@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests;
@@ -17,6 +18,12 @@ public class ApiFactory : WebApplicationFactory<Program>
     public static readonly DateOnly Today = new(2026, 3, 15);
 
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
+
+    /// <summary>
+    /// Test hook: runs once on the shared connection right before the next SaveChanges, i.e. after the
+    /// service's checks passed. Used to insert rows "behind the service's back".
+    /// </summary>
+    public Action<SqliteConnection>? BeforeNextSaveChanges { get; set; }
 
     public ApiFactory()
     {
@@ -35,9 +42,23 @@ public class ApiFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            services.AddDbContext<AppDbContext>(options => options.UseSqlite(_connection));
+            services.AddDbContext<AppDbContext>(options => options
+                .UseSqlite(_connection)
+                .AddInterceptors(new HookInterceptor(this)));
             services.AddSingleton<TimeProvider>(new FixedTimeProvider(Today));
         });
+    }
+
+    private sealed class HookInterceptor(ApiFactory factory) : SaveChangesInterceptor
+    {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            var hook = factory.BeforeNextSaveChanges;
+            factory.BeforeNextSaveChanges = null;
+            hook?.Invoke(factory._connection);
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
     }
 
     protected override void Dispose(bool disposing)
