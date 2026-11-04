@@ -50,6 +50,19 @@ npm start
 - `proxy.conf.json` forwards every `/api` request of the dev server to `http://localhost:5035`, so the frontend calls the backend through relative URLs such as `/api/drones`.
 - A production build is created with `npm run build` (output in `frontend/drone-inventory-ui/dist/`).
 
+## Run with Rider (macOS)
+
+Shared run configurations live in `.run/` at the repository root: `Backend` (launch profile `http`, port 5035), `Frontend` (npm script `start`, port 4200) and the compound `Drone Lending System`, which starts both.
+
+1. Open the **repository root folder** in Rider (not only `backend/` or the solution file). Rider then lists the three configurations in the run configuration dropdown.
+2. Run `npm install` once in `frontend/drone-inventory-ui`.
+3. Select **Drone Lending System** and press Run.
+
+- Backend: **http://localhost:5035** (API under `/api`)
+- Frontend: **http://localhost:4200**
+
+These configurations are a Rider convenience only; the `dotnet run` and `npm start` commands above work unchanged.
+
 ## Run the tests
 
 ```bash
