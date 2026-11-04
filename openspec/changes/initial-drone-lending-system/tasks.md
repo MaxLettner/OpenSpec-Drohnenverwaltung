@@ -22,7 +22,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 5. Drone list (backend) — REQ-002
 
-- [ ] 5.1 Implement `GET /api/drones` with availability derived from the active loan; verify tests for the loaned/available, empty-inventory and available-after-return scenarios (seed loans directly in the test database) (#7)
+- [x] 5.1 Implement `GET /api/drones` with availability derived from the active loan; verify tests for the loaned/available, empty-inventory and available-after-return scenarios (seed loans directly in the test database) (#7)
 
 ## 6. Loaning (backend) — REQ-004, REQ-005, REQ-006
 
