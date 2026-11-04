@@ -74,7 +74,7 @@ There is deliberately no `DELETE` route for loans, drones or groups. A `DELETE /
 Validation details: the create-drone body rejects unknown members (`JsonUnmappedMemberHandling.Disallow`), which rejects a supplied `status`. Enums are serialised as strings and an unknown `type` is a 400. `quantity` is a JSON integer; a fractional or negative value is a 400.
 
 ### D6. Dates
-`LoanDate` and `ReturnDate` are calendar dates (`DateOnly`), set by the server from an injected `TimeProvider` so tests can fix the day. The API carries ISO-8601 (`yyyy-MM-dd`); only the UI renders `dd.MM.yyyy`. A same-day return gives `ReturnDate == LoanDate`, which satisfies "not before".
+`LoanDate` and `ReturnDate` are calendar dates (`DateOnly`), set by the server from an injected `TimeProvider` so tests can fix the day. "Today" is the current date in UTC (`GetUtcNow()`), independent of the server's time zone. The API carries ISO-8601 (`yyyy-MM-dd`); only the UI renders `dd.MM.yyyy`. A same-day return gives `ReturnDate == LoanDate`, which satisfies "not before".
 *Alternative:* timestamps. Rejected: nothing in the requirements needs a time of day.
 
 ### D7. Quantity
