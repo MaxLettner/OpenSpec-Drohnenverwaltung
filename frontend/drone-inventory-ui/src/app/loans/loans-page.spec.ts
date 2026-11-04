@@ -105,9 +105,9 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     const select = (id: string) => element().querySelector<HTMLSelectElement>(`#${id}`)!;
     const input = (id: string) => element().querySelector<HTMLInputElement>(`#${id}`)!;
     select('loan-drone').value = '2';
-    select('loan-drone').dispatchEvent(new Event('change'));
+    select('loan-drone').dispatchEvent(new Event('change', { bubbles: true }));
     select('loan-group').value = '3';
-    select('loan-group').dispatchEvent(new Event('change'));
+    select('loan-group').dispatchEvent(new Event('change', { bubbles: true }));
     input('loan-batteries').value = '4';
     input('loan-batteries').dispatchEvent(new Event('input'));
     input('loan-propellers').value = '8';

@@ -52,7 +52,8 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
   /** Chooses an option of a select the way the user does, so that the component's handler runs. */
   function choose(select: HTMLSelectElement, value: string): void {
     select.value = value;
-    select.dispatchEvent(new Event('change'));
+    // A real change event bubbles from the inner <select> to the <hlm-native-select> host.
+    select.dispatchEvent(new Event('change', { bubbles: true }));
     fixture.detectChanges();
   }
 
@@ -181,6 +182,46 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
       .flush([loanedDrone, { ...availableDrone, availability: 'Loaned' }]);
+  });
+
+  it('Loan flow still works: one request with drone, group, 2 batteries and 4 propellers (REQ-004, REQ-006)', () => {
+    let emitted: Loan | undefined;
+    fixture.componentInstance.loaned.subscribe((loan) => (emitted = loan));
+    answerLists();
+
+    chooseReferenceDroneAndGroup();
+    type(batteriesInput(), '2');
+    type(propellersInput(), '4');
+    submit();
+
+    const requests = http.match({ method: 'POST', url: '/api/loans' });
+    expect(requests.length).toBe(1);
+    expect(requests[0].request.body).toEqual({
+      droneId: 2,
+      studentGroupId: 3,
+      items: [
+        { type: 'Battery', quantity: 2 },
+        { type: 'Propeller', quantity: 4 },
+      ],
+    });
+    requests[0].flush(createdLoan, { status: 201, statusText: 'Created' });
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([loanedDrone]);
+
+    expect(emitted).toEqual(createdLoan);
+  });
+
+  it('uses the shared Spartan styles for the card, selects, inputs and button', () => {
+    answerLists();
+
+    expect(element().querySelector('section[data-slot="card"]')).not.toBeNull();
+    expect(element().querySelector('[data-slot="card-title"]')?.textContent?.trim()).toBe(
+      'New loan',
+    );
+    expect(droneSelect()!.getAttribute('data-slot')).toBe('native-select');
+    expect(groupSelect()!.getAttribute('data-slot')).toBe('native-select');
+    expect(batteriesInput().getAttribute('data-slot')).toBe('input');
+    expect(propellersInput().getAttribute('data-slot')).toBe('input');
+    expect(submitButton().getAttribute('data-slot')).toBe('button');
   });
 
   it('resets the form and reloads the drone list after a successful loan (REQ-004)', () => {
