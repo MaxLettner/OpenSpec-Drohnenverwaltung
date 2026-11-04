@@ -67,12 +67,26 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
       ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B'],
     ]);
 
-    const badges = Array.from(element().querySelectorAll('.badge')) as HTMLElement[];
-    expect(badges.map((badge) => badge.classList.contains('badge-loaned'))).toEqual([true, false]);
-    expect(badges.map((badge) => badge.classList.contains('badge-available'))).toEqual([
-      false,
-      true,
-    ]);
+    const badges = Array.from(element().querySelectorAll<HTMLElement>('tbody [data-slot="badge"]'));
+    expect(badges.map((badge) => badge.textContent?.trim())).toEqual(['Loaned', 'Available']);
+    expect(badges[0].className).toContain('bg-warning/20');
+    expect(badges[1].className).toContain('bg-success/20');
+    expect(badges[0].className).not.toEqual(badges[1].className);
+  });
+
+  it('shows the drones in the shared table style inside a card (ui-theme)', () => {
+    fixture.detectChanges();
+    http
+      .expectOne({ method: 'GET', url: '/api/drones' })
+      .flush([{ id: 2, name: 'TELLO-07', description: null, availability: 'Available' }]);
+    fixture.detectChanges();
+
+    expect(
+      element().querySelector(
+        '[data-slot="card"] div[data-slot="table-container"] table[data-slot="table"]',
+      ),
+    ).not.toBeNull();
+    expect(element().querySelector('h1')?.textContent).toBe('Drones');
   });
 
   it('shows an em dash when a drone has no description (REQ-002)', () => {

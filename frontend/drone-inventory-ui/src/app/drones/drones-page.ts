@@ -1,5 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmBadge } from '@spartan-ng/helm/badge';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DroneForm } from './drone-form';
 import { Drone } from './drone.models';
 import { DroneService } from './drone.service';
@@ -15,79 +18,66 @@ type LoadState = 'loading' | 'loaded' | 'failed';
 @Component({
   selector: 'app-drones-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DroneForm],
+  host: { class: 'block space-y-6' },
+  imports: [DroneForm, HlmBadge, HlmCardImports, HlmTableImports],
   template: `
-    <h1>Drones</h1>
+    <h1 class="text-2xl font-semibold tracking-tight">Drones</h1>
 
     <app-drone-form (created)="reload()" />
 
     @switch (state()) {
       @case ('loading') {
-        <p>Loading drones...</p>
+        <p class="text-sm text-muted-foreground">Loading drones...</p>
       }
       @case ('loaded') {
         @if (drones().length === 0) {
-          <p>No drones yet.</p>
+          <p class="text-sm text-muted-foreground">No drones yet.</p>
         } @else {
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Availability</th>
-                <th scope="col">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (drone of drones(); track drone.id) {
-                <tr>
-                  <td>{{ drone.name }}</td>
-                  <td>
-                    <span
-                      class="badge"
-                      [class.badge-available]="drone.availability === 'Available'"
-                      [class.badge-loaned]="drone.availability === 'Loaned'"
-                      >{{ drone.availability }}</span
-                    >
-                  </td>
-                  <td>{{ drone.description || '—' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+          <section hlmCard aria-labelledby="drone-list-title">
+            <div hlmCardHeader>
+              <h2 hlmCardTitle id="drone-list-title">All drones</h2>
+            </div>
+            <div hlmCardContent>
+              <div hlmTableContainer>
+                <table hlmTable>
+                  <thead hlmTHead>
+                    <tr hlmTr>
+                      <th hlmTh scope="col">Name</th>
+                      <th hlmTh scope="col">Availability</th>
+                      <th hlmTh scope="col">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody hlmTBody>
+                    @for (drone of drones(); track drone.id) {
+                      <tr hlmTr>
+                        <td hlmTd>{{ drone.name }}</td>
+                        <td hlmTd>
+                          @if (drone.availability === 'Available') {
+                            <span
+                              hlmBadge
+                              variant="outline"
+                              class="border-success bg-success/20 text-foreground"
+                              >Available</span
+                            >
+                          } @else {
+                            <span
+                              hlmBadge
+                              variant="outline"
+                              class="border-warning bg-warning/20 text-foreground"
+                              >Loaned</span
+                            >
+                          }
+                        </td>
+                        <td hlmTd>{{ drone.description || '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
         }
       }
-    }
-  `,
-  styles: `
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      text-align: left;
-      padding: 0.5rem;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 0.1rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid currentColor;
-      font-size: 0.875rem;
-      white-space: nowrap;
-    }
-
-    .badge-available {
-      background: #e6f4ea;
-      color: #1e4620;
-    }
-
-    .badge-loaned {
-      background: #fdf1d8;
-      color: #6b4a00;
     }
   `,
 })

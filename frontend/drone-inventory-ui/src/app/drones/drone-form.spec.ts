@@ -50,6 +50,19 @@ describe('DroneForm (REQ-001)', () => {
     expect(submitButton().disabled).toBe(true);
   });
 
+  it('keeps the validation unchanged after the restyle: blank name disables "Create drone" (ui-theme)', () => {
+    expect(submitButton().textContent?.trim()).toBe('Create drone');
+    expect(submitButton().disabled).toBe(true);
+
+    type(nameInput(), '');
+    expect(submitButton().disabled).toBe(true);
+
+    type(nameInput(), ' \t ');
+    expect(submitButton().disabled).toBe(true);
+
+    expect(element().querySelector('[data-slot="card"] form')).not.toBeNull();
+  });
+
   it('offers no status or availability field (REQ-001)', () => {
     expect(element().querySelector('select')).toBeNull();
 
