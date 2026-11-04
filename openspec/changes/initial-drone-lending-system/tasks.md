@@ -10,7 +10,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 2. Student groups (backend) — REQ-003
 
 - [x] 2.1 Implement the `StudentGroup` model, migration (unique name, ignoring case) and `POST /api/student-groups`; verify tests for the create, blank-name and duplicate-name scenarios of `specs/student-group` (#3)
-- [ ] 2.2 Implement `GET /api/student-groups`; verify tests for the listing and empty-list scenarios (#4)
+- [x] 2.2 Implement `GET /api/student-groups`; verify tests for the listing and empty-list scenarios (#4)
 
 ## 3. Drones (backend) — REQ-001
 
