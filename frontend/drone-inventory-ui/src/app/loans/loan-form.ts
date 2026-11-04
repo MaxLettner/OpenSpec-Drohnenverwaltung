@@ -11,6 +11,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmNativeSelectImports } from '@spartan-ng/helm/native-select';
 import { Drone } from '../drones/drone.models';
 import { DroneService } from '../drones/drone.service';
 import { StudentGroup } from '../student-groups/student-group.models';
@@ -59,143 +64,115 @@ function readOptionId(event: Event): number | null {
 @Component({
   selector: 'app-loan-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block' },
+  imports: [HlmButton, HlmCardImports, HlmInput, HlmLabel, HlmNativeSelectImports],
   template: `
-    <form class="loan-form" novalidate (submit)="onSubmit($event)">
-      <h2>New loan</h2>
-
-      <div class="field">
-        <label for="loan-drone">Drone</label>
-        @switch (droneState()) {
-          @case ('loading') {
-            <p class="hint">Loading drones...</p>
-          }
-          @case ('loaded') {
-            @if (availableDrones().length === 0) {
-              <p class="hint">No drones available.</p>
-            } @else {
-              <select id="loan-drone" name="drone" (change)="onDroneChange($event)">
-                <option value="" [selected]="selectedDroneId() === null">Choose a drone</option>
-                @for (drone of availableDrones(); track drone.id) {
-                  <option [value]="drone.id" [selected]="drone.id === selectedDroneId()">
-                    {{ drone.name }}
-                  </option>
+    <section hlmCard>
+      <div hlmCardHeader>
+        <h2 hlmCardTitle>New loan</h2>
+      </div>
+      <div hlmCardContent>
+        <form class="grid max-w-xl gap-4" novalidate (submit)="onSubmit($event)">
+          <div class="grid gap-2">
+            <label hlmLabel for="loan-drone">Drone</label>
+            @switch (droneState()) {
+              @case ('loading') {
+                <p class="text-sm text-muted-foreground">Loading drones...</p>
+              }
+              @case ('loaded') {
+                @if (availableDrones().length === 0) {
+                  <p class="text-sm text-muted-foreground">No drones available.</p>
+                } @else {
+                  <hlm-native-select
+                    class="w-full"
+                    [selectId]="'loan-drone'"
+                    [value]="selectedDroneId()?.toString() ?? ''"
+                    (change)="onDroneChange($event)"
+                  >
+                    <option value="" [selected]="selectedDroneId() === null">Choose a drone</option>
+                    @for (drone of availableDrones(); track drone.id) {
+                      <option [value]="drone.id" [selected]="drone.id === selectedDroneId()">
+                        {{ drone.name }}
+                      </option>
+                    }
+                  </hlm-native-select>
                 }
-              </select>
+              }
             }
-          }
-        }
-      </div>
+          </div>
 
-      <div class="field">
-        <label for="loan-group">Student group</label>
-        @switch (groupState()) {
-          @case ('loading') {
-            <p class="hint">Loading student groups...</p>
-          }
-          @case ('loaded') {
-            @if (groups().length === 0) {
-              <p class="hint">No student groups yet.</p>
-            } @else {
-              <select id="loan-group" name="group" (change)="onGroupChange($event)">
-                <option value="" [selected]="selectedGroupId() === null">Choose a group</option>
-                @for (group of groups(); track group.id) {
-                  <option [value]="group.id" [selected]="group.id === selectedGroupId()">
-                    {{ group.name }}
-                  </option>
+          <div class="grid gap-2">
+            <label hlmLabel for="loan-group">Student group</label>
+            @switch (groupState()) {
+              @case ('loading') {
+                <p class="text-sm text-muted-foreground">Loading student groups...</p>
+              }
+              @case ('loaded') {
+                @if (groups().length === 0) {
+                  <p class="text-sm text-muted-foreground">No student groups yet.</p>
+                } @else {
+                  <hlm-native-select
+                    class="w-full"
+                    [selectId]="'loan-group'"
+                    [value]="selectedGroupId()?.toString() ?? ''"
+                    (change)="onGroupChange($event)"
+                  >
+                    <option value="" [selected]="selectedGroupId() === null">Choose a group</option>
+                    @for (group of groups(); track group.id) {
+                      <option [value]="group.id" [selected]="group.id === selectedGroupId()">
+                        {{ group.name }}
+                      </option>
+                    }
+                  </hlm-native-select>
                 }
-              </select>
+              }
             }
+          </div>
+
+          <div class="grid gap-2">
+            <label hlmLabel for="loan-batteries">Batteries</label>
+            <input
+              hlmInput
+              #batteriesInput
+              id="loan-batteries"
+              name="batteries"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="optional"
+              (input)="onBatteriesInput($event)"
+            />
+          </div>
+
+          <div class="grid gap-2">
+            <label hlmLabel for="loan-propellers">Propellers</label>
+            <input
+              hlmInput
+              #propellersInput
+              id="loan-propellers"
+              name="propellers"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="optional"
+              (input)="onPropellersInput($event)"
+            />
+          </div>
+
+          @if (quantitiesInvalid()) {
+            <p class="text-sm text-destructive">
+              Batteries and propellers must be whole numbers, 0 or more.
+            </p>
           }
-        }
+
+          <button hlmBtn type="submit" class="justify-self-start" [disabled]="!canSubmit()">
+            Loan drone
+          </button>
+        </form>
       </div>
-
-      <div class="field">
-        <label for="loan-batteries">Batteries</label>
-        <input
-          #batteriesInput
-          id="loan-batteries"
-          name="batteries"
-          type="number"
-          min="0"
-          step="1"
-          inputmode="numeric"
-          placeholder="optional"
-          (input)="onBatteriesInput($event)"
-        />
-      </div>
-
-      <div class="field">
-        <label for="loan-propellers">Propellers</label>
-        <input
-          #propellersInput
-          id="loan-propellers"
-          name="propellers"
-          type="number"
-          min="0"
-          step="1"
-          inputmode="numeric"
-          placeholder="optional"
-          (input)="onPropellersInput($event)"
-        />
-      </div>
-
-      @if (quantitiesInvalid()) {
-        <p class="hint hint-error">Batteries and propellers must be whole numbers, 0 or more.</p>
-      }
-
-      <button type="submit" [disabled]="!canSubmit()">Loan drone</button>
-    </form>
-  `,
-  styles: `
-    .loan-form {
-      display: grid;
-      gap: 0.75rem;
-      max-width: 36rem;
-      margin-bottom: 2rem;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 1.25rem;
-    }
-
-    .field {
-      display: grid;
-      gap: 0.25rem;
-    }
-
-    select,
-    input {
-      font: inherit;
-      padding: 0.4rem 0.5rem;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-    }
-
-    .hint {
-      margin: 0;
-      color: #555;
-    }
-
-    .hint-error {
-      color: #8a1c1c;
-    }
-
-    button {
-      justify-self: start;
-      font: inherit;
-      padding: 0.4rem 1rem;
-      border-radius: 4px;
-      border: 1px solid #1e4620;
-      background: #1e4620;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    </section>
   `,
 })
 export class LoanForm {

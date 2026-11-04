@@ -10,7 +10,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 2. Theme switching and app shell
 
 - [x] 2.1 Implement `ThemeService` (preference `system | light | dark`, `prefers-color-scheme`, `localStorage` with guarded access, `dark` class on `<html>`) and the inline pre-boot script in `index.html`; verify service tests for the scenarios "Light system setting", "Dark system setting", "System setting changes while the app is open", "Choice survives a reload", "Chosen theme beats the system setting" and "Invalid stored choice" (#59)
-- [ ] 2.2 Restyle the app shell (header, pill navigation with active state, centered container) and add the light/dark toggle with `aria-pressed`; remove `app.css`; verify `App` tests for the scenarios "Switch to dark on a light system" and "Navigation marks the current page", and that the existing navigation labels and the single toast container test still pass (#60)
+- [x] 2.2 Restyle the app shell (header, pill navigation with active state, centered container) and add the light/dark toggle with `aria-pressed`; remove `app.css`; verify `App` tests for the scenarios "Switch to dark on a light system" and "Navigation marks the current page", and that the existing navigation labels and the single toast container test still pass (#60)
 
 ## 3. Pages
 
