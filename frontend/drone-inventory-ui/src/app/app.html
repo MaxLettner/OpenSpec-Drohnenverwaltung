@@ -1,14 +1,53 @@
-<header class="app-header">
-  <span class="app-title">Drone Lending System</span>
-  <nav aria-label="Main navigation">
-    <a routerLink="/drones" routerLinkActive="active">Drones</a>
-    <a routerLink="/student-groups" routerLinkActive="active">Student groups</a>
-    <a routerLink="/loans" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Loans</a>
-    <a routerLink="/loans/history" routerLinkActive="active">History</a>
-  </nav>
+<header class="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+  <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
+    <span class="flex items-center gap-2 text-base font-semibold tracking-tight">
+      <span class="size-2.5 rounded-full bg-primary" aria-hidden="true"></span>
+      Drone Lending System
+    </span>
+
+    <nav aria-label="Main navigation" class="flex flex-wrap gap-1">
+      @for (link of links; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
+          class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground aria-[current=page]:bg-primary/15 aria-[current=page]:text-foreground"
+          >{{ link.label }}</a
+        >
+      }
+    </nav>
+
+    <div class="ml-auto flex gap-1" role="group" aria-label="Theme">
+      <button
+        hlmBtn
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        class="aria-pressed:bg-primary/15"
+        aria-label="Light theme"
+        [attr.aria-pressed]="theme() === 'light'"
+        (click)="choose('light')"
+      >
+        <ng-icon name="lucideSun" />
+      </button>
+      <button
+        hlmBtn
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        class="aria-pressed:bg-primary/15"
+        aria-label="Dark theme"
+        [attr.aria-pressed]="theme() === 'dark'"
+        (click)="choose('dark')"
+      >
+        <ng-icon name="lucideMoon" />
+      </button>
+    </div>
+  </div>
 </header>
 
-<main class="app-main">
+<main class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
   <router-outlet />
 </main>
 
