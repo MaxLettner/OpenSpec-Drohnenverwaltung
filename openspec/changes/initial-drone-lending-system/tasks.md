@@ -47,7 +47,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 10. Frontend features
 
-- [ ] 10.1 Drone list showing name, availability and description — REQ-002; verify a component test with a loaned and an available drone and the empty state (#17)
+- [x] 10.1 Drone list showing name, availability and description — REQ-002; verify a component test with a loaned and an available drone and the empty state (#17)
 - [ ] 10.2 Drone form — REQ-001; verify component tests that a created drone appears in the list and that a duplicate name error is shown (#18)
 - [ ] 10.3 Student group page with form and list — REQ-003; verify component tests for create, list and the duplicate error (#19)
 - [ ] 10.4 Loan form (drone from available drones, group, battery and propeller quantities) — REQ-004, REQ-005, REQ-006; verify component tests for a successful loan and for the backend rejections being displayed (#20)

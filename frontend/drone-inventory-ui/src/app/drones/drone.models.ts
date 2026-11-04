@@ -4,7 +4,7 @@ export type Availability = 'Available' | 'Loaned';
 export interface Drone {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
   availability: Availability;
 }
 

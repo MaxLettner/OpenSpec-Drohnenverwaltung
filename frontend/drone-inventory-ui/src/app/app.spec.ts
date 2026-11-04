@@ -25,4 +25,11 @@ describe('App', () => {
     const labels = Array.from(compiled.querySelectorAll('nav a')).map((link) => link.textContent?.trim());
     expect(labels).toEqual(['Drones', 'Student groups', 'Loans', 'History']);
   });
+
+  it('renders the toast container once in the app shell', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelectorAll('app-toast-container').length).toBe(1);
+  });
 });
