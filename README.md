@@ -52,14 +52,14 @@ npm start
 
 ## Run with Rider (macOS)
 
-Shared run configurations live in `.run/` at the repository root: `Backend` (launch profile `http`, port 5035), `Frontend` (npm script `start`, port 4200) and the compound `Drone Lending System`, which starts both.
+Shared run configurations live in `backend/.run/`, next to the solution, because Rider reads them from the solution directory: `Backend` (launch profile `http`, port 5035), `Frontend` (npm script `start`, port 4200) and the compound `Drone Lending System`, which starts both.
 
-1. Open the **repository root folder** in Rider (not only `backend/` or the solution file). Rider then lists the three configurations in the run configuration dropdown.
+1. Open `backend/DroneInventory.sln` in Rider (opening the repository root folder gives the same project). Rider then lists the three configurations in the run configuration dropdown.
 2. Run `npm install` once in `frontend/drone-inventory-ui`.
 3. Select **Drone Lending System** and press Run.
 
-- Backend: **http://localhost:5035** (API under `/api`)
-- Frontend: **http://localhost:4200**
+- Frontend (the app): **http://localhost:4200**
+- Backend (API only, no page at `/`): **http://localhost:5035**
 
 These configurations are a Rider convenience only; the `dotnet run` and `npm start` commands above work unchanged.
 
