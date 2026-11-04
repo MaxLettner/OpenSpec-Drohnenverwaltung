@@ -7,13 +7,14 @@ Manage the lendable drones of the school and show which of them are currently av
 ## ADDED Requirements
 
 ### Requirement: Create a drone
-Per REQ-001 the system SHALL create a drone from a `Name` and an optional free-text `Description` and assign it an `Id`. The `Name` SHALL NOT be blank and SHALL be unique among drones, ignoring case. The request SHALL NOT contain a status; availability follows from the drone's loans.
+Per REQ-001 the system SHALL create a drone from a `Name` and an optional `Description` and assign it an `Id`. The `Name` SHALL be trimmed, not blank, at most 100 characters and unique among drones, ignoring case. The `Description` SHALL be trimmed, stored as empty when blank and at most 500 characters. The request SHALL NOT contain a status; availability follows from the drone's loans.
 
 #### Scenario: Create a drone
 - **GIVEN** no drone named "TELLO-07" exists
 - **WHEN** a drone "TELLO-07" with the description "SSID: TELLO-9FA21B, right propeller guard damaged" is created
 - **THEN** the drone "TELLO-07" exists with a generated `Id`
 - **AND** its availability is "Available"
+- **AND** the response contains the `Id`, the `Name` and the `Description` and a `Location` header for the new drone
 
 #### Scenario: Description is optional
 - **GIVEN** no drone named "TELLO-08" exists
@@ -32,9 +33,37 @@ Per REQ-001 the system SHALL create a drone from a `Name` and an optional free-t
 - **THEN** the request is rejected with a validation error
 - **AND** no drone is created
 
+#### Scenario: Name and description are trimmed
+- **GIVEN** no drone named "TELLO-09" exists
+- **WHEN** a drone "  TELLO-09 " with the description "  spare unit " is created
+- **THEN** the drone "TELLO-09" exists with the description "spare unit"
+
+#### Scenario: Blank description is stored as empty
+- **GIVEN** no drone named "TELLO-10" exists
+- **WHEN** a drone "TELLO-10" with a description consisting only of whitespace is created
+- **THEN** the drone exists with an empty description
+
+#### Scenario: Too long name is rejected
+- **GIVEN** a drone creation request
+- **WHEN** the name is longer than 100 characters
+- **THEN** the request is rejected with a validation error
+- **AND** no drone is created
+
+#### Scenario: Too long description is rejected
+- **GIVEN** a drone creation request
+- **WHEN** the description is longer than 500 characters
+- **THEN** the request is rejected with a validation error
+- **AND** no drone is created
+
 #### Scenario: Duplicate name is rejected
 - **GIVEN** the drone "TELLO-07" exists
 - **WHEN** another drone named "TELLO-07" is created
+- **THEN** the request is rejected
+- **AND** only one drone named "TELLO-07" exists
+
+#### Scenario: Duplicate name is rejected ignoring case
+- **GIVEN** the drone "TELLO-07" exists
+- **WHEN** another drone named "tello-07" is created
 - **THEN** the request is rejected
 - **AND** only one drone named "TELLO-07" exists
 

@@ -14,7 +14,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 3. Drones (backend) — REQ-001
 
-- [ ] 3.1 Implement the `Drone` model (no status column), migration (unique name, ignoring case) and `POST /api/drones`; verify tests for the create, optional-description, status-rejected, blank-name and duplicate-name scenarios of `specs/drone` (#5)
+- [x] 3.1 Implement the `Drone` model (no status column), migration (unique name, ignoring case) and `POST /api/drones`; verify tests for the create, optional-description, status-rejected, blank-name and duplicate-name scenarios of `specs/drone` (#5)
 
 ## 4. Loan model — REQ-005, REQ-006, REQ-010
 
