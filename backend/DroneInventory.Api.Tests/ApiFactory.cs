@@ -25,6 +25,12 @@ public class ApiFactory : WebApplicationFactory<Program>
     /// </summary>
     public Action<SqliteConnection>? BeforeNextSaveChanges { get; set; }
 
+    /// <summary>
+    /// Test hook: runs once on the shared connection right before the next set-based command
+    /// (ExecuteUpdate/ExecuteDelete), i.e. after the service's checks passed.
+    /// </summary>
+    public Action<SqliteConnection>? BeforeNextNonQuery { get; set; }
+
     public ApiFactory()
     {
         _connection.Open();
@@ -44,7 +50,7 @@ public class ApiFactory : WebApplicationFactory<Program>
 
             services.AddDbContext<AppDbContext>(options => options
                 .UseSqlite(_connection)
-                .AddInterceptors(new HookInterceptor(this)));
+                .AddInterceptors(new HookInterceptor(this), new NonQueryHookInterceptor(this)));
             services.AddSingleton<TimeProvider>(new FixedTimeProvider(Today));
         });
     }
@@ -58,6 +64,19 @@ public class ApiFactory : WebApplicationFactory<Program>
             factory.BeforeNextSaveChanges = null;
             hook?.Invoke(factory._connection);
             return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
+
+    private sealed class NonQueryHookInterceptor(ApiFactory factory) : DbCommandInterceptor
+    {
+        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
+            System.Data.Common.DbCommand command, CommandEventData eventData, InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            var hook = factory.BeforeNextNonQuery;
+            factory.BeforeNextNonQuery = null;
+            hook?.Invoke(factory._connection);
+            return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
         }
     }
 
