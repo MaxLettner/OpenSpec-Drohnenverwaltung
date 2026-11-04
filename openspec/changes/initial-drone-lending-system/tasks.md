@@ -5,7 +5,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 1. Backend foundation
 
 - [x] 1.1 Add EF Core with SQLite, an `AppDbContext`, the `Domain/Application/Infrastructure/Api` folders, a `DroneInventory.Api.Tests` project (xUnit, `WebApplicationFactory`, in-memory SQLite) and `backend/DroneInventory.sln` containing both projects; verify `dotnet test backend` runs a passing smoke test against the real API pipeline (#1)
-- [ ] 1.2 Add central error handling and JSON options (ProblemDetails for 400/404/409, string enums, unknown members rejected); verify tests that a malformed body gives 400 and an unknown route gives 404 in ProblemDetails form (#2)
+- [x] 1.2 Add central error handling and JSON options (ProblemDetails for 400/404/409, string enums, unknown members rejected); verify tests that a malformed body gives 400 and an unknown route gives 404 in ProblemDetails form (#2)
 
 ## 2. Student groups (backend) — REQ-003
 
