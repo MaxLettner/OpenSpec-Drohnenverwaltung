@@ -13,6 +13,9 @@ namespace DroneInventory.Api.Tests;
 /// </summary>
 public class ApiFactory : WebApplicationFactory<Program>
 {
+    /// <summary>The date the API sees as today in every test.</summary>
+    public static readonly DateOnly Today = new(2026, 3, 15);
+
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
 
     public ApiFactory()
@@ -33,6 +36,7 @@ public class ApiFactory : WebApplicationFactory<Program>
             }
 
             services.AddDbContext<AppDbContext>(options => options.UseSqlite(_connection));
+            services.AddSingleton<TimeProvider>(new FixedTimeProvider(Today));
         });
     }
 
@@ -44,4 +48,12 @@ public class ApiFactory : WebApplicationFactory<Program>
             _connection.Dispose();
         }
     }
+}
+
+/// <summary>A clock that always shows noon UTC on a fixed date.</summary>
+public sealed class FixedTimeProvider(DateOnly date) : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => new(date.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
+
+    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
 }

@@ -1,4 +1,5 @@
 using DroneInventory.Api.Api;
+using DroneInventory.Api.Application;
 using DroneInventory.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,6 +12,9 @@ builder.Services.AddApiErrorHandling();
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? "Data Source=droneinventory.db";
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<LoanService>();
 
 var app = builder.Build();
 
@@ -29,6 +33,7 @@ app.UseHttpsRedirection();
 
 app.MapStudentGroupEndpoints();
 app.MapDroneEndpoints();
+app.MapLoanEndpoints();
 
 app.Run();
 
