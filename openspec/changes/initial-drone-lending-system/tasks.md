@@ -43,7 +43,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 9. Frontend foundation
 
 - [x] 9.1 Replace the Angular placeholder with an app shell and routes for drones, student groups, loans and history; add the dev proxy for `/api` and a `dd.MM.yyyy` date pipe; verify `ng build` and `ng test` pass, including a test for the date pipe (#15)
-- [ ] 9.2 Add typed API services for drones, student groups and loans, plus a shared way to show backend errors (400/404/409) to the user; verify service tests with `HttpTestingController` for each endpoint and error status (#16)
+- [x] 9.2 Add typed API services for drones, student groups and loans, plus a shared way to show backend errors (400/404/409) to the user; verify service tests with `HttpTestingController` for each endpoint and error status (#16)
 
 ## 10. Frontend features
 
