@@ -28,7 +28,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 - [x] 6.1 Implement `LoanService` and `POST /api/loans` for an available drone and an existing group, with the current date as `LoanDate` via `TimeProvider`; verify tests for the loan-available-drone, unknown-group and unknown-drone scenarios (#8)
 - [x] 6.2 Reject loans for a drone that already has an active loan, including simultaneous requests (database constraint violation mapped to 409); verify tests for the second-loan and unavailable-drone scenarios, and for the simultaneous-attempts scenario by inserting an active loan directly behind the service's back and checking that the constraint violation is returned as 409 with exactly one active loan left (#9)
-- [ ] 6.3 Accept and validate `items` (`Battery`, `Propeller`, integer quantity >= 0, one item per type, items optional); verify tests for the accessories, negative, zero, fractional, unknown-type, repeated-type and no-accessories scenarios (#10)
+- [x] 6.3 Accept and validate `items` (`Battery`, `Propeller`, integer quantity >= 0, one item per type, items optional); verify tests for the accessories, negative, zero, fractional, unknown-type, repeated-type and no-accessories scenarios (#10)
 
 ## 7. Returning (backend) — REQ-008, REQ-009
 
@@ -48,11 +48,12 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 10. Frontend features
 
 - [x] 10.1 Drone list showing name, availability and description — REQ-002; verify a component test with a loaned and an available drone and the empty state (#17)
-- [ ] 10.2 Drone form — REQ-001; verify component tests that a created drone appears in the list and that a duplicate name error is shown (#18)
+- [x] 10.2 Drone form — REQ-001; verify component tests that a created drone appears in the list and that a duplicate name error is shown (#18)
 - [x] 10.3 Student group page with form and list — REQ-003; verify component tests for create, list and the duplicate error (#19)
 - [ ] 10.4 Loan form (drone from available drones, group, battery and propeller quantities) — REQ-004, REQ-005, REQ-006; verify component tests for a successful loan and for the backend rejections being displayed (#20)
 - [x] 10.5 Active loan list with Group, Drone, Batteries, Propellers, Loan Date and a return action — REQ-007, REQ-008; verify component tests that the reference-example rows render and that returning removes the row (#21)
-- [ ] 10.6 Loan history list with both dates — REQ-010; verify a component test that returned loans render with loan date and return date (#22)
+- [x] 10.6 Loan history list with both dates — REQ-010; verify a component test that returned loans render with loan date and return date (#22)
+
 
 ## 11. Integration
 
