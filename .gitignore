@@ -3,3 +3,6 @@ agenda.md
 
 # Agent worktrees
 .claude/worktrees/
+
+# JetBrains Rider project files (shared run configurations are in backend/.run)
+.idea/
