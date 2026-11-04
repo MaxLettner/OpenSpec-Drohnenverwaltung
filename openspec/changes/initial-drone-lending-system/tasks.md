@@ -33,6 +33,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 7. Returning (backend) — REQ-008, REQ-009
 
 - [x] 7.1 Implement `POST /api/loans/{id}/return` (status `Returned`, `ReturnDate` set to the current date, not before `LoanDate`) and `GET /api/loans/{id}`; verify tests for the return, return-twice, unknown-loan, drone-loanable-again, ReturnDate-set and active-has-no-ReturnDate scenarios (#11)
+- [ ] 7.2 Make the return atomic: change the status with a conditional update (`Status = Active`) so that simultaneous returns of one loan give exactly one success and one 409, and the first `ReturnDate` stays; verify the simultaneous-returns scenario with a deterministic test (return the loan directly behind the service's back after its check) (#47)
 
 ## 8. Loan queries (backend) — REQ-007, REQ-010
 

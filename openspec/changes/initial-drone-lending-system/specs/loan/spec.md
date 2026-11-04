@@ -117,6 +117,13 @@ Per REQ-008 the system SHALL set the status of an active loan to `Returned`, whi
 - **WHEN** that loan is returned
 - **THEN** the request is rejected
 
+#### Scenario: Simultaneous returns
+- **GIVEN** a loan for "TELLO-07" is active
+- **WHEN** the same loan is returned twice at the same time
+- **THEN** exactly one return succeeds
+- **AND** the other is rejected
+- **AND** the loan keeps the return date of the successful return
+
 #### Scenario: Drone can be loaned again after return
 - **GIVEN** the loan of "TELLO-07" to "Group 3" has been returned
 - **WHEN** "TELLO-07" is loaned to "Group 1"
