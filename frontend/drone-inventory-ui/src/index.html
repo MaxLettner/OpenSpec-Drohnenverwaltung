@@ -6,6 +6,18 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Applies the theme before Angular starts so that the page does not flash in the wrong theme.
+    // Same rule as ThemeService: a stored 'light' or 'dark' wins, otherwise the system setting.
+    (function () {
+      var stored = null;
+      var systemDark = false;
+      try { stored = localStorage.getItem('drone-theme'); } catch (e) {}
+      try { systemDark = matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) {}
+      var dark = stored === 'dark' || (stored !== 'light' && systemDark);
+      document.documentElement.classList.toggle('dark', dark);
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>
