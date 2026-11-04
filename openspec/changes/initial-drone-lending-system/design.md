@@ -71,7 +71,7 @@ Names (drone, student group) are trimmed and at most 100 characters; a drone `de
 
 There is deliberately no `DELETE` route for loans, drones or groups. A `DELETE /api/loans/{id}` therefore answers `405 Method Not Allowed`, because the `GET` route on the same path exists.
 
-Validation details: the create-drone body rejects unknown members (`JsonUnmappedMemberHandling.Disallow`), which rejects a supplied `status`. Enums are serialised as strings and an unknown `type` is a 400. `quantity` is a JSON integer; a fractional or negative value is a 400.
+Validation details: the create-drone body rejects unknown members (`JsonUnmappedMemberHandling.Disallow`), which rejects a supplied `status`. Enums are serialised as strings and an unknown `type` is a 400. `quantity` is a JSON integer; a fractional or negative value is a 400. JSON numbers are read strictly for every endpoint (`JsonNumberHandling.Strict`): a quoted number such as `"droneId": "1"` or `"quantity": "2"` is a 400, and numeric enum values are a 400 as well.
 
 ### D6. Dates
 `LoanDate` and `ReturnDate` are calendar dates (`DateOnly`), set by the server from an injected `TimeProvider` so tests can fix the day. "Today" is the current date in UTC (`GetUtcNow()`), independent of the server's time zone. The API carries ISO-8601 (`yyyy-MM-dd`); only the UI renders `dd.MM.yyyy`. A same-day return gives `ReturnDate == LoanDate`, which satisfies "not before".
