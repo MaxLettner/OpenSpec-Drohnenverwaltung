@@ -147,4 +147,13 @@ describe('StudentGroupsPage (REQ-003)', () => {
       'A student group named "Group 1" already exists.',
     ]);
   });
+
+  // ui-theme: "Same look on every page"
+  it('uses the shared button, input and table styles', () => {
+    loadPage([{ id: 1, name: 'Group 1' }]);
+
+    expect(createButton().getAttribute('data-slot')).toBe('button');
+    expect(nameInput().getAttribute('data-slot')).toBe('input');
+    expect(element('div[data-slot="table-container"] table[data-slot="table"]')).not.toBeNull();
+  });
 });
