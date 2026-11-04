@@ -15,6 +15,11 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmButton } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmInput } from '@spartan-ng/helm/input';
+import { HlmLabel } from '@spartan-ng/helm/label';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { StudentGroup } from './student-group.models';
 import { StudentGroupService } from './student-group.service';
 
@@ -33,71 +38,72 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
  */
 @Component({
   selector: 'app-student-groups-page',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    HlmButton,
+    HlmCardImports,
+    HlmInput,
+    HlmLabel,
+    HlmTableImports,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block space-y-6' },
   template: `
-    <h1>Student groups</h1>
+    <h1 class="text-2xl font-semibold tracking-tight">Student groups</h1>
 
-    <section aria-labelledby="create-student-group-heading">
-      <h2 id="create-student-group-heading">Create student group</h2>
-      <form [formGroup]="form" (ngSubmit)="createGroup()">
-        <label for="student-group-name">Name</label>
-        <input
-          id="student-group-name"
-          type="text"
-          formControlName="name"
-          maxlength="100"
-          autocomplete="off"
-        />
-        <button type="submit" [disabled]="form.invalid || saving()">Create</button>
-      </form>
+    <section hlmCard aria-labelledby="create-student-group-heading">
+      <div hlmCardHeader>
+        <h2 hlmCardTitle id="create-student-group-heading">Create student group</h2>
+      </div>
+      <div hlmCardContent>
+        <form class="grid max-w-xl gap-4" [formGroup]="form" (ngSubmit)="createGroup()">
+          <div class="grid gap-2">
+            <label hlmLabel for="student-group-name">Name</label>
+            <input
+              hlmInput
+              id="student-group-name"
+              type="text"
+              formControlName="name"
+              maxlength="100"
+              autocomplete="off"
+            />
+          </div>
+          <div>
+            <button hlmBtn type="submit" [disabled]="form.invalid || saving()">Create</button>
+          </div>
+        </form>
+      </div>
     </section>
 
-    <section aria-labelledby="student-group-list-heading">
-      <h2 id="student-group-list-heading">Student groups</h2>
-      @if (groups(); as list) {
-        @if (list.length === 0) {
-          <p>No student groups yet.</p>
-        } @else {
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (group of list; track group.id) {
-                <tr>
-                  <td>{{ group.name }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+    <section hlmCard aria-labelledby="student-group-list-heading">
+      <div hlmCardHeader>
+        <h2 hlmCardTitle id="student-group-list-heading">Student groups</h2>
+      </div>
+      <div hlmCardContent>
+        @if (groups(); as list) {
+          @if (list.length === 0) {
+            <p class="text-sm text-muted-foreground">No student groups yet.</p>
+          } @else {
+            <div hlmTableContainer>
+              <table hlmTable>
+                <thead hlmTHead>
+                  <tr hlmTr>
+                    <th hlmTh scope="col">Name</th>
+                  </tr>
+                </thead>
+                <tbody hlmTBody>
+                  @for (group of list; track group.id) {
+                    <tr hlmTr>
+                      <td hlmTd>{{ group.name }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         }
-      }
+      </div>
     </section>
-  `,
-  styles: `
-    form {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    input {
-      min-width: 16rem;
-    }
-
-    table {
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 0.4rem 1rem 0.4rem 0;
-      text-align: left;
-    }
   `,
 })
 export class StudentGroupsPage implements OnInit {
