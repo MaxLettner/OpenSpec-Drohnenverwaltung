@@ -1,1 +1,1 @@
-# OpenSpec-Drohenverwaltung
+# OpenSpec-Drohnenverwaltung
