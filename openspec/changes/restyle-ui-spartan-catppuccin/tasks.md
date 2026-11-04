@@ -23,7 +23,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 4. Rider on macOS
 
-- [ ] 4.1 Add shared Rider run configurations in `.run/` at the repository root (`Backend`, `Frontend`, compound `Drone Lending System`) and document them with the one-time `npm install` in `README.md`; verify the XML files are well-formed, that the referenced project, launch profile `http`, `package.json` and `start` script exist, that `dotnet run --project backend/DroneInventory.Api` and `npm start` start as documented, and that the configurations appear and start both apps from the repository root folder in Rider on macOS (#67)
+- [x] 4.1 Add shared Rider run configurations in `.run/` at the repository root (`Backend`, `Frontend`, compound `Drone Lending System`) and document them with the one-time `npm install` in `README.md`; verify the XML files are well-formed, that the referenced project, launch profile `http`, `package.json` and `start` script exist, that `dotnet run --project backend/DroneInventory.Api` and `npm start` start as documented, and that the configurations appear and start both apps from the repository root folder in Rider on macOS (#67)
 
 ## 5. Integration
 
