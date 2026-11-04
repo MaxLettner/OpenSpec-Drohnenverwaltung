@@ -15,7 +15,15 @@ public static class StudentGroupEndpoints
     {
         var group = app.MapGroup("/api/student-groups");
         group.MapPost("/", CreateAsync);
+        group.MapGet("/", ListAsync);
     }
+
+    // Fixed order by name (design D10); the NOCASE collation makes it case-insensitive.
+    private static async Task<IResult> ListAsync(AppDbContext db) =>
+        Results.Ok(await db.StudentGroups
+            .OrderBy(g => g.Name)
+            .Select(g => new StudentGroupResponse(g.Id, g.Name))
+            .ToListAsync());
 
     private static async Task<IResult> CreateAsync(CreateStudentGroupRequest request, AppDbContext db)
     {
