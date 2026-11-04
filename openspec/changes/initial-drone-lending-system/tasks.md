@@ -39,7 +39,8 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 - [x] 8.1 Implement `GET /api/loans/active` returning group, drone, batteries, propellers (0 when absent) and loan date; verify tests for the reference-example, returned-not-listed, no-accessories and empty-list scenarios (#12)
 - [x] 8.2 Implement `GET /api/loans/history` returning returned loans with both dates; verify tests for the returned-stays-in-history and active-not-in-history scenarios (#13)
-- [ ] 8.3 Verify retention: no delete route exists for loans, and return keeps the loan and its items; verify tests for the return-does-not-delete and no-way-to-delete scenarios (`DELETE /api/loans/{id}` answers 405) (#14)
+- [x] 8.3 Verify retention: no delete route exists for loans, and return keeps the loan and its items; verify tests for the return-does-not-delete and no-way-to-delete scenarios (`DELETE /api/loans/{id}` answers 405) (#14)
+
 
 ## 9. Frontend foundation
 
