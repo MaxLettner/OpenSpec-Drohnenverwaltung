@@ -65,6 +65,39 @@ describe('LoanHistoryPage (REQ-010)', () => {
     expect(rows()).toEqual([['Group 3', 'TELLO-07', '4', '8', '19.08.2026', '20.08.2026']]);
   });
 
+  it('uses the shared table style inside a scrollable container on narrow viewports (ui-theme)', () => {
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/loans/history' }).flush([
+      {
+        id: 5,
+        group: 'Group 3',
+        drone: 'TELLO-07',
+        batteries: 4,
+        propellers: 8,
+        loanDate: '2026-08-19',
+        returnDate: '2026-08-20',
+      },
+    ]);
+    fixture.detectChanges();
+
+    const container = element().querySelector<HTMLElement>(
+      '[data-slot="card"] div[data-slot="table-container"]',
+    )!;
+    expect(container.querySelector('table[data-slot="table"]')).not.toBeNull();
+    expect(
+      container.querySelector('thead[data-slot="table-header"] th[data-slot="table-head"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('tbody[data-slot="table-body"] td[data-slot="table-cell"]'),
+    ).not.toBeNull();
+    expect(container.classList.contains('overflow-x-auto')).toBe(true);
+
+    // The page root has no fixed width, so the table container scrolls instead of the page.
+    expect(element().className).toContain('block');
+    expect(element().className).not.toMatch(/\b(w-\d|w-\[|min-w-|max-w-)/);
+    expect(element().style.width).toBe('');
+  });
+
   it('shows the empty state when no loan has been returned yet (REQ-010)', () => {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/loans/history' }).flush([]);

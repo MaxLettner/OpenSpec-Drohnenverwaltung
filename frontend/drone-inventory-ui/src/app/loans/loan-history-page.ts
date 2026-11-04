@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoanHistoryRow } from './loan.models';
 import { LoanService } from './loan.service';
@@ -14,58 +16,55 @@ type LoadState = 'loading' | 'loaded' | 'failed';
  */
 @Component({
   selector: 'app-loan-history-page',
-  imports: [DateDisplayPipe],
+  host: { class: 'block space-y-6' },
+  imports: [DateDisplayPipe, HlmCardImports, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <h1>History</h1>
+    <h1 class="text-2xl font-semibold tracking-tight">History</h1>
 
     @switch (state()) {
       @case ('loading') {
-        <p>Loading loan history...</p>
+        <p class="text-sm text-muted-foreground">Loading loan history...</p>
       }
       @case ('loaded') {
         @if (rows().length === 0) {
-          <p>No returned loans yet.</p>
+          <p class="text-sm text-muted-foreground">No returned loans yet.</p>
         } @else {
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Group</th>
-                <th scope="col">Drone</th>
-                <th scope="col">Batteries</th>
-                <th scope="col">Propellers</th>
-                <th scope="col">Loan Date</th>
-                <th scope="col">Return Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of rows(); track row.id) {
-                <tr>
-                  <td>{{ row.group }}</td>
-                  <td>{{ row.drone }}</td>
-                  <td>{{ row.batteries }}</td>
-                  <td>{{ row.propellers }}</td>
-                  <td>{{ row.loanDate | dateDisplay }}</td>
-                  <td>{{ row.returnDate | dateDisplay }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+          <section hlmCard aria-labelledby="loan-history-title">
+            <div hlmCardHeader>
+              <h2 hlmCardTitle id="loan-history-title">Returned loans</h2>
+            </div>
+            <div hlmCardContent>
+              <div hlmTableContainer>
+                <table hlmTable>
+                  <thead hlmTHead>
+                    <tr hlmTr>
+                      <th hlmTh scope="col">Group</th>
+                      <th hlmTh scope="col">Drone</th>
+                      <th hlmTh scope="col">Batteries</th>
+                      <th hlmTh scope="col">Propellers</th>
+                      <th hlmTh scope="col">Loan Date</th>
+                      <th hlmTh scope="col">Return Date</th>
+                    </tr>
+                  </thead>
+                  <tbody hlmTBody>
+                    @for (row of rows(); track row.id) {
+                      <tr hlmTr>
+                        <td hlmTd>{{ row.group }}</td>
+                        <td hlmTd>{{ row.drone }}</td>
+                        <td hlmTd>{{ row.batteries }}</td>
+                        <td hlmTd>{{ row.propellers }}</td>
+                        <td hlmTd>{{ row.loanDate | dateDisplay }}</td>
+                        <td hlmTd>{{ row.returnDate | dateDisplay }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
         }
       }
-    }
-  `,
-  styles: `
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      text-align: left;
-      padding: 0.5rem;
-      border-bottom: 1px solid #ddd;
     }
   `,
 })
