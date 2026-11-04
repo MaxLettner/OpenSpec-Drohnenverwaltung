@@ -9,13 +9,30 @@ public record CreateDroneRequest(string? Name, string? Description);
 
 public record DroneResponse(int Id, string Name, string? Description);
 
+public record DroneListItemResponse(int Id, string Name, string? Description, Availability Availability);
+
 public static class DroneEndpoints
 {
     public static void MapDroneEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/drones");
         group.MapPost("/", CreateAsync);
+        group.MapGet("/", ListAsync);
     }
+
+    // REQ-002: availability is derived in a single query from the existence of an active loan (design D3).
+    // Fixed order by name (design D10); the NOCASE collation makes it case-insensitive.
+    private static async Task<IResult> ListAsync(AppDbContext db) =>
+        Results.Ok(await db.Drones
+            .OrderBy(d => d.Name)
+            .Select(d => new DroneListItemResponse(
+                d.Id,
+                d.Name,
+                d.Description,
+                db.Loans.Any(l => l.DroneId == d.Id && l.Status == LoanStatus.Active)
+                    ? Availability.Loaned
+                    : Availability.Available))
+            .ToListAsync());
 
     private static async Task<IResult> CreateAsync(CreateDroneRequest request, AppDbContext db)
     {
