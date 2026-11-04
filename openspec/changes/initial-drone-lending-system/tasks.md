@@ -52,7 +52,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 - [x] 10.3 Student group page with form and list — REQ-003; verify component tests for create, list and the duplicate error (#19)
 - [ ] 10.4 Loan form (drone from available drones, group, battery and propeller quantities) — REQ-004, REQ-005, REQ-006; verify component tests for a successful loan and for the backend rejections being displayed (#20)
 - [ ] 10.5 Active loan list with Group, Drone, Batteries, Propellers, Loan Date and a return action — REQ-007, REQ-008; verify component tests that the reference-example rows render and that returning removes the row (#21)
-- [ ] 10.6 Loan history list with both dates — REQ-010; verify a component test that returned loans render with loan date and return date (#22)
+- [x] 10.6 Loan history list with both dates — REQ-010; verify a component test that returned loans render with loan date and return date (#22)
 
 ## 11. Integration
 
