@@ -65,6 +65,11 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(groups);
   }
 
+  /** After a successful return the loan form reloads its drones (REQ-008). */
+  function answerDroneReload(drones: Drone[] = []): void {
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush(drones);
+  }
+
   /** Renders the page and answers its initial GET /api/loans/active with the given rows. */
   function loadRows(loans: ActiveLoanRow[]): void {
     fixture.detectChanges();
@@ -190,6 +195,7 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
       items: [],
     };
     req.flush(returned);
+    answerDroneReload();
     fixture.detectChanges();
 
     expect(rows()).toEqual(['Group 3 | TELLO-07 | 4 | 8 | 19.08.2026']);
@@ -212,6 +218,7 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
       returnDate: '2026-08-19',
       items: [],
     });
+    answerDroneReload();
     fixture.detectChanges();
 
     expect(rows()).toEqual(['Group 1 | TELLO-02 | 3 | 4 | 19.08.2026']);
@@ -245,6 +252,7 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
       returnDate: '2026-08-19',
       items: [],
     });
+    answerDroneReload();
     fixture.detectChanges();
 
     expect(rows()).toEqual(['Group 3 | TELLO-07 | 4 | 8 | 19.08.2026']);
@@ -273,5 +281,153 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'The loan has already been returned.',
     ]);
+  });
+});
+
+/** loan spec: Offer a returned drone for a new loan (REQ-008, REQ-005). */
+describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', () => {
+  let fixture: ComponentFixture<LoansPage>;
+  let http: HttpTestingController;
+
+  const element = () => fixture.nativeElement as HTMLElement;
+  const droneSelect = () => element().querySelector<HTMLSelectElement>('#loan-drone');
+  const groupSelect = () => element().querySelector<HTMLSelectElement>('#loan-group')!;
+  const batteriesInput = () => element().querySelector<HTMLInputElement>('#loan-batteries')!;
+  const droneOptions = () =>
+    Array.from(droneSelect()?.querySelectorAll('option') ?? []).map((o) => o.textContent?.trim());
+  const returnButton = () => element().querySelector<HTMLButtonElement>('tbody button')!;
+  const submitButton = () => element().querySelector<HTMLButtonElement>('button[type="submit"]')!;
+
+  const tello07Loan: ActiveLoanRow = {
+    id: 5,
+    group: 'Group 3',
+    drone: 'TELLO-07',
+    batteries: 0,
+    propellers: 0,
+    loanDate: '2026-08-19',
+  };
+  const tello07 = (availability: Drone['availability']): Drone => ({
+    id: 7,
+    name: 'TELLO-07',
+    description: null,
+    availability,
+  });
+  const tello08: Drone = { id: 8, name: 'TELLO-08', description: null, availability: 'Available' };
+  const group1: StudentGroup = { id: 1, name: 'Group 1' };
+  const group3: StudentGroup = { id: 3, name: 'Group 3' };
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorToastInterceptor])),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(LoansPage);
+  });
+
+  afterEach(() => http.verify());
+
+  /** Renders the page with one active loan of TELLO-07 and the given drones and groups. */
+  function openPage(drones: Drone[]): void {
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([tello07Loan]);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush(drones);
+    http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush([group1, group3]);
+    fixture.detectChanges();
+  }
+
+  function returnTello07(): void {
+    returnButton().click();
+    fixture.detectChanges();
+    http.expectOne({ method: 'POST', url: '/api/loans/5/return' }).flush({
+      id: 5,
+      droneId: 7,
+      studentGroupId: 3,
+      status: 'Returned',
+      loanDate: '2026-08-19',
+      returnDate: '2026-08-19',
+      items: [],
+    });
+  }
+
+  function choose(select: HTMLSelectElement, value: string): void {
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+  }
+
+  it('Returned drone is offered again without reloading the page', () => {
+    openPage([tello07('Loaned')]);
+    expect(element().textContent).toContain('No drones available.');
+    expect(droneSelect()).toBeNull();
+
+    returnTello07();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available')]);
+    fixture.detectChanges();
+
+    expect(element().textContent).not.toContain('No drones available.');
+    expect(droneOptions()).toEqual(['Choose a drone', 'TELLO-07']);
+    // Only the drone list was requested again: the page was not reloaded.
+    http.expectNone({ method: 'GET', url: '/api/loans/active' });
+  });
+
+  it('Entered values are kept while the returned drone is added', () => {
+    openPage([tello07('Loaned'), tello08]);
+    choose(droneSelect()!, '8');
+    choose(groupSelect(), '1');
+    batteriesInput().value = '2';
+    batteriesInput().dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    returnTello07();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available'), tello08]);
+    fixture.detectChanges();
+
+    expect(droneSelect()!.value).toBe('8');
+    expect(groupSelect().value).toBe('1');
+    expect(batteriesInput().value).toBe('2');
+    expect(droneOptions()).toEqual(['Choose a drone', 'TELLO-07', 'TELLO-08']);
+  });
+
+  it('Rejected return changes nothing', () => {
+    openPage([tello07('Loaned')]);
+
+    returnButton().click();
+    http.expectOne({ method: 'POST', url: '/api/loans/5/return' }).flush(
+      { title: 'Conflict', status: 409, detail: 'The loan is already returned.' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    fixture.detectChanges();
+
+    http.expectNone({ method: 'GET', url: '/api/drones' });
+    expect(element().textContent).toContain('No drones available.');
+    expect(element().querySelectorAll('tbody tr').length).toBe(1);
+  });
+
+  it('Returned drone can be loaned again at once', () => {
+    openPage([tello07('Loaned')]);
+    returnTello07();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available')]);
+    fixture.detectChanges();
+
+    choose(droneSelect()!, '7');
+    choose(groupSelect(), '1');
+    submitButton().click();
+
+    const req = http.expectOne({ method: 'POST', url: '/api/loans' });
+    expect(req.request.body).toEqual({ droneId: 7, studentGroupId: 1 });
+    // Answer the follow-up reloads that a successful loan triggers.
+    req.flush({
+      id: 6,
+      droneId: 7,
+      studentGroupId: 1,
+      status: 'Active',
+      loanDate: '2026-08-19',
+      returnDate: null,
+      items: [],
+    });
+    http.match({ method: 'GET' }).forEach((request) => request.flush([]));
   });
 });
