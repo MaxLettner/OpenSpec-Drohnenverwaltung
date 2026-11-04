@@ -5,7 +5,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 1. Foundation
 
 - [x] 1.1 Add Tailwind CSS v4 (`.postcssrc.json`, `@import 'tailwindcss'`), `@spartan-ng/brain`, `@spartan-ng/cli`, `@angular/cdk`, `clsx`, `tw-animate-css` and an icon library; set up the Spartan CLI config and generate the helm components that are needed (button, input, label, textarea, card, badge, table classes, native-select style) into `frontend/drone-inventory-ui/src/app/ui/`; verify `npm run build` and `npm test -- --watch=false` pass and a generated button renders in a component test (#57)
-- [ ] 1.2 Define the shadcn token set for Catppuccin Latte (`:root`) and Macchiato (`.dark`) in `styles.css` with Mauve primary/ring, Red destructive, Green available, Peach loaned and neutral surfaces, mapped via `@theme inline`; verify unit tests for the scenarios "Accents come from the active flavor" and "Readable text in both themes" (token pairs of button, input, table, badge and error message reach a contrast ratio of at least 4.5:1 in both themes) (#58)
+- [x] 1.2 Define the shadcn token set for Catppuccin Latte (`:root`) and Macchiato (`.dark`) in `styles.css` with Mauve primary/ring, Red destructive, Green available, Peach loaned and neutral surfaces, mapped via `@theme inline`; verify unit tests for the scenarios "Accents come from the active flavor" and "Readable text in both themes" (token pairs of button, input, table, badge and error message reach a contrast ratio of at least 4.5:1 in both themes) (#58)
 
 ## 2. Theme switching and app shell
 
