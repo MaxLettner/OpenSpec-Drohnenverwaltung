@@ -18,7 +18,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 4. Loan model — REQ-005, REQ-006, REQ-010
 
-- [ ] 4.1 Implement `Loan`, `LoanItem`, `LoanStatus` and `LoanItemType`, the migration with the partial unique index on active loans per drone, the unique `(LoanId, Type)` index and restrict-delete relations; verify persistence tests that a second active loan for one drone is rejected by the database and that two returned loans for one drone are allowed (#6)
+- [x] 4.1 Implement `Loan`, `LoanItem`, `LoanStatus` and `LoanItemType`, the migration with the partial unique index on active loans per drone, the unique `(LoanId, Type)` index and restrict-delete relations; verify persistence tests that a second active loan for one drone is rejected by the database and that two returned loans for one drone are allowed (#6)
 
 ## 5. Drone list (backend) — REQ-002
 
