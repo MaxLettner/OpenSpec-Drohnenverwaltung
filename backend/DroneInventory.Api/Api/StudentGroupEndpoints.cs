@@ -30,18 +30,14 @@ public static class StudentGroupEndpoints
         var name = request.Name?.Trim();
         if (string.IsNullOrEmpty(name))
         {
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            {
-                ["name"] = ["The name must not be blank."],
-            });
+            return ApiResults.ValidationError("name", "The name must not be blank.");
         }
 
         if (name.Length > StudentGroup.NameMaxLength)
         {
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            {
-                ["name"] = [$"The name must not be longer than {StudentGroup.NameMaxLength} characters."],
-            });
+            return ApiResults.ValidationError(
+                "name",
+                $"The name must not be longer than {StudentGroup.NameMaxLength} characters.");
         }
 
         var studentGroup = new StudentGroup { Name = name };
@@ -53,9 +49,7 @@ public static class StudentGroupEndpoints
         catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteErrorCode: 19 })
         {
             // The unique index is the single enforcement point, so simultaneous requests are safe too.
-            return Results.Problem(
-                statusCode: StatusCodes.Status409Conflict,
-                detail: $"A student group named \"{name}\" already exists.");
+            return ApiResults.DuplicateName("student group", name);
         }
 
         return Results.Created(

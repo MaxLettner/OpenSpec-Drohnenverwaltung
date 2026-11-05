@@ -18,12 +18,11 @@ import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmNativeSelectImports } from '@spartan-ng/helm/native-select';
 import { Drone } from '../drones/drone.models';
 import { DroneService } from '../drones/drone.service';
+import { LoadState } from '../shared/load-state';
 import { StudentGroup } from '../student-groups/student-group.models';
 import { StudentGroupService } from '../student-groups/student-group.service';
 import { CreateLoanRequest, Loan, LoanItem } from './loan.models';
 import { LoanService } from './loan.service';
-
-type LoadState = 'loading' | 'loaded' | 'failed';
 
 /**
  * An accessory quantity as typed: `undefined` when the field is empty (no item is sent),

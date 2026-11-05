@@ -11,13 +11,6 @@ namespace DroneInventory.Api.Tests;
 /// <summary>REQ-004 "Loan a drone" (specs/loan).</summary>
 public class LoanCreateTests
 {
-    private static async Task<int> CreateAsync(HttpClient client, string url, object body)
-    {
-        var response = await client.PostAsJsonAsync(url, body);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
-    }
-
     private static async Task<int> LoanCountAsync(ApiFactory factory)
     {
         using var scope = factory.Services.CreateScope();
@@ -29,8 +22,8 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = groupId });
 
@@ -58,8 +51,8 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = groupId });
 
@@ -75,7 +68,7 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = 9 });
 
@@ -89,7 +82,7 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId = 99, studentGroupId = groupId });
 
@@ -103,8 +96,8 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
 
         var response = await client.PostAsJsonAsync(
             "/api/loans", new { droneId, studentGroupId = groupId, loanDate = "2020-01-01" });
@@ -123,8 +116,8 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
         object body = kind switch
         {
             "missing-both" => new { },

@@ -3,11 +3,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { LoadState } from '../shared/load-state';
 import { DroneForm } from './drone-form';
 import { Drone } from './drone.models';
 import { DroneService } from './drone.service';
-
-type LoadState = 'loading' | 'loaded' | 'failed';
 
 /**
  * Lists all drones with their availability (REQ-002) and embeds the form that adds drones (REQ-001).
@@ -85,8 +84,8 @@ export class DronesPage {
   private readonly droneService = inject(DroneService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly state = signal<LoadState>('loading');
-  readonly drones = signal<readonly Drone[]>([]);
+  protected readonly state = signal<LoadState>('loading');
+  protected readonly drones = signal<readonly Drone[]>([]);
 
   constructor() {
     this.reload();

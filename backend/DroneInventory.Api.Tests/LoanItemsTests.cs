@@ -12,16 +12,9 @@ namespace DroneInventory.Api.Tests;
 /// <summary>REQ-006 "Loan accessories" (specs/loan).</summary>
 public class LoanItemsTests
 {
-    private static async Task<int> CreateAsync(HttpClient client, string url, object body)
-    {
-        var response = await client.PostAsJsonAsync(url, body);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
-    }
-
     private static async Task<(int DroneId, int GroupId)> SeedAsync(HttpClient client) => (
-        await CreateAsync(client, "/api/drones", new { name = "TELLO-07" }),
-        await CreateAsync(client, "/api/student-groups", new { name = "Group 3" }));
+        await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" }),
+        await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" }));
 
     private static Task<HttpResponseMessage> PostRawAsync(HttpClient client, string json) =>
         client.PostAsync("/api/loans", new StringContent(json, Encoding.UTF8, "application/json"));

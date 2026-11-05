@@ -39,12 +39,13 @@ public static class DroneEndpoints
         var name = request.Name?.Trim();
         if (string.IsNullOrEmpty(name))
         {
-            return ValidationError("name", "The name must not be blank.");
+            return ApiResults.ValidationError("name", "The name must not be blank.");
         }
 
         if (name.Length > Drone.NameMaxLength)
         {
-            return ValidationError("name", $"The name must not be longer than {Drone.NameMaxLength} characters.");
+            return ApiResults.ValidationError(
+                "name", $"The name must not be longer than {Drone.NameMaxLength} characters.");
         }
 
         var description = request.Description?.Trim();
@@ -54,7 +55,7 @@ public static class DroneEndpoints
         }
         else if (description.Length > Drone.DescriptionMaxLength)
         {
-            return ValidationError(
+            return ApiResults.ValidationError(
                 "description",
                 $"The description must not be longer than {Drone.DescriptionMaxLength} characters.");
         }
@@ -68,14 +69,9 @@ public static class DroneEndpoints
         catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteErrorCode: 19 })
         {
             // The unique index is the single enforcement point, so simultaneous requests are safe too.
-            return Results.Problem(
-                statusCode: StatusCodes.Status409Conflict,
-                detail: $"A drone named \"{name}\" already exists.");
+            return ApiResults.DuplicateName("drone", name);
         }
 
         return Results.Created($"/api/drones/{drone.Id}", new DroneResponse(drone.Id, drone.Name, drone.Description));
     }
-
-    private static IResult ValidationError(string field, string message) =>
-        Results.ValidationProblem(new Dictionary<string, string[]> { [field] = [message] });
 }

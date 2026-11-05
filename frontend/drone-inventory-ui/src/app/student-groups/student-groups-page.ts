@@ -24,7 +24,7 @@ import { StudentGroup } from './student-group.models';
 import { StudentGroupService } from './student-group.service';
 
 /** Maximum length of a student group name, as in the backend (REQ-003). */
-export const MAX_STUDENT_GROUP_NAME_LENGTH = 100;
+const MAX_STUDENT_GROUP_NAME_LENGTH = 100;
 
 /** Rejects names that consist only of whitespace; the backend trims and rejects them too. */
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {

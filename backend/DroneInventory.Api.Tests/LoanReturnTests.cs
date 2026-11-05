@@ -10,18 +10,11 @@ namespace DroneInventory.Api.Tests;
 /// <summary>REQ-008 "Return a loan" and REQ-009 "Store the return date" (specs/loan).</summary>
 public class LoanReturnTests
 {
-    private static async Task<int> CreateAsync(HttpClient client, string url, object body)
-    {
-        var response = await client.PostAsJsonAsync(url, body);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
-    }
-
     private static async Task<(int DroneId, int GroupId, int LoanId)> LoanAsync(HttpClient client)
     {
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
-        var loanId = await CreateAsync(client, "/api/loans", new
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var loanId = await TestApi.CreateAsync(client, "/api/loans", new
         {
             droneId,
             studentGroupId = groupId,
@@ -141,11 +134,11 @@ public class LoanReturnTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
         var (droneId, groupId, loanId) = await LoanAsync(client);
-        var group1 = await CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
+        var group1 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
         await client.PostAsync($"/api/loans/{loanId}/return", null);
         var returned = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
 
-        var newId = await CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
+        var newId = await TestApi.CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
 
         Assert.NotEqual(loanId, newId);
         var added = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{newId}");
