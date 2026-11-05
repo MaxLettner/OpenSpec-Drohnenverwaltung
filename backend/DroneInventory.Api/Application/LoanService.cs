@@ -66,17 +66,7 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
             return CreateLoanResult.NotAvailable(droneId);
         }
 
-        var loan = new Loan
-        {
-            DroneId = droneId,
-            StudentGroupId = studentGroupId,
-            Status = LoanStatus.Active,
-            LoanDate = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime),
-            Items = (items ?? [])
-                .OrderBy(i => i!.Type)
-                .Select(i => new LoanItem { Type = i!.Type!.Value, Quantity = i.Quantity!.Value })
-                .ToList(),
-        };
+        var loan = NewLoan(droneId, studentGroupId, items);
         db.Loans.Add(loan);
         try
         {
@@ -115,7 +105,7 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
             return ReturnLoanResult.AlreadyReturned(id);
         }
 
-        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var today = Today();
         var returnDate = today < loan.LoanDate ? loan.LoanDate : today;
 
         // Atomic: the row changes only while it is still Active, so of several simultaneous returns
@@ -136,6 +126,22 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
 
         return ReturnLoanResult.Returned((await GetAsync(id))!);
     }
+
+    /// <summary>The new Active loan, dated today, with the already validated items in a fixed order (Battery first).</summary>
+    private Loan NewLoan(int droneId, int studentGroupId, IReadOnlyList<LoanItemInput?>? items) => new()
+    {
+        DroneId = droneId,
+        StudentGroupId = studentGroupId,
+        Status = LoanStatus.Active,
+        LoanDate = Today(),
+        Items = (items ?? [])
+            .OrderBy(i => i!.Type)
+            .Select(i => new LoanItem { Type = i!.Type!.Value, Quantity = i.Quantity!.Value })
+            .ToList(),
+    };
+
+    /// <summary>Today in UTC. The server sets the dates, the caller never supplies them (REQ-004, REQ-009).</summary>
+    private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
     private static Dictionary<string, string[]> ValidateItems(IReadOnlyList<LoanItemInput?>? items)
     {

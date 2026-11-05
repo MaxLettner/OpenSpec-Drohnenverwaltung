@@ -11,13 +11,6 @@ namespace DroneInventory.Api.Tests;
 /// <summary>REQ-005 "One active loan per drone" (specs/loan).</summary>
 public class LoanConflictTests
 {
-    private static async Task<int> CreateAsync(HttpClient client, string url, object body)
-    {
-        var response = await client.PostAsJsonAsync(url, body);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
-    }
-
     private static async Task<List<Loan>> LoansAsync(ApiFactory factory)
     {
         using var scope = factory.Services.CreateScope();
@@ -38,10 +31,10 @@ public class LoanConflictTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var group1 = await CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
-        var group2 = await CreateAsync(client, "/api/student-groups", new { name = "Group 2" });
-        var firstId = await CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var group1 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
+        var group2 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 2" });
+        var firstId = await TestApi.CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = group2 });
 
@@ -58,9 +51,9 @@ public class LoanConflictTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var group1 = await CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
-        await CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var group1 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
+        await TestApi.CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
         var drones = await client.GetFromJsonAsync<JsonElement>("/api/drones");
         Assert.Equal("Loaned", drones[0].GetProperty("availability").GetString());
 
@@ -75,9 +68,9 @@ public class LoanConflictTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var group1 = await CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
-        var group2 = await CreateAsync(client, "/api/student-groups", new { name = "Group 2" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var group1 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
+        var group2 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 2" });
         // The service's pre-check sees no active loan; right before its INSERT the other request "wins".
         factory.BeforeNextSaveChanges = connection =>
         {
@@ -101,9 +94,9 @@ public class LoanConflictTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var group1 = await CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
-        var group2 = await CreateAsync(client, "/api/student-groups", new { name = "Group 2" });
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var group1 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
+        var group2 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 2" });
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

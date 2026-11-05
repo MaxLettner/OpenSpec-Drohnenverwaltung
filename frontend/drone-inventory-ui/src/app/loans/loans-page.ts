@@ -12,11 +12,10 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
+import { LoadState } from '../shared/load-state';
 import { ActiveLoanRow } from './loan.models';
 import { LoanForm } from './loan-form';
 import { LoanService } from './loan.service';
-
-type LoadState = 'loading' | 'loaded' | 'failed';
 
 /**
  * Lists the active loans with group, drone, accessory quantities and loan date (REQ-007)

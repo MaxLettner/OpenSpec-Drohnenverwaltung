@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using DroneInventory.Api.Domain;
 using DroneInventory.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,7 +53,7 @@ public class DroneCreateTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var properties = db.Model.FindEntityType(typeof(DroneInventory.Api.Domain.Drone))!
+        var properties = db.Model.FindEntityType(typeof(Drone))!
             .GetProperties().Select(p => p.Name).ToArray();
 
         Assert.Equivalent(new[] { "Id", "Name", "Description" }, properties);

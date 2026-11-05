@@ -13,18 +13,11 @@ namespace DroneInventory.Api.Tests;
 /// <summary>REQ-010 "Retain returned loans" (specs/loan).</summary>
 public class LoanRetentionTests
 {
-    private static async Task<int> CreateAsync(HttpClient client, string url, object body)
-    {
-        var response = await client.PostAsJsonAsync(url, body);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
-    }
-
     private static async Task<int> ActiveLoanAsync(HttpClient client)
     {
-        var droneId = await CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
-        return await CreateAsync(client, "/api/loans", new
+        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        return await TestApi.CreateAsync(client, "/api/loans", new
         {
             droneId,
             studentGroupId = groupId,

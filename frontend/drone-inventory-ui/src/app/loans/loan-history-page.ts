@@ -3,10 +3,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
+import { LoadState } from '../shared/load-state';
 import { LoanHistoryRow } from './loan.models';
 import { LoanService } from './loan.service';
-
-type LoadState = 'loading' | 'loaded' | 'failed';
 
 /**
  * Lists the returned loans with their loan and return dates (REQ-010). The backend only
@@ -71,8 +70,8 @@ type LoadState = 'loading' | 'loaded' | 'failed';
 export class LoanHistoryPage {
   private readonly loanService = inject(LoanService);
 
-  readonly state = signal<LoadState>('loading');
-  readonly rows = signal<readonly LoanHistoryRow[]>([]);
+  protected readonly state = signal<LoadState>('loading');
+  protected readonly rows = signal<readonly LoanHistoryRow[]>([]);
 
   constructor() {
     this.loanService
