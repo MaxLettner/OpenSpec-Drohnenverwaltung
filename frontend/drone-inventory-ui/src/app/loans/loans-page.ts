@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  OnInit,
   inject,
   signal,
   viewChild,
@@ -88,12 +87,15 @@ import { LoanService } from './loan.service';
               </div>
             }
           }
+          @case ('failed') {
+            <p class="text-sm text-muted-foreground">The active loans could not be loaded.</p>
+          }
         }
       </div>
     </section>
   `,
 })
-export class LoansPage implements OnInit {
+export class LoansPage {
   private readonly loanService = inject(LoanService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -104,7 +106,7 @@ export class LoansPage implements OnInit {
   /** Ids of the loans whose return request is running; their return button is disabled. */
   protected readonly returningIds = signal<ReadonlySet<number>>(new Set());
 
-  ngOnInit(): void {
+  constructor() {
     this.loadActiveLoans();
   }
 

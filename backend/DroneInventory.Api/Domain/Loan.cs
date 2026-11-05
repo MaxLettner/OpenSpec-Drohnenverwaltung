@@ -13,7 +13,7 @@ public class Loan
 
     public DateOnly? ReturnDate { get; set; }
 
-    public LoanStatus Status { get; set; } = LoanStatus.Active;
+    public LoanStatus Status { get; set; }
 
     public List<LoanItem> Items { get; set; } = [];
 }

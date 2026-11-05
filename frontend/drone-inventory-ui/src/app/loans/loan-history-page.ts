@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
@@ -64,11 +64,15 @@ import { LoanService } from './loan.service';
           </section>
         }
       }
+      @case ('failed') {
+        <p class="text-sm text-muted-foreground">The loan history could not be loaded.</p>
+      }
     }
   `,
 })
 export class LoanHistoryPage {
   private readonly loanService = inject(LoanService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly rows = signal<readonly LoanHistoryRow[]>([]);
@@ -76,7 +80,7 @@ export class LoanHistoryPage {
   constructor() {
     this.loanService
       .listHistory()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (rows) => {
           this.rows.set(rows);

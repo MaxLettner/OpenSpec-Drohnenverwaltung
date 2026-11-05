@@ -10,19 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests;
 
-/// <summary>REQ-010 "Retain returned loans" (specs/loan).</summary>
+/// <summary>REQ-010 "Retain returned loans" (specs/loan). Each test gets its own database.</summary>
 public class LoanRetentionTests
 {
     private static async Task<int> ActiveLoanAsync(HttpClient client)
     {
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
-        return await TestApi.CreateAsync(client, "/api/loans", new
-        {
-            droneId,
-            studentGroupId = groupId,
-            items = new object[] { new { type = "Battery", quantity = 4 }, new { type = "Propeller", quantity = 8 } },
-        });
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        return await TestApi.CreateLoanAsync(client, droneId, groupId, ("Battery", 4), ("Propeller", 8));
     }
 
     private static async Task AssertLoanKeptAsync(ApiFactory factory, HttpClient client, int loanId)
@@ -68,10 +62,7 @@ public class LoanRetentionTests
 
         var response = await client.DeleteAsync($"/api/loans/{loanId}");
 
-        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(405, problem.GetProperty("status").GetInt32());
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.MethodNotAllowed);
         Assert.Contains("GET", response.Content.Headers.Allow);
         await AssertLoanKeptAsync(factory, client, loanId);
     }

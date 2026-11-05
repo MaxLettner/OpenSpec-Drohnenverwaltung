@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests;
 
-/// <summary>REQ-004 "Loan a drone" (specs/loan).</summary>
+/// <summary>REQ-004 "Loan a drone" (specs/loan). Each test gets its own database.</summary>
 public class LoanCreateTests
 {
     private static async Task<int> LoanCountAsync(ApiFactory factory)
@@ -22,8 +22,7 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = groupId });
 
@@ -51,8 +50,7 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = groupId });
 
@@ -68,12 +66,11 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
+        var (droneId, _) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = 9 });
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.NotFound);
         Assert.Equal(0, await LoanCountAsync(factory));
     }
 
@@ -82,12 +79,11 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var (_, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId = 99, studentGroupId = groupId });
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.NotFound);
         Assert.Equal(0, await LoanCountAsync(factory));
     }
 
@@ -96,13 +92,12 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync(
             "/api/loans", new { droneId, studentGroupId = groupId, loanDate = "2020-01-01" });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.BadRequest);
         Assert.Equal(0, await LoanCountAsync(factory));
     }
 
@@ -116,8 +111,7 @@ public class LoanCreateTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
         object body = kind switch
         {
             "missing-both" => new { },
@@ -129,8 +123,7 @@ public class LoanCreateTests
 
         var response = await client.PostAsJsonAsync("/api/loans", body);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.BadRequest);
         Assert.Equal(0, await LoanCountAsync(factory));
     }
 }

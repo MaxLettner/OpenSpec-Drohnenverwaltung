@@ -1,31 +1,23 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using DroneInventory.Api.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using DroneInventory.Api.Domain;
 
 namespace DroneInventory.Api.Tests;
 
-/// <summary>REQ-003 "Create a student group" (specs/student-group).</summary>
-public class StudentGroupCreateTests(ApiFactory factory) : IClassFixture<ApiFactory>
+/// <summary>REQ-003 "Create a student group" (specs/student-group). Each test gets its own empty database.</summary>
+public class StudentGroupCreateTests
 {
-    private async Task<int> CountAsync(string? nameFilter = null)
-    {
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return nameFilter is null
-            ? await db.StudentGroups.CountAsync()
-            : await db.StudentGroups.CountAsync(g => g.Name == nameFilter);
-    }
-
-    private Task<HttpResponseMessage> PostAsync(object body) =>
-        factory.CreateClient().PostAsJsonAsync("/api/student-groups", body);
+    private static Task<HttpResponseMessage> PostAsync(HttpClient client, object body) =>
+        client.PostAsJsonAsync("/api/student-groups", body);
 
     [Fact]
     public async Task REQ_003_Create_a_student_group()
     {
-        var response = await PostAsync(new { name = "Group 3" });
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+
+        var response = await PostAsync(client, new { name = "Group 3" });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -33,18 +25,21 @@ public class StudentGroupCreateTests(ApiFactory factory) : IClassFixture<ApiFact
         Assert.True(id > 0);
         Assert.Equal("Group 3", created.GetProperty("name").GetString());
         Assert.Equal($"/api/student-groups/{id}", response.Headers.Location?.ToString());
-        Assert.Equal(1, await CountAsync("Group 3"));
+        Assert.Equal(1, await TestApi.CountAsync<StudentGroup>(factory, "Group 3"));
     }
 
     [Fact]
     public async Task REQ_003_Name_is_trimmed()
     {
-        var response = await PostAsync(new { name = "  Group 4 " });
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+
+        var response = await PostAsync(client, new { name = "  Group 4 " });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var created = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("Group 4", created.GetProperty("name").GetString());
-        Assert.Equal(1, await CountAsync("Group 4"));
+        Assert.Equal(1, await TestApi.CountAsync<StudentGroup>(factory, "Group 4"));
     }
 
     [Theory]
@@ -53,30 +48,35 @@ public class StudentGroupCreateTests(ApiFactory factory) : IClassFixture<ApiFact
     [InlineData(null)]
     public async Task REQ_003_Blank_name_is_rejected(string? name)
     {
-        var before = await CountAsync();
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        var before = await TestApi.CountAsync<StudentGroup>(factory);
 
-        var response = await PostAsync(new { name });
+        var response = await PostAsync(client, new { name });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal(before, await CountAsync());
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        Assert.Equal(before, await TestApi.CountAsync<StudentGroup>(factory));
     }
 
     [Fact]
     public async Task REQ_003_Too_long_name_is_rejected()
     {
-        var before = await CountAsync();
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        var before = await TestApi.CountAsync<StudentGroup>(factory);
 
-        var response = await PostAsync(new { name = new string('x', 101) });
+        var response = await PostAsync(client, new { name = new string('x', 101) });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(before, await CountAsync());
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        Assert.Equal(before, await TestApi.CountAsync<StudentGroup>(factory));
     }
 
     [Fact]
     public async Task REQ_003_Name_of_100_characters_is_accepted()
     {
-        var response = await PostAsync(new { name = new string('y', 100) });
+        using var factory = new ApiFactory();
+
+        var response = await PostAsync(factory.CreateClient(), new { name = new string('y', 100) });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
@@ -87,14 +87,15 @@ public class StudentGroupCreateTests(ApiFactory factory) : IClassFixture<ApiFact
     [InlineData("Group 7", " group 7 ")]
     public async Task REQ_003_Duplicate_name_is_rejected_ignoring_case(string first, string second)
     {
-        Assert.Equal(HttpStatusCode.Created, (await PostAsync(new { name = first })).StatusCode);
-        var before = await CountAsync();
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        Assert.Equal(HttpStatusCode.Created, (await PostAsync(client, new { name = first })).StatusCode);
+        var before = await TestApi.CountAsync<StudentGroup>(factory);
 
-        var response = await PostAsync(new { name = second });
+        var response = await PostAsync(client, new { name = second });
 
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal(before, await CountAsync());
-        Assert.Equal(1, await CountAsync(first));
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal(before, await TestApi.CountAsync<StudentGroup>(factory));
+        Assert.Equal(1, await TestApi.CountAsync<StudentGroup>(factory, first));
     }
 }

@@ -77,6 +77,9 @@ import { DroneService } from './drone.service';
           </section>
         }
       }
+      @case ('failed') {
+        <p class="text-sm text-muted-foreground">The drones could not be loaded.</p>
+      }
     }
   `,
 })

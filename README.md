@@ -69,6 +69,9 @@ These configurations are a Rider convenience only; the `dotnet run` and `npm sta
 # Backend (xUnit, from the repository root)
 dotnet test backend
 
+# Backend with code coverage (coverlet, Cobertura XML under backend/DroneInventory.Api.Tests/TestResults/)
+dotnet test backend --collect:"XPlat Code Coverage"
+
 # Frontend (single run, no watch mode)
 cd frontend/drone-inventory-ui
 npm test -- --watch=false

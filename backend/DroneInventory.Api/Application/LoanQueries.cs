@@ -1,12 +1,31 @@
+using System.Text.Json.Serialization;
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace DroneInventory.Api.Application;
 
-public record ActiveLoanRow(int Id, string Group, string Drone, int Batteries, int Propellers, DateOnly LoanDate);
+/// <summary>
+/// One row of the active loan list (REQ-007). The record is the query projection and the API returns it
+/// as it is, so its members carry the JSON names of the API contract (design D5).
+/// </summary>
+public record ActiveLoanRow(
+    int Id,
+    [property: JsonPropertyName("group")] string GroupName,
+    [property: JsonPropertyName("drone")] string DroneName,
+    int Batteries,
+    int Propellers,
+    DateOnly LoanDate);
 
-public record LoanHistoryRow(int Id, string Group, string Drone, int Batteries, int Propellers, DateOnly LoanDate, DateOnly ReturnDate);
+/// <summary>One row of the loan history (REQ-010), with the same members as <see cref="ActiveLoanRow"/>.</summary>
+public record LoanHistoryRow(
+    int Id,
+    [property: JsonPropertyName("group")] string GroupName,
+    [property: JsonPropertyName("drone")] string DroneName,
+    int Batteries,
+    int Propellers,
+    DateOnly LoanDate,
+    DateOnly ReturnDate);
 
 public static class LoanQueries
 {
@@ -25,6 +44,8 @@ public static class LoanQueries
              loan.Id,
              studentGroup.Name,
              drone.Name,
+             // Summed per type in SQL; the same expression twice cannot be factored out without
+             // leaving the translation of the query (a helper call is not translatable).
              db.LoanItems.Where(i => i.LoanId == loan.Id && i.Type == LoanItemType.Battery)
                  .Sum(i => (int?)i.Quantity) ?? 0,
              db.LoanItems.Where(i => i.LoanId == loan.Id && i.Type == LoanItemType.Propeller)
@@ -51,6 +72,7 @@ public static class LoanQueries
              db.LoanItems.Where(i => i.LoanId == loan.Id && i.Type == LoanItemType.Propeller)
                  .Sum(i => (int?)i.Quantity) ?? 0,
              loan.LoanDate,
+             // A returned loan always carries its ReturnDate (REQ-009).
              loan.ReturnDate!.Value))
         .ToListAsync(ct);
 }

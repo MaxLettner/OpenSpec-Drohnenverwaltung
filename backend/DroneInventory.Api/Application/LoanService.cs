@@ -1,39 +1,67 @@
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Infrastructure;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace DroneInventory.Api.Application;
 
 /// <summary>
-/// Outcome of <see cref="LoanService.CreateAsync"/>: the new loan, or why none was created
-/// (<see cref="Invalid"/> = invalid accessories, <see cref="NotFound"/> = unknown drone or group,
-/// <see cref="Conflict"/> = drone not available).
+/// A loan request as the API receives it. Every member may be missing, because the validation has to
+/// name each field it rejects (REQ-004, REQ-006).
 /// </summary>
-public record CreateLoanResult(
-    Loan? Loan, string? NotFound, string? Conflict, IReadOnlyDictionary<string, string[]>? Invalid = null)
-{
-    public static CreateLoanResult Created(Loan loan) => new(loan, null, null);
-
-    public static CreateLoanResult Missing(string message) => new(null, message, null);
-
-    public static CreateLoanResult NotAvailable(int droneId) => new(null, null, $"Drone {droneId} is not available.");
-
-    public static CreateLoanResult InvalidItems(IReadOnlyDictionary<string, string[]> errors) => new(null, null, null, errors);
-}
-
-/// <summary>Outcome of <see cref="LoanService.ReturnAsync"/>: the returned loan, or why not (unknown loan, already returned).</summary>
-public record ReturnLoanResult(Loan? Loan, string? NotFound, string? Conflict)
-{
-    public static ReturnLoanResult Returned(Loan loan) => new(loan, null, null);
-
-    public static ReturnLoanResult Missing(int id) => new(null, $"No loan with Id {id} exists.", null);
-
-    public static ReturnLoanResult AlreadyReturned(int id) => new(null, null, $"Loan {id} is already returned.");
-}
+public record LoanRequest(int? DroneId, int? StudentGroupId, IReadOnlyList<LoanItemInput?>? Items = null);
 
 /// <summary>One requested accessory. Null members and null list elements are reported as validation errors.</summary>
 public record LoanItemInput(LoanItemType? Type, int? Quantity);
+
+/// <summary>Which reference a loan request needs but the system does not have (REQ-004).</summary>
+public enum LoanReference
+{
+    Drone,
+    StudentGroup,
+}
+
+/// <summary>
+/// Outcome of <see cref="LoanService.CreateAsync"/>. Only the nested cases can be constructed, so a
+/// result is exactly one of them and the caller cannot read a case that does not apply.
+/// </summary>
+public abstract record CreateLoanResult
+{
+    private CreateLoanResult()
+    {
+    }
+
+    /// <summary>REQ-004: the loan was created.</summary>
+    public sealed record Created(Loan Loan) : CreateLoanResult;
+
+    /// <summary>REQ-004, REQ-006: the request was rejected; the keys name the offending fields.</summary>
+    public sealed record InvalidInput(Dictionary<string, string[]> Errors) : CreateLoanResult;
+
+    /// <summary>REQ-004: the drone or student group the request refers to does not exist.</summary>
+    public sealed record MissingReference(LoanReference Reference, int Id) : CreateLoanResult;
+
+    /// <summary>REQ-005: the drone already has an active loan.</summary>
+    public sealed record NotAvailable(int DroneId) : CreateLoanResult;
+}
+
+/// <summary>
+/// Outcome of <see cref="LoanService.ReturnAsync"/>. Only the nested cases can be constructed, so a
+/// result is exactly one of them.
+/// </summary>
+public abstract record ReturnLoanResult
+{
+    private ReturnLoanResult()
+    {
+    }
+
+    /// <summary>REQ-008, REQ-009: the loan is returned and carries its ReturnDate.</summary>
+    public sealed record Returned(Loan Loan) : ReturnLoanResult;
+
+    /// <summary>REQ-008: no loan with that Id exists.</summary>
+    public sealed record NotFound(int LoanId) : ReturnLoanResult;
+
+    /// <summary>REQ-008: the loan was already returned, here or by a simultaneous request.</summary>
+    public sealed record AlreadyReturned(int LoanId) : ReturnLoanResult;
+}
 
 /// <summary>Holds the loan rules (design D3). Endpoints only translate HTTP to calls of this service.</summary>
 public class LoanService(AppDbContext db, TimeProvider timeProvider)
@@ -41,29 +69,41 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
     // REQ-004: loan an existing drone to an existing student group; the LoanDate is today and never caller-supplied.
     // REQ-005: a drone has at most one active loan.
     // REQ-006: optional accessories, one item per type, integer quantity >= 0 (0 is allowed).
-    public async Task<CreateLoanResult> CreateAsync(
-        int droneId, int studentGroupId, IReadOnlyList<LoanItemInput?>? items = null)
+    public async Task<CreateLoanResult> CreateAsync(LoanRequest request)
     {
-        var errors = ValidateItems(items);
+        var errors = new Dictionary<string, string[]>();
+        var droneId = request.DroneId.GetValueOrDefault();
+        if (droneId <= 0)
+        {
+            errors["droneId"] = ["The droneId is required and must be positive."];
+        }
+
+        var studentGroupId = request.StudentGroupId.GetValueOrDefault();
+        if (studentGroupId <= 0)
+        {
+            errors["studentGroupId"] = ["The studentGroupId is required and must be positive."];
+        }
+
+        var items = ValidateItems(request.Items, errors);
         if (errors.Count > 0)
         {
-            return CreateLoanResult.InvalidItems(errors);
+            return new CreateLoanResult.InvalidInput(errors);
         }
 
         if (!await db.Drones.AnyAsync(d => d.Id == droneId))
         {
-            return CreateLoanResult.Missing($"No drone with Id {droneId} exists.");
+            return new CreateLoanResult.MissingReference(LoanReference.Drone, droneId);
         }
 
         if (!await db.StudentGroups.AnyAsync(g => g.Id == studentGroupId))
         {
-            return CreateLoanResult.Missing($"No student group with Id {studentGroupId} exists.");
+            return new CreateLoanResult.MissingReference(LoanReference.StudentGroup, studentGroupId);
         }
 
-        // REQ-005 friendly path; the partial unique index below still decides when requests race.
+        // REQ-005 friendly path; the partial unique index still decides when requests race (design D4).
         if (await db.Loans.AnyAsync(l => l.DroneId == droneId && l.Status == LoanStatus.Active))
         {
-            return CreateLoanResult.NotAvailable(droneId);
+            return new CreateLoanResult.NotAvailable(droneId);
         }
 
         var loan = NewLoan(droneId, studentGroupId, items);
@@ -72,20 +112,20 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
         {
             await db.SaveChangesAsync();
         }
-        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        catch (DbUpdateException ex) when (SqliteConstraints.IsUniqueViolation(ex))
         {
             // REQ-005 race path: another request inserted the active loan after the check above.
             db.Entry(loan).State = EntityState.Detached;
-            return CreateLoanResult.NotAvailable(droneId);
+            return new CreateLoanResult.NotAvailable(droneId);
         }
 
-        return CreateLoanResult.Created(loan);
+        return new CreateLoanResult.Created(loan);
     }
 
     // The loan with its items in a fixed order (Battery before Propeller), or null for an unknown Id.
     public async Task<Loan?> GetAsync(int id)
     {
-        var loan = await db.Loans.Include(l => l.Items).AsSplitQuery().FirstOrDefaultAsync(l => l.Id == id);
+        var loan = await db.Loans.AsNoTracking().Include(l => l.Items).FirstOrDefaultAsync(l => l.Id == id);
         loan?.Items.Sort((a, b) => a.Type.CompareTo(b.Type));
         return loan;
     }
@@ -94,62 +134,61 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
     // REQ-009: ReturnDate is today (UTC), never before the LoanDate. Only Status and ReturnDate change.
     public async Task<ReturnLoanResult> ReturnAsync(int id)
     {
-        var loan = await GetAsync(id);
-        if (loan is null)
-        {
-            return ReturnLoanResult.Missing(id);
-        }
-
-        if (loan.Status == LoanStatus.Returned)
-        {
-            return ReturnLoanResult.AlreadyReturned(id);
-        }
-
         var today = Today();
-        var returnDate = today < loan.LoanDate ? loan.LoanDate : today;
 
-        // Atomic: the row changes only while it is still Active, so of several simultaneous returns
+        // One conditional update: the row changes only while it is still Active, so of simultaneous returns
         // exactly one affects a row and the first ReturnDate is never overwritten.
         var affected = await db.Loans
             .Where(l => l.Id == id && l.Status == LoanStatus.Active)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(l => l.Status, LoanStatus.Returned)
-                .SetProperty(l => l.ReturnDate, returnDate));
+                .SetProperty(l => l.ReturnDate, l => l.LoanDate > today ? l.LoanDate : today));
 
-        // Drop the stale tracked copy, then answer from what is stored.
-        db.ChangeTracker.Clear();
         if (affected == 0)
         {
-            // Another return won after the check above (or the loan vanished).
-            return await GetAsync(id) is null ? ReturnLoanResult.Missing(id) : ReturnLoanResult.AlreadyReturned(id);
+            // Nothing changed: the loan does not exist, or another return won the race above.
+            return await db.Loans.AnyAsync(l => l.Id == id)
+                ? new ReturnLoanResult.AlreadyReturned(id)
+                : new ReturnLoanResult.NotFound(id);
         }
 
-        return ReturnLoanResult.Returned((await GetAsync(id))!);
+        return new ReturnLoanResult.Returned(await StoredLoanAsync(id));
     }
 
-    /// <summary>The new Active loan, dated today, with the already validated items in a fixed order (Battery first).</summary>
-    private Loan NewLoan(int droneId, int studentGroupId, IReadOnlyList<LoanItemInput?>? items) => new()
+    /// <summary>The loan the update just matched, with its items in the same fixed order.</summary>
+    private async Task<Loan> StoredLoanAsync(int id)
+    {
+        var loan = await db.Loans.AsNoTracking().Include(l => l.Items).SingleAsync(l => l.Id == id);
+        loan.Items.Sort((a, b) => a.Type.CompareTo(b.Type));
+        return loan;
+    }
+
+    /// <summary>The new Active loan, dated today, with the validated items in a fixed order (Battery first).</summary>
+    private Loan NewLoan(int droneId, int studentGroupId, List<LoanItem> items) => new()
     {
         DroneId = droneId,
         StudentGroupId = studentGroupId,
         Status = LoanStatus.Active,
         LoanDate = Today(),
-        Items = (items ?? [])
-            .OrderBy(i => i!.Type)
-            .Select(i => new LoanItem { Type = i!.Type!.Value, Quantity = i.Quantity!.Value })
-            .ToList(),
+        Items = [.. items.OrderBy(i => i.Type)],
     };
 
     /// <summary>Today in UTC. The server sets the dates, the caller never supplies them (REQ-004, REQ-009).</summary>
     private DateOnly Today() => DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
 
-    private static Dictionary<string, string[]> ValidateItems(IReadOnlyList<LoanItemInput?>? items)
+    /// <summary>
+    /// REQ-006: reports every rejected accessory in <paramref name="errors"/> and returns the accepted
+    /// ones as the items the loan stores.
+    /// </summary>
+    private static List<LoanItem> ValidateItems(
+        IReadOnlyList<LoanItemInput?>? requested, Dictionary<string, string[]> errors)
     {
-        var errors = new Dictionary<string, string[]>();
+        var items = new List<LoanItem>();
         var seen = new HashSet<LoanItemType>();
-        for (var i = 0; i < (items?.Count ?? 0); i++)
+        var itemInputs = requested ?? [];
+        for (var i = 0; i < itemInputs.Count; i++)
         {
-            var item = items![i];
+            var item = itemInputs[i];
             if (item is null)
             {
                 errors[$"items[{i}]"] = ["An item must not be null."];
@@ -173,12 +212,14 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
             {
                 errors[$"items[{i}].quantity"] = ["The quantity must be 0 or greater."];
             }
+
+            // Only a complete, accepted accessory reaches the loan; anything else is reported above.
+            if (item is { Type: { } type, Quantity: { } quantity } && quantity >= 0)
+            {
+                items.Add(new LoanItem { Type = type, Quantity = quantity });
+            }
         }
 
-        return errors;
+        return items;
     }
-
-    // 19 = SQLITE_CONSTRAINT; 2067 = SQLITE_CONSTRAINT_UNIQUE (the partial index on Loans(DroneId)).
-    private static bool IsUniqueViolation(DbUpdateException ex) =>
-        ex.InnerException is SqliteException { SqliteErrorCode: 19, SqliteExtendedErrorCode: 2067 };
 }

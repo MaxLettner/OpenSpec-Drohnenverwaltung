@@ -9,13 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests;
 
-/// <summary>REQ-006 "Loan accessories" (specs/loan).</summary>
+/// <summary>REQ-006 "Loan accessories" (specs/loan). Each test gets its own database.</summary>
 public class LoanItemsTests
 {
-    private static async Task<(int DroneId, int GroupId)> SeedAsync(HttpClient client) => (
-        await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" }),
-        await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" }));
-
     private static Task<HttpResponseMessage> PostRawAsync(HttpClient client, string json) =>
         client.PostAsync("/api/loans", new StringContent(json, Encoding.UTF8, "application/json"));
 
@@ -26,13 +22,14 @@ public class LoanItemsTests
         return (await db.Loans.CountAsync(), await db.LoanItems.AsNoTracking().OrderBy(i => i.Type).ToListAsync());
     }
 
-    private static async Task AssertRejectedAsync(ApiFactory factory, HttpResponseMessage response)
+    /// <summary>Asserts the rejection and that nothing was stored; returns the ProblemDetails body.</summary>
+    private static async Task<JsonElement> AssertRejectedAsync(ApiFactory factory, HttpResponseMessage response)
     {
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await TestApi.AssertProblemAsync(response, HttpStatusCode.BadRequest);
         var (loans, items) = await StoredAsync(factory);
         Assert.Equal(0, loans);
         Assert.Empty(items);
+        return problem;
     }
 
     [Fact]
@@ -40,7 +37,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new
         {
@@ -72,15 +69,14 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new
         {
             droneId, studentGroupId = groupId, items = new[] { new { type = "Battery", quantity = -1 } },
         });
 
-        await AssertRejectedAsync(factory, response);
-        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var problem = await AssertRejectedAsync(factory, response);
         Assert.True(problem.GetProperty("errors").TryGetProperty("items[0].quantity", out _));
     }
 
@@ -89,7 +85,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new
         {
@@ -110,7 +106,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await PostRawAsync(client,
             $$"""{"droneId":{{droneId}},"studentGroupId":{{groupId}},"items":[{"type":"Battery","quantity":1.5}]}""");
@@ -123,7 +119,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new
         {
@@ -138,7 +134,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new
         {
@@ -147,8 +143,7 @@ public class LoanItemsTests
             items = new[] { new { type = "Battery", quantity = 2 }, new { type = "Battery", quantity = 3 } },
         });
 
-        await AssertRejectedAsync(factory, response);
-        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var problem = await AssertRejectedAsync(factory, response);
         Assert.True(problem.GetProperty("errors").TryGetProperty("items", out _));
     }
 
@@ -157,7 +152,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId, studentGroupId = groupId });
 
@@ -173,7 +168,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await client.PostAsJsonAsync(
             "/api/loans", new { droneId, studentGroupId = groupId, items = Array.Empty<object>() });
@@ -196,7 +191,7 @@ public class LoanItemsTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId) = await SeedAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
 
         var response = await PostRawAsync(client,
             $$"""{"droneId":{{droneId}},"studentGroupId":{{groupId}},"items":[{{item}}]}""");

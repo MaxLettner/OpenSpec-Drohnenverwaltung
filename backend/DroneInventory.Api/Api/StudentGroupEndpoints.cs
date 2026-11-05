@@ -1,6 +1,5 @@
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Infrastructure;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace DroneInventory.Api.Api;
@@ -21,23 +20,17 @@ public static class StudentGroupEndpoints
     // Fixed order by name (design D10); the NOCASE collation makes it case-insensitive.
     private static async Task<IResult> ListAsync(AppDbContext db) =>
         Results.Ok(await db.StudentGroups
+            .AsNoTracking()
             .OrderBy(g => g.Name)
             .Select(g => new StudentGroupResponse(g.Id, g.Name))
             .ToListAsync());
 
     private static async Task<IResult> CreateAsync(CreateStudentGroupRequest request, AppDbContext db)
     {
-        var name = request.Name?.Trim();
-        if (string.IsNullOrEmpty(name))
+        var (name, nameErrors) = NameValidation.Validate(request.Name, StudentGroup.NameMaxLength);
+        if (name is null)
         {
-            return ApiResults.ValidationError("name", "The name must not be blank.");
-        }
-
-        if (name.Length > StudentGroup.NameMaxLength)
-        {
-            return ApiResults.ValidationError(
-                "name",
-                $"The name must not be longer than {StudentGroup.NameMaxLength} characters.");
+            return ApiResults.ValidationErrors(nameErrors);
         }
 
         var studentGroup = new StudentGroup { Name = name };
@@ -46,7 +39,7 @@ public static class StudentGroupEndpoints
         {
             await db.SaveChangesAsync();
         }
-        catch (DbUpdateException ex) when (ex.InnerException is SqliteException { SqliteErrorCode: 19 })
+        catch (DbUpdateException ex) when (SqliteConstraints.IsUniqueViolation(ex))
         {
             // The unique index is the single enforcement point, so simultaneous requests are safe too.
             return ApiResults.DuplicateName("student group", name);
