@@ -9,8 +9,9 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddApiErrorHandling();
 
+// The one place the database location comes from: appsettings.json sets the connection string.
 var connectionString = builder.Configuration.GetConnectionString("Default")
-    ?? "Data Source=droneinventory.db";
+    ?? throw new InvalidOperationException("The connection string \"Default\" is not configured.");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 
 builder.Services.AddSingleton(TimeProvider.System);
@@ -28,8 +29,6 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
 }
-
-app.UseHttpsRedirection();
 
 app.MapStudentGroupEndpoints();
 app.MapDroneEndpoints();

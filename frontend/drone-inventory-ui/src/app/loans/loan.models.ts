@@ -36,7 +36,13 @@ export interface ActiveLoanRow {
   loanDate: string;
 }
 
-/** One row of `GET /api/loans/history`. */
-export interface LoanHistoryRow extends ActiveLoanRow {
+/** One row of `GET /api/loans/history`: an active loan row plus the return date it now carries. */
+export interface LoanHistoryRow {
+  id: number;
+  group: string;
+  drone: string;
+  batteries: number;
+  propellers: number;
+  loanDate: string;
   returnDate: string;
 }

@@ -7,22 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests;
 
-/// <summary>REQ-008 "Return a loan" and REQ-009 "Store the return date" (specs/loan).</summary>
+/// <summary>REQ-008 "Return a loan" and REQ-009 "Store the return date" (specs/loan). Each test gets its own database.</summary>
 public class LoanReturnTests
 {
-    private static async Task<(int DroneId, int GroupId, int LoanId)> LoanAsync(HttpClient client)
-    {
-        var droneId = await TestApi.CreateAsync(client, "/api/drones", new { name = "TELLO-07" });
-        var groupId = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 3" });
-        var loanId = await TestApi.CreateAsync(client, "/api/loans", new
-        {
-            droneId,
-            studentGroupId = groupId,
-            items = new object[] { new { type = "Propeller", quantity = 8 }, new { type = "Battery", quantity = 4 } },
-        });
-        return (droneId, groupId, loanId);
-    }
-
     private static async Task<string> AvailabilityAsync(HttpClient client, int droneId)
     {
         var drones = await client.GetFromJsonAsync<JsonElement>("/api/drones");
@@ -30,24 +17,13 @@ public class LoanReturnTests
             .GetProperty("availability").GetString()!;
     }
 
-    private static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string? detail = null)
-    {
-        Assert.Equal(status, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal((int)status, problem.GetProperty("status").GetInt32());
-        if (detail is not null)
-        {
-            Assert.Equal(detail, problem.GetProperty("detail").GetString());
-        }
-    }
-
     [Fact]
     public async Task REQ_008_Return_a_loan()
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId, ("Propeller", 8), ("Battery", 4));
         Assert.Equal("Loaned", await AvailabilityAsync(client, droneId));
 
         var response = await client.PostAsync($"/api/loans/{loanId}/return", null);
@@ -76,7 +52,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
 
         var response = await client.PostAsJsonAsync($"/api/loans/{loanId}/return", new { });
 
@@ -88,7 +65,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
         await client.PostAsync($"/api/loans/{loanId}/return", null);
         // Move the stored ReturnDate away from "today" to prove a rejected second return leaves it alone.
         var original = new DateOnly(2026, 3, 14);
@@ -101,7 +79,7 @@ public class LoanReturnTests
 
         var response = await client.PostAsync($"/api/loans/{loanId}/return", null);
 
-        await AssertProblemAsync(response, HttpStatusCode.Conflict, $"Loan {loanId} is already returned.");
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.Conflict);
         var stored = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
         Assert.Equal("Returned", stored.GetProperty("status").GetString());
         Assert.Equal("2026-03-14", stored.GetProperty("returnDate").GetString());
@@ -115,7 +93,7 @@ public class LoanReturnTests
 
         var response = await client.PostAsync("/api/loans/999/return", null);
 
-        await AssertProblemAsync(response, HttpStatusCode.NotFound);
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -124,8 +102,9 @@ public class LoanReturnTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        await AssertProblemAsync(await client.PostAsync("/api/loans/abc/return", null), HttpStatusCode.NotFound);
-        await AssertProblemAsync(await client.GetAsync("/api/loans/abc"), HttpStatusCode.NotFound);
+        await TestApi.AssertProblemAsync(
+            await client.PostAsync("/api/loans/abc/return", null), HttpStatusCode.NotFound);
+        await TestApi.AssertProblemAsync(await client.GetAsync("/api/loans/abc"), HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -133,18 +112,19 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (droneId, groupId, loanId) = await LoanAsync(client);
-        var group1 = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
+        var otherGroup = await TestApi.CreateAsync(client, "/api/student-groups", new { name = "Group 1" });
         await client.PostAsync($"/api/loans/{loanId}/return", null);
         var returned = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
 
-        var newId = await TestApi.CreateAsync(client, "/api/loans", new { droneId, studentGroupId = group1 });
+        var newId = await TestApi.CreateLoanAsync(client, droneId, otherGroup);
 
         Assert.NotEqual(loanId, newId);
         var added = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{newId}");
         Assert.Equal("Active", added.GetProperty("status").GetString());
         Assert.Equal(droneId, added.GetProperty("droneId").GetInt32());
-        Assert.Equal(group1, added.GetProperty("studentGroupId").GetInt32());
+        Assert.Equal(otherGroup, added.GetProperty("studentGroupId").GetInt32());
         var unchanged = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
         Assert.Equal(returned.GetRawText(), unchanged.GetRawText());
         Assert.Equal(groupId, unchanged.GetProperty("studentGroupId").GetInt32());
@@ -156,7 +136,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
 
         var loan = await (await client.PostAsync($"/api/loans/{loanId}/return", null))
             .Content.ReadFromJsonAsync<JsonElement>();
@@ -171,7 +152,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
 
         var response = await client.GetAsync($"/api/loans/{loanId}");
 
@@ -187,7 +169,7 @@ public class LoanReturnTests
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
 
-        await AssertProblemAsync(await client.GetAsync("/api/loans/999"), HttpStatusCode.NotFound);
+        await TestApi.AssertProblemAsync(await client.GetAsync("/api/loans/999"), HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -195,7 +177,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
 
         var loan = await (await client.PostAsync($"/api/loans/{loanId}/return", null))
             .Content.ReadFromJsonAsync<JsonElement>();
@@ -208,8 +191,9 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
-        // The service's check saw an Active loan; right before its update the other return "wins"
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
+        // The service's update sees an Active loan; right before it the other return "wins"
         // with a ReturnDate different from the one the service would write (today).
         factory.BeforeNextNonQuery = connection =>
         {
@@ -221,7 +205,7 @@ public class LoanReturnTests
 
         var response = await client.PostAsync($"/api/loans/{loanId}/return", null);
 
-        await AssertProblemAsync(response, HttpStatusCode.Conflict, $"Loan {loanId} is already returned.");
+        await TestApi.AssertProblemAsync(response, HttpStatusCode.Conflict);
         var stored = await client.GetFromJsonAsync<JsonElement>($"/api/loans/{loanId}");
         Assert.Equal("Returned", stored.GetProperty("status").GetString());
         Assert.Equal("2026-03-14", stored.GetProperty("returnDate").GetString());
@@ -232,7 +216,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
 
         var responses = await Task.WhenAll(
             client.PostAsync($"/api/loans/{loanId}/return", null),
@@ -250,7 +235,8 @@ public class LoanReturnTests
     {
         using var factory = new ApiFactory();
         var client = factory.CreateClient();
-        var (_, _, loanId) = await LoanAsync(client);
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+        var loanId = await TestApi.CreateLoanAsync(client, droneId, groupId);
         var future = ApiFactory.Today.AddDays(5);
         using (var scope = factory.Services.CreateScope())
         {

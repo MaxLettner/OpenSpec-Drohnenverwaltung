@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DroneInventory.Api.Application;
 using DroneInventory.Api.Domain;
 
@@ -5,9 +6,7 @@ namespace DroneInventory.Api.Api;
 
 // Type/Quantity are nullable so a missing member is a validation error, not a silent default (REQ-006).
 // Numeric types, unknown types and fractional quantities fail JSON binding and become a 400.
-public record LoanItemRequest(LoanItemType? Type, int? Quantity);
-
-public record CreateLoanRequest(int? DroneId, int? StudentGroupId, List<LoanItemRequest?>? Items = null);
+public record CreateLoanRequest(int? DroneId, int? StudentGroupId, List<LoanItemInput?>? Items = null);
 
 public record LoanItemResponse(LoanItemType Type, int Quantity);
 
@@ -41,62 +40,54 @@ public static class LoanEndpoints
         group.MapPost("/{id:int}/return", ReturnAsync);
     }
 
-    private static async Task<IResult> GetAsync(int id, LoanService loans)
-    {
-        var loan = await loans.GetAsync(id);
-        return loan is null
-            ? Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: $"No loan with Id {id} exists.")
-            : Results.Ok(LoanResponse.From(loan));
-    }
+    private static async Task<IResult> GetAsync(int id, LoanService loans) =>
+        await loans.GetAsync(id) is { } loan
+            ? Results.Ok(LoanResponse.From(loan))
+            : ApiResults.NotFound(NoLoan(id));
 
     private static async Task<IResult> ReturnAsync(int id, LoanService loans)
     {
-        var result = await loans.ReturnAsync(id);
-        if (result.Conflict is not null)
+        switch (await loans.ReturnAsync(id))
         {
-            return Results.Problem(statusCode: StatusCodes.Status409Conflict, detail: result.Conflict);
+            case ReturnLoanResult.Returned returned:
+                return Results.Ok(LoanResponse.From(returned.Loan));
+            case ReturnLoanResult.NotFound:
+                return ApiResults.NotFound(NoLoan(id));
+            case ReturnLoanResult.AlreadyReturned:
+                return ApiResults.Conflict(AlreadyReturned(id));
+            default:
+                throw new UnreachableException("The service returned a result this endpoint does not know.");
         }
-
-        return result.Loan is null
-            ? Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: result.NotFound)
-            : Results.Ok(LoanResponse.From(result.Loan));
     }
 
     private static async Task<IResult> CreateAsync(CreateLoanRequest request, LoanService loans)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (request.DroneId is not > 0)
+        var result = await loans.CreateAsync(
+            new LoanRequest(request.DroneId, request.StudentGroupId, request.Items));
+        switch (result)
         {
-            errors["droneId"] = ["The droneId is required and must be positive."];
+            case CreateLoanResult.Created created:
+                return Results.Created($"/api/loans/{created.Loan.Id}", LoanResponse.From(created.Loan));
+            case CreateLoanResult.InvalidInput invalid:
+                return ApiResults.ValidationErrors(invalid.Errors);
+            case CreateLoanResult.MissingReference missing:
+                return ApiResults.NotFound(MissingReference(missing));
+            case CreateLoanResult.NotAvailable notAvailable:
+                return ApiResults.Conflict(DroneNotAvailable(notAvailable.DroneId));
+            default:
+                throw new UnreachableException("The service returned a result this endpoint does not know.");
         }
-
-        if (request.StudentGroupId is not > 0)
-        {
-            errors["studentGroupId"] = ["The studentGroupId is required and must be positive."];
-        }
-
-        if (errors.Count > 0)
-        {
-            return Results.ValidationProblem(errors);
-        }
-
-        var result = await loans.CreateAsync(request.DroneId!.Value, request.StudentGroupId!.Value,
-            request.Items?.Select(i => i is null ? null : new LoanItemInput(i.Type, i.Quantity)).ToList());
-        if (result.Invalid is not null)
-        {
-            return Results.ValidationProblem(result.Invalid.ToDictionary(e => e.Key, e => e.Value));
-        }
-
-        if (result.Conflict is not null)
-        {
-            return Results.Problem(statusCode: StatusCodes.Status409Conflict, detail: result.Conflict);
-        }
-
-        if (result.Loan is null)
-        {
-            return Results.Problem(statusCode: StatusCodes.Status404NotFound, detail: result.NotFound);
-        }
-
-        return Results.Created($"/api/loans/{result.Loan.Id}", LoanResponse.From(result.Loan));
     }
+
+    // The wording of the loan rejections belongs to the HTTP responses that carry it (design D5).
+    private static string NoLoan(int id) => $"No loan with Id {id} exists.";
+
+    private static string AlreadyReturned(int id) => $"Loan {id} is already returned.";
+
+    private static string DroneNotAvailable(int droneId) => $"Drone {droneId} is not available.";
+
+    private static string MissingReference(CreateLoanResult.MissingReference missing) =>
+        missing.Reference == LoanReference.Drone
+            ? $"No drone with Id {missing.Id} exists."
+            : $"No student group with Id {missing.Id} exists.";
 }

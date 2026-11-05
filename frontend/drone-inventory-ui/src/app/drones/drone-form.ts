@@ -11,7 +11,12 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTextarea } from '@spartan-ng/helm/textarea';
-import { CreateDroneRequest, Drone } from './drone.models';
+import {
+  CreateDroneRequest,
+  Drone,
+  MAX_DRONE_DESCRIPTION_LENGTH,
+  MAX_DRONE_NAME_LENGTH,
+} from './drone.models';
 import { DroneService } from './drone.service';
 
 /**
@@ -39,7 +44,7 @@ import { DroneService } from './drone.service';
               id="drone-name"
               type="text"
               name="name"
-              maxlength="100"
+              [attr.maxlength]="maxNameLength"
               required
               [value]="name()"
               (input)="onNameInput($event)"
@@ -52,7 +57,7 @@ import { DroneService } from './drone.service';
               hlmTextarea
               id="drone-description"
               name="description"
-              maxlength="500"
+              [attr.maxlength]="maxDescriptionLength"
               rows="3"
               [value]="description()"
               (input)="onDescriptionInput($event)"
@@ -72,6 +77,9 @@ export class DroneForm {
 
   /** Emits the created drone once the backend has accepted it. */
   readonly created = output<Drone>();
+
+  protected readonly maxNameLength = MAX_DRONE_NAME_LENGTH;
+  protected readonly maxDescriptionLength = MAX_DRONE_DESCRIPTION_LENGTH;
 
   readonly name = signal('');
   readonly description = signal('');

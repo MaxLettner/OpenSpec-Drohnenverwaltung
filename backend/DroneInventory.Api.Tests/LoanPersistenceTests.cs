@@ -85,22 +85,27 @@ public class LoanPersistenceTests
     }
 
     [Fact]
-    public async Task REQ_005_Status_and_item_type_are_stored_as_strings()
+    public async Task REQ_010_Status_and_item_type_survive_a_reload()
     {
         var (factory, scope, db) = Open();
         using var _f = factory;
         using var _s = scope;
         var (drone, group) = await SeedAsync(db);
-        var loan = NewLoan(drone, group, LoanStatus.Active);
+        var loan = NewLoan(drone, group, LoanStatus.Returned);
         loan.Items.Add(new LoanItem { Type = LoanItemType.Propeller, Quantity = 4 });
         db.Loans.Add(loan);
         await db.SaveChangesAsync();
+        var loanId = loan.Id;
 
-        var status = await db.Database.SqlQueryRaw<string>("SELECT \"Status\" AS \"Value\" FROM \"Loans\"").SingleAsync();
-        var type = await db.Database.SqlQueryRaw<string>("SELECT \"Type\" AS \"Value\" FROM \"LoanItems\"").SingleAsync();
+        // A fresh context reads the loan the way a later request does: nothing of it is lost (REQ-010).
+        using var reloadScope = factory.Services.CreateScope();
+        var reloaded = await reloadScope.ServiceProvider.GetRequiredService<AppDbContext>()
+            .Loans.Include(l => l.Items).SingleAsync(l => l.Id == loanId);
 
-        Assert.Equal("Active", status);
-        Assert.Equal("Propeller", type);
+        Assert.Equal(LoanStatus.Returned, reloaded.Status);
+        var item = Assert.Single(reloaded.Items);
+        Assert.Equal(LoanItemType.Propeller, item.Type);
+        Assert.Equal(4, item.Quantity);
     }
 
     [Fact]

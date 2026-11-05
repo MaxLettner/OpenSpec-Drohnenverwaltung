@@ -1,51 +1,22 @@
-import {
-  AbstractControl,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  OnInit,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { HlmTableImports } from '@spartan-ng/helm/table';
-import { StudentGroup } from './student-group.models';
+import { LoadState } from '../shared/load-state';
+import { MAX_STUDENT_GROUP_NAME_LENGTH, StudentGroup } from './student-group.models';
 import { StudentGroupService } from './student-group.service';
-
-/** Maximum length of a student group name, as in the backend (REQ-003). */
-const MAX_STUDENT_GROUP_NAME_LENGTH = 100;
-
-/** Rejects names that consist only of whitespace; the backend trims and rejects them too. */
-function notBlank(control: AbstractControl<string>): ValidationErrors | null {
-  return control.value.trim() === '' ? { blank: true } : null;
-}
 
 /**
  * Lists the student groups and creates new ones (REQ-003).
- * The backend validates and trims the name and answers duplicates with 409; the
- * error interceptor shows those messages, so this page only keeps the entered name.
+ * The backend validates and trims the name and answers duplicates with 409; the error interceptor
+ * shows those messages, so this page only keeps the entered name after a failure.
  */
 @Component({
   selector: 'app-student-groups-page',
-  imports: [
-    ReactiveFormsModule,
-    HlmButton,
-    HlmCardImports,
-    HlmInput,
-    HlmLabel,
-    HlmTableImports,
-  ],
+  imports: [HlmButton, HlmCardImports, HlmInput, HlmLabel, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
   template: `
@@ -56,20 +27,22 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
         <h2 hlmCardTitle id="create-student-group-heading">Create student group</h2>
       </div>
       <div hlmCardContent>
-        <form class="grid max-w-xl gap-4" [formGroup]="form" (ngSubmit)="createGroup()">
+        <form class="grid max-w-xl gap-4" (submit)="createGroup($event)">
           <div class="grid gap-2">
             <label hlmLabel for="student-group-name">Name</label>
             <input
               hlmInput
               id="student-group-name"
               type="text"
-              formControlName="name"
-              maxlength="100"
+              name="name"
+              [attr.maxlength]="maxNameLength"
               autocomplete="off"
+              [value]="name()"
+              (input)="onNameInput($event)"
             />
           </div>
           <div>
-            <button hlmBtn type="submit" [disabled]="form.invalid || saving()">Create</button>
+            <button hlmBtn type="submit" [disabled]="!canSubmit()">Create</button>
           </div>
         </form>
       </div>
@@ -80,67 +53,74 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
         <h2 hlmCardTitle id="student-group-list-heading">Student groups</h2>
       </div>
       <div hlmCardContent>
-        @if (groups(); as list) {
-          @if (list.length === 0) {
-            <p class="text-sm text-muted-foreground">No student groups yet.</p>
-          } @else {
-            <div hlmTableContainer>
-              <table hlmTable>
-                <thead hlmTHead>
-                  <tr hlmTr>
-                    <th hlmTh scope="col">Name</th>
-                  </tr>
-                </thead>
-                <tbody hlmTBody>
-                  @for (group of list; track group.id) {
+        @switch (state()) {
+          @case ('loading') {
+            <p class="text-sm text-muted-foreground">Loading student groups...</p>
+          }
+          @case ('loaded') {
+            @if (groups().length === 0) {
+              <p class="text-sm text-muted-foreground">No student groups yet.</p>
+            } @else {
+              <div hlmTableContainer>
+                <table hlmTable>
+                  <thead hlmTHead>
                     <tr hlmTr>
-                      <td hlmTd>{{ group.name }}</td>
+                      <th hlmTh scope="col">Name</th>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody hlmTBody>
+                    @for (group of groups(); track group.id) {
+                      <tr hlmTr>
+                        <td hlmTd>{{ group.name }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+          @case ('failed') {
+            <p class="text-sm text-muted-foreground">The student groups could not be loaded.</p>
           }
         }
       </div>
     </section>
   `,
 })
-export class StudentGroupsPage implements OnInit {
+export class StudentGroupsPage {
   private readonly service = inject(StudentGroupService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Undefined until the first list response arrives, so the empty state is not shown too early. */
-  protected readonly groups = signal<readonly StudentGroup[] | undefined>(undefined);
+  protected readonly maxNameLength = MAX_STUDENT_GROUP_NAME_LENGTH;
+  protected readonly state = signal<LoadState>('loading');
+  protected readonly groups = signal<readonly StudentGroup[]>([]);
+  protected readonly name = signal('');
   protected readonly saving = signal(false);
 
-  protected readonly form = new FormGroup({
-    name: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.maxLength(MAX_STUDENT_GROUP_NAME_LENGTH),
-        notBlank,
-      ],
-    }),
-  });
+  /** A blank name (empty or only whitespace) and a running request both disable the button. */
+  protected readonly canSubmit = computed(() => this.name().trim() !== '' && !this.saving());
 
-  ngOnInit(): void {
+  constructor() {
     this.loadGroups();
   }
 
-  protected createGroup(): void {
-    if (this.form.invalid || this.saving()) {
+  protected onNameInput(event: Event): void {
+    this.name.set((event.target as HTMLInputElement).value);
+  }
+
+  protected createGroup(event: Event): void {
+    event.preventDefault();
+    if (!this.canSubmit()) {
       return;
     }
 
     this.saving.set(true);
     this.service
-      .create({ name: this.form.getRawValue().name })
+      .create({ name: this.name().trim() })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.form.reset();
+          this.name.set('');
           this.saving.set(false);
           this.loadGroups();
         },
@@ -155,9 +135,12 @@ export class StudentGroupsPage implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (groups) => this.groups.set(groups),
-        // The error interceptor has already shown the message.
-        error: () => undefined,
+        next: (groups) => {
+          this.groups.set(groups);
+          this.state.set('loaded');
+        },
+        // The error interceptor has already shown the message; the page says the list is missing.
+        error: () => this.state.set('failed'),
       });
   }
 }
