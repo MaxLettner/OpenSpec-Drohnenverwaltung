@@ -7,6 +7,8 @@ namespace DroneInventory.Api.Api;
 
 public record CreateStudentGroupRequest(string? Name);
 
+public record UpdateStudentGroupRequest(string? Name);
+
 public record StudentGroupResponse(int Id, string Name);
 
 public static class StudentGroupEndpoints
@@ -17,6 +19,7 @@ public static class StudentGroupEndpoints
         group.MapPost("/", CreateAsync);
         group.MapGet("/", ListAsync);
         group.MapGet("/{id:int}", GetAsync);
+        group.MapPut("/{id:int}", UpdateAsync);
     }
 
     // Student-group spec "Show student group details" (design D3); "today" is the UTC date the loans use.
@@ -60,5 +63,33 @@ public static class StudentGroupEndpoints
         return Results.Created(
             $"/api/student-groups/{studentGroup.Id}",
             new StudentGroupResponse(studentGroup.Id, studentGroup.Name));
+    }
+
+    // REQ-003: the same validation as create; the name stays unique ignoring case (design D2).
+    private static async Task<IResult> UpdateAsync(int id, UpdateStudentGroupRequest request, AppDbContext db)
+    {
+        var studentGroup = await db.StudentGroups.SingleOrDefaultAsync(g => g.Id == id);
+        if (studentGroup is null)
+        {
+            return ApiResults.NotFound($"No student group with the Id {id} exists.");
+        }
+
+        var (name, nameErrors) = NameValidation.Validate(request.Name, StudentGroup.NameMaxLength);
+        if (name is null)
+        {
+            return ApiResults.ValidationErrors(nameErrors);
+        }
+
+        studentGroup.Name = name;
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (SqliteConstraints.IsUniqueViolation(ex))
+        {
+            return ApiResults.DuplicateName("student group", name);
+        }
+
+        return Results.Ok(new StudentGroupResponse(studentGroup.Id, studentGroup.Name));
     }
 }

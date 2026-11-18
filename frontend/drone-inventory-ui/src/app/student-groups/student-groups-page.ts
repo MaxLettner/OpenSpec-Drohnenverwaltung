@@ -1,9 +1,14 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { LoadState } from '../shared/load-state';
+import {
+  StudentGroupEditDialog,
+  StudentGroupEditDialogData,
+} from './student-group-edit-dialog';
 import {
   StudentGroupDetailsDialog,
   StudentGroupDetailsDialogData,
@@ -20,7 +25,7 @@ import { StudentGroupService } from './student-group.service';
  */
 @Component({
   selector: 'app-student-groups-page',
-  imports: [StudentGroupForm, HlmCardImports, HlmTableImports],
+  imports: [StudentGroupForm, HlmButton, HlmCardImports, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
   template: `
@@ -46,6 +51,7 @@ import { StudentGroupService } from './student-group.service';
                   <thead hlmTHead>
                     <tr hlmTr>
                       <th hlmTh scope="col">Name</th>
+                      <th hlmTh scope="col">Action</th>
                     </tr>
                   </thead>
                   <tbody hlmTBody>
@@ -59,6 +65,18 @@ import { StudentGroupService } from './student-group.service';
                             (click)="openDetails(group)"
                           >
                             {{ group.name }}
+                          </button>
+                        </td>
+                        <td hlmTd>
+                          <button
+                            hlmBtn
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            [attr.aria-label]="'Edit ' + group.name"
+                            (click)="openEdit(group)"
+                          >
+                            Edit
                           </button>
                         </td>
                       </tr>
@@ -108,6 +126,15 @@ export class StudentGroupsPage {
     this.dialog.open<void, StudentGroupDetailsDialogData>(StudentGroupDetailsDialog, {
       data: { studentGroupId: group.id },
       ariaLabelledBy: 'student-group-details-title',
+      autoFocus: 'first-tabbable',
+    });
+  }
+
+  /** Opens the edit dialog; a save reloads the list (design D5). */
+  protected openEdit(group: StudentGroup): void {
+    this.dialog.open<void, StudentGroupEditDialogData>(StudentGroupEditDialog, {
+      data: { group, saved: () => this.loadGroups() },
+      ariaLabelledBy: 'student-group-edit-title',
       autoFocus: 'first-tabbable',
     });
   }
