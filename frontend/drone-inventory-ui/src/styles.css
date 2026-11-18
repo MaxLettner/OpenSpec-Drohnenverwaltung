@@ -6,6 +6,8 @@
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 /* Open and close animations of the combobox popup (data-open:animate-in ...). */
 @import 'tw-animate-css';
+/* Positioning and backdrop of the CDK dialog (drone details, add-home-dashboard design D5). */
+@import '@angular/cdk/overlay-prebuilt.css';
 
 :root {
   color-scheme: light;

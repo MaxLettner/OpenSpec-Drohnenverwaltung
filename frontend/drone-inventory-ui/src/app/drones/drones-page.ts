@@ -1,3 +1,4 @@
+import { Dialog } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -6,6 +7,7 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { LoadState } from '../shared/load-state';
+import { DroneDetailsDialog, DroneDetailsDialogData } from './drone-details-dialog';
 import { DroneForm } from './drone-form';
 import { Drone } from './drone.models';
 import { DroneService } from './drone.service';
@@ -14,7 +16,8 @@ import { LoanService } from '../loans/loan.service';
 /**
  * Lists all drones with their availability (REQ-002) and embeds the form that adds drones (REQ-001).
  * Every Available drone has a "Loan" link that opens the loan form with that drone chosen (REQ-004),
- * every Loaned drone a "Return" button that returns its active loan and reloads the list (REQ-008).
+ * Clicking a drone name opens its details in a dialog (drone spec "Show drone details"),
+ * every Loaned drone has a "Return" button that returns its active loan and reloads the list (REQ-008).
  * The backend delivers the drones already ordered by name and derives the availability, so the page
  * shows them as received and reloads the list after a drone was created.
  * A failed request is reported by the global error toast, so the page only leaves out the list.
@@ -55,7 +58,16 @@ import { LoanService } from '../loans/loan.service';
                   <tbody hlmTBody>
                     @for (drone of drones(); track drone.id) {
                       <tr hlmTr>
-                        <td hlmTd>{{ drone.name }}</td>
+                        <td hlmTd>
+                          <button
+                            type="button"
+                            class="rounded-sm font-medium underline-offset-4 hover:text-primary hover:underline focus-visible:outline-2"
+                            [attr.aria-label]="'Details of ' + drone.name"
+                            (click)="openDetails(drone)"
+                          >
+                            {{ drone.name }}
+                          </button>
+                        </td>
                         <td hlmTd>
                           @if (drone.availability === 'Available') {
                             <span
@@ -120,6 +132,7 @@ import { LoanService } from '../loans/loan.service';
 export class DronesPage {
   private readonly droneService = inject(DroneService);
   private readonly loanService = inject(LoanService);
+  private readonly dialog = inject(Dialog);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Ids of the loans whose return request is running; their Return button is disabled. */
@@ -143,6 +156,15 @@ export class DronesPage {
         },
         error: () => this.state.set('failed'),
       });
+  }
+
+  /** Opens the details dialog; a return made there reloads the list (design D5). */
+  openDetails(drone: Drone): void {
+    this.dialog.open<void, DroneDetailsDialogData>(DroneDetailsDialog, {
+      data: { droneId: drone.id, returned: () => this.reload() },
+      ariaLabelledBy: 'drone-details-title',
+      autoFocus: 'first-tabbable',
+    });
   }
 
   /**

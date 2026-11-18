@@ -94,17 +94,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
 
   it('shows the drones in the shared table style inside a card (ui-theme)', () => {
     fixture.detectChanges();
-    http
-      .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([
-        {
-          id: 2,
-          name: 'TELLO-07',
-          description: null,
-          availability: 'Available',
-          activeLoanId: null,
-        },
-      ]);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
+      {
+        id: 2,
+        name: 'TELLO-07',
+        description: null,
+        availability: 'Available',
+        activeLoanId: null,
+      },
+    ]);
     fixture.detectChanges();
 
     expect(
@@ -117,17 +115,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
 
   it('shows an em dash when a drone has no description (REQ-002)', () => {
     fixture.detectChanges();
-    http
-      .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([
-        {
-          id: 3,
-          name: 'TELLO-08',
-          description: null,
-          availability: 'Available',
-          activeLoanId: null,
-        },
-      ]);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
+      {
+        id: 3,
+        name: 'TELLO-08',
+        description: null,
+        availability: 'Available',
+        activeLoanId: null,
+      },
+    ]);
     fixture.detectChanges();
 
     expect(rows()).toEqual([['TELLO-08', 'Available', '—', 'Loan']]);
@@ -182,29 +178,25 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     submitButton().click();
     fixture.detectChanges();
 
-    http
-      .expectOne({ method: 'POST', url: '/api/drones' })
-      .flush(
-        {
-          id: 7,
-          name: 'TELLO-07',
-          description: 'SSID: TELLO-9FA21B',
-          availability: 'Available',
-          activeLoanId: null,
-        },
-        { status: 201, statusText: 'Created' },
-      );
-    http
-      .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([
-        {
-          id: 7,
-          name: 'TELLO-07',
-          description: 'SSID: TELLO-9FA21B',
-          availability: 'Available',
-          activeLoanId: null,
-        },
-      ]);
+    http.expectOne({ method: 'POST', url: '/api/drones' }).flush(
+      {
+        id: 7,
+        name: 'TELLO-07',
+        description: 'SSID: TELLO-9FA21B',
+        availability: 'Available',
+        activeLoanId: null,
+      },
+      { status: 201, statusText: 'Created' },
+    );
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
+      {
+        id: 7,
+        name: 'TELLO-07',
+        description: 'SSID: TELLO-9FA21B',
+        availability: 'Available',
+        activeLoanId: null,
+      },
+    ]);
     fixture.detectChanges();
 
     expect(rows()).toEqual([['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Loan']]);
@@ -214,17 +206,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
 
   it('keeps the entered values, shows the duplicate error and adds nothing on a duplicate name (REQ-001)', () => {
     fixture.detectChanges();
-    http
-      .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([
-        {
-          id: 2,
-          name: 'TELLO-07',
-          description: null,
-          availability: 'Available',
-          activeLoanId: null,
-        },
-      ]);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
+      {
+        id: 2,
+        name: 'TELLO-07',
+        description: null,
+        availability: 'Available',
+        activeLoanId: null,
+      },
+    ]);
     fixture.detectChanges();
 
     type(nameInput(), 'tello-07');
