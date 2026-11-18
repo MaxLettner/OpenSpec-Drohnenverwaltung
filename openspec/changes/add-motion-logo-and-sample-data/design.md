@@ -31,6 +31,7 @@ A static `SampleData.SeedIfEmptyAsync(AppDbContext)` writes the set in one `Save
 
 ### D4. Theme fade: view transition around the class change
 `ThemeService` applies the class through `document.startViewTransition(() => toggle)` when the browser supports it and `prefers-reduced-motion: reduce` does not match; otherwise it toggles directly, as today. The first application (constructor, matching what the inline script already set) never animates. During the theme fade `<html>` carries a `theme-transition` class, which `styles.css` uses to give `::view-transition-old/new(root)` a plain 250 ms crossfade instead of the page-change rise.
+The pressed theme button holds a `theme-highlight` span with its own transition name, so its marking slides from the old to the new button during the same fade (added on request while implementing). During a theme fade the header and the page content drop their transition names, so the whole page is one crossfade.
 *Alternative:* CSS `transition` on `background-color` and `color` of every element. Rejected: each element fades on its own timing, and borders, rings and SVGs lag behind.
 
 ### D5. One reduced-motion rule

@@ -203,6 +203,25 @@
   }
 }
 
+/*
+ * Theme changes (ui-theme "Fade between themes", design D4). ThemeService sets .theme-transition
+ * while the theme fades: header and content give up their own names, so the whole page is one
+ * crossfade, and the marking of the theme switch slides to the chosen button. The two buttons
+ * have the same size, so the browser can move the picture of the marking without bending it.
+ */
+.theme-highlight {
+  view-transition-name: theme-highlight;
+}
+.theme-transition .site-header,
+.theme-transition .page-content {
+  view-transition-name: none;
+}
+.theme-transition::view-transition-group(*),
+.theme-transition::view-transition-old(*),
+.theme-transition::view-transition-new(*) {
+  animation-duration: 250ms;
+}
+
 /* One switch for all motion (design D5): the change is shown at once. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),

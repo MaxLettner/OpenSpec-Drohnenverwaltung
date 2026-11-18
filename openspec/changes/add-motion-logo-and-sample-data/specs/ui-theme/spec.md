@@ -17,12 +17,13 @@ The system SHALL animate a change of page: the marked navigation entry SHALL mov
 - **THEN** the new page and its marked navigation entry are shown at once without movement
 
 ### Requirement: Fade between themes
-The system SHALL fade the whole page from the old to the new theme within 300 ms when the user chooses a theme or the followed system setting changes. When the system setting asks for reduced motion, or the browser cannot fade, the theme SHALL change at once. The first page load SHALL still show the right theme without any fade or flash.
+The system SHALL fade the whole page from the old to the new theme within 300 ms when the user chooses a theme or the followed system setting changes, and the marking of the theme switch SHALL move to the chosen button at the same time. When the system setting asks for reduced motion, or the browser cannot fade, the theme SHALL change at once. The first page load SHALL still show the right theme without any fade or flash.
 
 #### Scenario: Choose the dark theme
 - **GIVEN** the Latte theme is shown
 - **WHEN** the user chooses the dark theme
 - **THEN** the page fades to the Macchiato theme within 300 ms
+- **AND** the marking of the theme switch moves from the light to the dark button at the same time
 
 #### Scenario: Reduced motion
 - **GIVEN** the system setting asks for reduced motion
