@@ -3,11 +3,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideMoon, lucideSun } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
+import { AppLogo } from './shared/logo/app-logo';
 import { ToastContainer } from './shared/toast/toast-container';
 import { Theme, ThemeService } from './shared/theme/theme.service';
 
 @Component({
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainer, HlmButton, NgIcon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainer, HlmButton, NgIcon, AppLogo],
   providers: [provideIcons({ lucideSun, lucideMoon })],
   selector: 'app-root',
   templateUrl: './app.html',
