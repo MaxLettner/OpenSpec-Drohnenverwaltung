@@ -6,10 +6,8 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { RetireDialog, RetireDialogData } from '../shared/retire-dialog/retire-dialog';
 import { LoadState } from '../shared/load-state';
-import {
-  StudentGroupEditDialog,
-  StudentGroupEditDialogData,
-} from './student-group-edit-dialog';
+import { LoadingRows } from '../shared/loading-rows';
+import { StudentGroupEditDialog, StudentGroupEditDialogData } from './student-group-edit-dialog';
 import {
   StudentGroupDetailsDialog,
   StudentGroupDetailsDialogData,
@@ -26,7 +24,7 @@ import { StudentGroupService } from './student-group.service';
  */
 @Component({
   selector: 'app-student-groups-page',
-  imports: [StudentGroupForm, HlmButton, HlmCardImports, HlmTableImports],
+  imports: [LoadingRows, StudentGroupForm, HlmButton, HlmCardImports, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
   template: `
@@ -41,7 +39,7 @@ import { StudentGroupService } from './student-group.service';
       <div hlmCardContent>
         @switch (state()) {
           @case ('loading') {
-            <p class="text-sm text-muted-foreground">Loading student groups...</p>
+            <app-loading-rows label="Loading student groups..." />
           }
           @case ('loaded') {
             @if (groups().length === 0) {
@@ -57,7 +55,7 @@ import { StudentGroupService } from './student-group.service';
                   </thead>
                   <tbody hlmTBody>
                     @for (group of groups(); track group.id) {
-                      <tr hlmTr>
+                      <tr hlmTr class="list-row" [style.--row]="$index">
                         <td hlmTd>
                           <button
                             type="button"

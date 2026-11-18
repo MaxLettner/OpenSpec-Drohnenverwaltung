@@ -62,6 +62,20 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     expect(element().textContent).not.toContain('Loading drones...');
   });
 
+  it('Loading the drone list: placeholder rows in the list card, the loading text for screen readers (ui-theme)', () => {
+    fixture.detectChanges();
+    const card = element().querySelector('[aria-labelledby="drone-list-heading"]') ?? element();
+    const status = card.querySelector('app-loading-rows[role="status"]')!;
+    expect(status.querySelector('.sr-only')!.textContent!.trim()).toBe('Loading drones...');
+    const placeholders = status.querySelector('[data-placeholders]')!;
+    expect(placeholders.getAttribute('aria-hidden')).toBe('true');
+    expect(placeholders.querySelectorAll('.skeleton').length).toBeGreaterThanOrEqual(3);
+
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([]);
+    fixture.detectChanges();
+    expect(element().querySelector('app-loading-rows')).toBeNull();
+  });
+
   it('lists a loaned and an available drone with their availability text (REQ-002)', () => {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([

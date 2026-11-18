@@ -321,6 +321,41 @@ a[hlmBtn]:active {
   }
 }
 
+/*
+ * Lists (ui-theme "Subtle motion" and "Loading placeholders", design D3): rows fade in one after
+ * another, 20 ms apart and at most 200 ms late; rows kept on a reload do not animate again. While
+ * a list loads, placeholder bars shimmer.
+ */
+.list-row {
+  animation: 200ms ease-out both row-in;
+  animation-delay: calc(min(var(--row, 0), 10) * 20ms);
+}
+@keyframes row-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklab, var(--foreground) 6%, transparent) 50%,
+      transparent 100%
+    )
+    var(--muted);
+  background-size: 200% 100%;
+  animation: 1.2s linear infinite skeleton-shimmer;
+}
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
 /* One switch for all motion (design D5): the change is shown at once. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
@@ -333,7 +368,9 @@ a[hlmBtn]:active {
   }
   .cdk-dialog-container,
   .ring-arc,
-  .week-bar {
+  .week-bar,
+  .list-row,
+  .skeleton {
     animation: none;
   }
   button:not(:disabled):active,

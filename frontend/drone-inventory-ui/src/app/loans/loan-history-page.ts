@@ -6,6 +6,7 @@ import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DroneDetailsDialog, DroneDetailsDialogData } from '../drones/drone-details-dialog';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoadState } from '../shared/load-state';
+import { LoadingRows } from '../shared/loading-rows';
 import {
   StudentGroupDetailsDialog,
   StudentGroupDetailsDialogData,
@@ -22,7 +23,7 @@ import { LoanService } from './loan.service';
 @Component({
   selector: 'app-loan-history-page',
   host: { class: 'block space-y-6' },
-  imports: [DateDisplayPipe, HlmCardImports, HlmTableImports],
+  imports: [LoadingRows, DateDisplayPipe, HlmCardImports, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">History</h1>
@@ -34,7 +35,7 @@ import { LoanService } from './loan.service';
       <div hlmCardContent>
         @switch (state()) {
           @case ('loading') {
-            <p class="text-sm text-muted-foreground">Loading loan history...</p>
+            <app-loading-rows label="Loading loan history..." />
           }
           @case ('loaded') {
             @if (rows().length === 0) {
@@ -54,7 +55,7 @@ import { LoanService } from './loan.service';
                   </thead>
                   <tbody hlmTBody>
                     @for (row of rows(); track row.id) {
-                      <tr hlmTr>
+                      <tr hlmTr class="list-row" [style.--row]="$index">
                         <td hlmTd>
                           <button
                             type="button"
