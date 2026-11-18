@@ -182,6 +182,28 @@ describe('ui-theme: Readable text in both themes', () => {
   });
 });
 
+/** One radial glow of the page gradient in shares of the viewport (styles.css `--page-gradient`). */
+interface Glow {
+  rx: number;
+  ry: number;
+  x: number;
+  y: number;
+  /** Where the glow has faded out, as share of the way to the ellipse edge. */
+  fadeEnd: number;
+}
+
+/** Reads the geometry of the two glows, mauve first, from the gradient in styles.css. */
+function pageGlows(): Glow[] {
+  const gradient = readTokens(':root').get('--page-gradient')!;
+  const shape = /ellipse ([\d.]+)% ([\d.]+)% at ([\d.]+)% ([\d.]+)%[\s\S]*?transparent ([\d.]+)%/g;
+  const glows = Array.from(gradient.matchAll(shape), (m) => {
+    const [rx, ry, x, y, fadeEnd] = m.slice(1).map((n) => Number(n) / 100);
+    return { rx, ry, x, y, fadeEnd };
+  });
+  expect(glows.length, 'two glows in --page-gradient').toBe(2);
+  return glows;
+}
+
 /** The strongest share of the accent in the page gradient, e.g. `8%` → 0.08. */
 function pageTint(tokens: Map<string, string>): number {
   const tint = /^([\d.]+)%$/.exec(resolve(tokens, '--page-tint'));
@@ -233,10 +255,22 @@ describe('ui-theme: Text on the page background stays readable', () => {
     const color = (name: string) => parseColor(resolve(tokens, name));
     const tint = pageTint(tokens);
     const background = color('--background');
-    const mauveGlow = over(color('--ctp-mauve'), tint, background);
-    const blueGlow = over(color('--ctp-blue'), tint, background);
-    // Where both glows overlap, as a worst case.
-    const bothGlows = over(color('--ctp-blue'), tint, mauveGlow);
+    const glows = pageGlows();
+    const accents = [color('--ctp-mauve'), color('--ctp-blue')];
+    // The page colour at a point given as share of the viewport width and height: each glow fades
+    // linearly from its corner to its last stop, measured along the ellipse.
+    const surfaceAt = (u: number, v: number): Rgba =>
+      glows.reduce((below, glow, i) => {
+        const distance = Math.hypot((u - glow.x) / glow.rx, (v - glow.y) / glow.ry);
+        return over(accents[i], tint * Math.max(0, 1 - distance / glow.fadeEnd), below);
+      }, background);
+    // Every point of a 51 x 51 grid, the corners and any overlap of the two glows included.
+    const points: [string, Rgba][] = [];
+    for (let i = 0; i <= 50; i++) {
+      for (let j = 0; j <= 50; j++) {
+        points.push([`point (${i * 2}%, ${j * 2}%)`, surfaceAt(i / 50, j / 50)]);
+      }
+    }
 
     // Text that sits directly on the page: the heading, empty-state and loading texts, the links
     // and the active navigation entry.
@@ -245,12 +279,7 @@ describe('ui-theme: Text on the page background stays readable', () => {
       ['empty-state and loading text', color('--muted-foreground')],
       ['link and active navigation', color('--primary')],
     ];
-    for (const [point, surface] of [
-      ['plain background', background],
-      ['mauve glow', mauveGlow],
-      ['blue glow', blueGlow],
-      ['both glows', bothGlows],
-    ] as const) {
+    for (const [point, surface] of points) {
       for (const [text, foreground] of texts) {
         expect(contrast(foreground, surface), `${text} on the ${point}`).toBeGreaterThanOrEqual(
           4.5,

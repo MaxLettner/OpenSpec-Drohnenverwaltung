@@ -17,4 +17,4 @@ Each task becomes one GitHub issue, one branch and one pull request, with its ba
 
 ## 3. Styling (no spec change)
 
-- [ ] 3.1 Light every card near the pointer, the dialogs included, and make the light page gradient visible with 4.5:1 text contrast by modelling the real glow overlap in `theme-tokens.spec.ts` (design D7); verify the theme and app specs and check both themes in the browser (#146)
+- [x] 3.1 Light every card near the pointer, the dialogs included, and make the light page gradient visible with 4.5:1 text contrast by modelling the real glow overlap in `theme-tokens.spec.ts` (design D7); verify the theme and app specs and check both themes in the browser (#146)
