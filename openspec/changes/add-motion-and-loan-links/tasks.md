@@ -4,7 +4,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 1. Features
 
-- [ ] 1.1 Open the group and drone dialogs from the Loans page: `studentGroupId` and `droneId` in active loan rows (design D1); tests for "Open details from the Loans page", "Active loan list matches the reference example" — REQ-007 (#158)
+- [x] 1.1 Open the group and drone dialogs from the Loans page: `studentGroupId` and `droneId` in active loan rows (design D1); tests for "Open details from the Loans page", "Active loan list matches the reference example" — REQ-007 (#158)
 - [ ] 1.2 Remove the "Home" navigation entry and mark the app name on Home (design D2); tests for "Open the app", "Go home from the header" — REQ-002 (#159)
 
 ## 2. Motion

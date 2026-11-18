@@ -1,3 +1,5 @@
+using DroneInventory.Api.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -32,6 +34,11 @@ public class ActiveLoanListTests
             ["Group 1 | TELLO-02 | 3 | 4 | 2026-08-19", "Group 3 | TELLO-07 | 4 | 8 | 2026-08-19"],
             rows.Select(TestApi.DescribeRow));
         Assert.Equal(ids, rows.Select(Id));
+        // The Loans page opens the group and drone details by these Ids (add-motion-and-loan-links D1).
+        using var scope = factory.Services.CreateScope();
+        var loans = scope.ServiceProvider.GetRequiredService<AppDbContext>().Loans.OrderBy(l => l.Id).ToList();
+        Assert.Equal(loans.Select(l => l.DroneId), rows.Select(r => r.GetProperty("droneId").GetInt32()));
+        Assert.Equal(loans.Select(l => l.StudentGroupId), rows.Select(r => r.GetProperty("studentGroupId").GetInt32()));
     }
 
     [Fact]

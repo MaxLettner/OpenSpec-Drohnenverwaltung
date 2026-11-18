@@ -31,6 +31,8 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     batteries: 3,
     propellers: 4,
     loanDate: '2026-08-19',
+    studentGroupId: 1,
+    droneId: 2,
   };
   const group3Loan: ActiveLoanRow = {
     id: 2,
@@ -39,6 +41,8 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     batteries: 4,
     propellers: 8,
     loanDate: '2026-08-19',
+    studentGroupId: 3,
+    droneId: 7,
   };
 
   /** Text of the data cells of each row joined by ' | ' (the action cell is left out). */
@@ -50,12 +54,16 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
         .join(' | '),
     );
 
+  /** The Return buttons of the rows; the names in the rows are buttons too. */
   const returnButtons = () =>
-    Array.from(element().querySelectorAll('tbody button')) as HTMLButtonElement[];
+    Array.from(element().querySelectorAll<HTMLButtonElement>('tbody button')).filter(
+      (button) => !button.getAttribute('aria-label')?.startsWith('Details of'),
+    );
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         provideHttpClient(withInterceptors([errorToastInterceptor])),
         provideHttpClientTesting(),
       ],
@@ -65,7 +73,10 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     fixture = TestBed.createComponent(LoansPage);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+  });
 
   /** The loan form on the page requests the drones and student groups when it is created. */
   function answerLoanFormLists(drones: Drone[] = [], groups: StudentGroup[] = []): void {
@@ -85,6 +96,42 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     answerLoanFormLists();
     fixture.detectChanges();
   }
+
+  it('Open details from the Loans page: the group dialog first, then the drone dialog (REQ-007)', async () => {
+    loadRows([group1Loan]);
+    const nameButton = (label: string) =>
+      element().querySelector<HTMLButtonElement>(`button[aria-label="Details of ${label}"]`)!;
+
+    nameButton('Group 1').click();
+    fixture.detectChanges();
+    http
+      .expectOne({ method: 'GET', url: '/api/student-groups/1' })
+      .flush({ id: 1, name: 'Group 1', retired: false, activeLoans: [], recentLoans: [] });
+    fixture.detectChanges();
+    const groupDialog = document.querySelector('app-student-group-details-dialog')!;
+    expect(groupDialog.textContent).toContain('Group 1');
+
+    groupDialog.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }),
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.querySelector('app-student-group-details-dialog')).toBeNull();
+
+    nameButton('TELLO-02').click();
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones/2' }).flush({
+      id: 2,
+      name: 'TELLO-02',
+      description: null,
+      availability: 'Loaned',
+      retired: false,
+      activeLoan: null,
+      recentLoans: [],
+    });
+    fixture.detectChanges();
+    expect(document.querySelector('app-drone-details-dialog')!.textContent).toContain('TELLO-02');
+  });
 
   it('shows the loading state until the active loans have arrived (REQ-007)', () => {
     fixture.detectChanges();
@@ -305,7 +352,8 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
   const element = () => fixture.nativeElement as HTMLElement;
   const batteriesInput = () => element().querySelector<HTMLInputElement>('#loan-batteries')!;
   const droneOptions = () => offeredOptions(element(), 'loan-drone');
-  const returnButton = () => element().querySelector<HTMLButtonElement>('tbody button')!;
+  const returnButton = () =>
+    element().querySelector<HTMLButtonElement>('tbody button:not([aria-label^="Details of"])')!;
   const submitButton = () => element().querySelector<HTMLButtonElement>('button[type="submit"]')!;
 
   const tello07Loan: ActiveLoanRow = {
@@ -315,6 +363,8 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     batteries: 0,
     propellers: 0,
     loanDate: '2026-08-19',
+    studentGroupId: 3,
+    droneId: 7,
   };
   const tello07 = (availability: Drone['availability']): Drone => ({
     id: 7,
