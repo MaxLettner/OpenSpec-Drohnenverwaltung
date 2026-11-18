@@ -11,7 +11,13 @@ public static class LoanQueryEndpoints
         // Literal segment: never captured by GET /api/loans/{id:int}.
         group.MapGet("/active", ActiveAsync);
         group.MapGet("/history", HistoryAsync);
+
+        // Dashboard spec (add-home-dashboard design D1).
+        app.MapGet("/api/dashboard", DashboardAsync);
     }
+
+    private static async Task<IResult> DashboardAsync(AppDbContext db, TimeProvider timeProvider) =>
+        Results.Ok(await db.GetDashboardAsync(DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime)));
 
     // REQ-010
     private static async Task<IResult> HistoryAsync(AppDbContext db) =>
