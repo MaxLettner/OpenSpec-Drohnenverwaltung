@@ -92,6 +92,8 @@ describe('LoanService (REQ-004 to REQ-010)', () => {
         batteries: 4,
         propellers: 8,
         loanDate: '2026-08-19',
+        studentGroupId: 1,
+        droneId: 2,
       },
     ];
     req.flush(rows);

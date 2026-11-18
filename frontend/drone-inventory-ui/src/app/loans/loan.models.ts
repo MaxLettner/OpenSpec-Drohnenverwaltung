@@ -34,6 +34,10 @@ export interface ActiveLoanRow {
   batteries: number;
   propellers: number;
   loanDate: string;
+  /** Opens the group details from the Loans page (add-motion-and-loan-links design D1). */
+  studentGroupId: number;
+  /** Opens the drone details from the Loans page. */
+  droneId: number;
 }
 
 /** One row of `GET /api/loans/history`: an active loan row plus the return date it now carries. */

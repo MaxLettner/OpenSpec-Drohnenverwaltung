@@ -7,12 +7,18 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { Dialog } from '@angular/cdk/dialog';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { DroneDetailsDialog, DroneDetailsDialogData } from '../drones/drone-details-dialog';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoadState } from '../shared/load-state';
+import {
+  StudentGroupDetailsDialog,
+  StudentGroupDetailsDialogData,
+} from '../student-groups/student-group-details-dialog';
 import { ActiveLoanRow } from './loan.models';
 import { LoanForm } from './loan-form';
 import { LoanService } from './loan.service';
@@ -69,8 +75,26 @@ function parseDroneId(value: string | undefined): number | undefined {
                   <tbody hlmTBody>
                     @for (loan of loans(); track loan.id) {
                       <tr hlmTr>
-                        <td hlmTd>{{ loan.group }}</td>
-                        <td hlmTd>{{ loan.drone }}</td>
+                        <td hlmTd>
+                          <button
+                            type="button"
+                            class="rounded-sm font-medium underline-offset-4 hover:text-primary hover:underline focus-visible:outline-2"
+                            [attr.aria-label]="'Details of ' + loan.group"
+                            (click)="openGroup(loan)"
+                          >
+                            {{ loan.group }}
+                          </button>
+                        </td>
+                        <td hlmTd>
+                          <button
+                            type="button"
+                            class="rounded-sm font-medium underline-offset-4 hover:text-primary hover:underline focus-visible:outline-2"
+                            [attr.aria-label]="'Details of ' + loan.drone"
+                            (click)="openDrone(loan)"
+                          >
+                            {{ loan.drone }}
+                          </button>
+                        </td>
                         <td hlmTd>{{ loan.batteries }}</td>
                         <td hlmTd>{{ loan.propellers }}</td>
                         <td hlmTd>{{ loan.loanDate | dateDisplay }}</td>
@@ -104,6 +128,7 @@ function parseDroneId(value: string | undefined): number | undefined {
 export class LoansPage {
   private readonly loanService = inject(LoanService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialog = inject(Dialog);
 
   /**
    * The drone to choose in the loan form, from `/loans?droneId=<id>` (loan spec "Open the loan form
@@ -137,6 +162,29 @@ export class LoansPage {
         // The error interceptor has already shown the message.
         error: () => this.state.set('failed'),
       });
+  }
+
+  /** Opens the group details (design D1); a return made there updates the list and the form. */
+  protected openGroup(loan: ActiveLoanRow): void {
+    this.dialog.open<void, StudentGroupDetailsDialogData>(StudentGroupDetailsDialog, {
+      data: { studentGroupId: loan.studentGroupId, returned: () => this.returnedInDialog() },
+      ariaLabelledBy: 'student-group-details-title',
+      autoFocus: 'first-tabbable',
+    });
+  }
+
+  /** Opens the drone details (design D1); a return made there updates the list and the form. */
+  protected openDrone(loan: ActiveLoanRow): void {
+    this.dialog.open<void, DroneDetailsDialogData>(DroneDetailsDialog, {
+      data: { droneId: loan.droneId, returned: () => this.returnedInDialog() },
+      ariaLabelledBy: 'drone-details-title',
+      autoFocus: 'first-tabbable',
+    });
+  }
+
+  private returnedInDialog(): void {
+    this.loadActiveLoans();
+    this.loanForm()?.reloadDrones();
   }
 
   protected returnLoan(loan: ActiveLoanRow): void {

@@ -15,7 +15,9 @@ public record ActiveLoanRow(
     [property: JsonPropertyName("drone")] string DroneName,
     int Batteries,
     int Propellers,
-    DateOnly LoanDate);
+    DateOnly LoanDate,
+    int StudentGroupId,
+    int DroneId);
 
 /// <summary>One row of the loan history (REQ-010), with the same members as <see cref="ActiveLoanRow"/>.</summary>
 public record LoanHistoryRow(
@@ -52,7 +54,9 @@ public static class LoanQueries
                  .Sum(i => (int?)i.Quantity) ?? 0,
              db.LoanItems.Where(i => i.LoanId == loan.Id && i.Type == LoanItemType.Propeller)
                  .Sum(i => (int?)i.Quantity) ?? 0,
-             loan.LoanDate))
+             loan.LoanDate,
+             studentGroup.Id,
+             drone.Id))
         .ToListAsync(ct);
 
     /// <summary>
