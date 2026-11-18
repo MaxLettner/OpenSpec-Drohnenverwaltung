@@ -68,7 +68,7 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
 {
     // REQ-004: loan an existing drone to an existing student group; the LoanDate is today and never caller-supplied.
     // REQ-005: a drone has at most one active loan.
-    // REQ-006: optional accessories, one item per type, integer quantity >= 0 (0 is allowed).
+    // REQ-006: optional accessories, one item per type, integer quantity >= 0 (0 is allowed), at most 10 batteries and 20 propellers.
     public async Task<CreateLoanResult> CreateAsync(LoanRequest request)
     {
         var errors = new Dictionary<string, string[]>();
@@ -212,9 +212,14 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
             {
                 errors[$"items[{i}].quantity"] = ["The quantity must be 0 or greater."];
             }
+            else if (item.Type is { } limited && item.Quantity > LoanItemLimits.Max(limited))
+            {
+                errors[$"items[{i}].quantity"] =
+                    [$"At most {LoanItemLimits.Max(limited)} items of type {limited} per loan."];
+            }
 
             // Only a complete, accepted accessory reaches the loan; anything else is reported above.
-            if (item is { Type: { } type, Quantity: { } quantity } && quantity >= 0)
+            if (item is { Type: { } type, Quantity: { } quantity } && quantity >= 0 && quantity <= LoanItemLimits.Max(type))
             {
                 items.Add(new LoanItem { Type = type, Quantity = quantity });
             }

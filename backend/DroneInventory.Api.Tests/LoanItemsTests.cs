@@ -80,6 +80,44 @@ public class LoanItemsTests
         Assert.True(problem.GetProperty("errors").TryGetProperty("items[0].quantity", out _));
     }
 
+    [Theory]
+    [InlineData("Battery", 11)]
+    [InlineData("Propeller", 21)]
+    public async Task REQ_006_Quantity_above_the_limit_is_rejected(string type, int quantity)
+    {
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+
+        var response = await client.PostAsJsonAsync("/api/loans", new
+        {
+            droneId, studentGroupId = groupId, items = new[] { new { type, quantity } },
+        });
+
+        var problem = await AssertRejectedAsync(factory, response);
+        Assert.True(problem.GetProperty("errors").TryGetProperty("items[0].quantity", out _));
+    }
+
+    [Fact]
+    public async Task REQ_006_Quantities_at_the_limit_are_allowed()
+    {
+        using var factory = new ApiFactory();
+        var client = factory.CreateClient();
+        var (droneId, groupId) = await TestApi.CreateDroneAndGroupAsync(client);
+
+        var response = await client.PostAsJsonAsync("/api/loans", new
+        {
+            droneId, studentGroupId = groupId,
+            items = new[] { new { type = "Battery", quantity = 10 }, new { type = "Propeller", quantity = 20 } },
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var (_, stored) = await StoredAsync(factory);
+        Assert.Equal(
+            [(LoanItemType.Battery, 10), (LoanItemType.Propeller, 20)],
+            stored.Select(i => (i.Type, i.Quantity)));
+    }
+
     [Fact]
     public async Task REQ_006_Zero_quantity_is_allowed()
     {
