@@ -21,7 +21,9 @@ describe('Spartan UI foundation', () => {
     const fixture = TestBed.createComponent(UiHost);
     await fixture.whenStable();
 
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     expect(buttons[0].textContent?.trim()).toBe('Create drone');
     expect(buttons[0].getAttribute('data-slot')).toBe('button');
     expect(buttons[0].classList.contains('bg-primary')).toBe(true);

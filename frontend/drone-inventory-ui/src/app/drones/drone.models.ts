@@ -10,6 +10,8 @@ export interface Drone {
   name: string;
   description: string | null;
   availability: Availability;
+  /** The Id of the drone's active Loan, null when it is Available (drone spec "Show drones"). */
+  activeLoanId: number | null;
 }
 
 export interface CreateDroneRequest {

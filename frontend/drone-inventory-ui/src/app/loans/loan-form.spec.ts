@@ -33,12 +33,14 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     name: 'TELLO-02',
     description: null,
     availability: 'Loaned',
+    activeLoanId: 1,
   };
   const availableDrone: Drone = {
     id: 2,
     name: 'TELLO-07',
     description: null,
     availability: 'Available',
+    activeLoanId: null,
   };
   const group1: StudentGroup = { id: 1, name: 'Group 1' };
   const group3: StudentGroup = { id: 3, name: 'Group 3' };
@@ -182,7 +184,7 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     // The drone list is reloaded; TELLO-07 is loaned now and must not be offered any more.
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([loanedDrone, { ...availableDrone, availability: 'Loaned' }]);
+      .flush([loanedDrone, { ...availableDrone, availability: 'Loaned', activeLoanId: 1 }]);
   });
 
   it('Loan flow still works: one request with drone, group, 2 batteries and 4 propellers (REQ-004, REQ-006)', () => {
@@ -214,7 +216,7 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
   it('Drones are shown as options: name and description without a menu, loaned drones left out (REQ-004, REQ-005)', () => {
     answerLists([
       { ...availableDrone, description: 'right propeller guard damaged' },
-      { id: 3, name: 'TELLO-08', description: null, availability: 'Available' },
+      { id: 3, name: 'TELLO-08', description: null, availability: 'Available', activeLoanId: null },
       loanedDrone,
     ]);
 
@@ -226,7 +228,16 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
 
   it('Choose a drone and a group by clicking: both are marked and sent (REQ-004)', () => {
     answerLists(
-      [availableDrone, { id: 3, name: 'TELLO-08', description: null, availability: 'Available' }],
+      [
+        availableDrone,
+        {
+          id: 3,
+          name: 'TELLO-08',
+          description: null,
+          availability: 'Available',
+          activeLoanId: null,
+        },
+      ],
       [group1, group3],
     );
 
@@ -269,7 +280,7 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     });
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([loanedDrone, { ...availableDrone, availability: 'Loaned' }]);
+      .flush([loanedDrone, { ...availableDrone, availability: 'Loaned', activeLoanId: 1 }]);
     fixture.detectChanges();
 
     expect(picker('loan-drone')).toBeNull();
@@ -374,7 +385,7 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     expect(batteriesInput().value).toBe('4');
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([loanedDrone, { ...availableDrone, availability: 'Loaned' }]);
+      .flush([loanedDrone, { ...availableDrone, availability: 'Loaned', activeLoanId: 1 }]);
     fixture.detectChanges();
 
     expect(picker('loan-drone')).toBeNull();
@@ -466,7 +477,16 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
 
   it('Several options are not chosen automatically (REQ-004)', () => {
     answerLists(
-      [availableDrone, { id: 3, name: 'TELLO-08', description: null, availability: 'Available' }],
+      [
+        availableDrone,
+        {
+          id: 3,
+          name: 'TELLO-08',
+          description: null,
+          availability: 'Available',
+          activeLoanId: null,
+        },
+      ],
       [group1, group3],
     );
 
@@ -475,7 +495,13 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
   });
 
   it('Single option is chosen again after a loan: the only group stays chosen after the form is cleared (REQ-004)', () => {
-    const tello08: Drone = { id: 3, name: 'TELLO-08', description: null, availability: 'Available' };
+    const tello08: Drone = {
+      id: 3,
+      name: 'TELLO-08',
+      description: null,
+      availability: 'Available',
+      activeLoanId: null,
+    };
     answerLists([availableDrone, tello08], [group3]);
     expect(chosen('loan-group')).toBe('Group 3');
     choose('loan-drone', 'TELLO-07');
@@ -488,7 +514,7 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     });
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([{ ...availableDrone, availability: 'Loaned' }, tello08]);
+      .flush([{ ...availableDrone, availability: 'Loaned', activeLoanId: 1 }, tello08]);
     fixture.detectChanges();
 
     expect(batteriesInput().value).toBe('');

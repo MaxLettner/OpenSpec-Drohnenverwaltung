@@ -94,6 +94,7 @@ describe('DroneForm (REQ-001)', () => {
       name: 'TELLO-07',
       description: 'SSID: TELLO-9FA21B',
       availability: 'Available',
+      activeLoanId: null,
     };
     req.flush(drone, { status: 201, statusText: 'Created' });
     fixture.detectChanges();
@@ -111,7 +112,13 @@ describe('DroneForm (REQ-001)', () => {
 
     const req = http.expectOne({ method: 'POST', url: '/api/drones' });
     expect(req.request.body).toEqual({ name: 'TELLO-08' });
-    req.flush({ id: 8, name: 'TELLO-08', description: null, availability: 'Available' });
+    req.flush({
+      id: 8,
+      name: 'TELLO-08',
+      description: null,
+      availability: 'Available',
+      activeLoanId: null,
+    });
   });
 
   it('disables the create button while the request is running (REQ-001)', () => {
@@ -125,7 +132,7 @@ describe('DroneForm (REQ-001)', () => {
     http.expectNone({ method: 'POST', url: '/api/drones' });
 
     req.flush(
-      { id: 7, name: 'TELLO-07', description: null, availability: 'Available' },
+      { id: 7, name: 'TELLO-07', description: null, availability: 'Available', activeLoanId: null },
       { status: 201, statusText: 'Created' },
     );
   });

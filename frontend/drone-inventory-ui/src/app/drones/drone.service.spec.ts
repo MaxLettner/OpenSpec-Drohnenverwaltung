@@ -25,13 +25,25 @@ describe('DroneService (REQ-001, REQ-002)', () => {
     const req = http.expectOne({ method: 'GET', url: '/api/drones' });
     expect(req.request.body).toBeNull();
     req.flush([
-      { id: 1, name: 'TELLO-02', description: '', availability: 'Loaned' },
-      { id: 2, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+      { id: 1, name: 'TELLO-02', description: '', availability: 'Loaned', activeLoanId: 1 },
+      {
+        id: 2,
+        name: 'TELLO-07',
+        description: 'SSID: TELLO-9FA21B',
+        availability: 'Available',
+        activeLoanId: null,
+      },
     ]);
 
     expect(result).toEqual([
-      { id: 1, name: 'TELLO-02', description: '', availability: 'Loaned' },
-      { id: 2, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+      { id: 1, name: 'TELLO-02', description: '', availability: 'Loaned', activeLoanId: 1 },
+      {
+        id: 2,
+        name: 'TELLO-07',
+        description: 'SSID: TELLO-9FA21B',
+        availability: 'Available',
+        activeLoanId: null,
+      },
     ]);
   });
 
@@ -61,6 +73,7 @@ describe('DroneService (REQ-001, REQ-002)', () => {
         name: 'TELLO-07',
         description: 'right propeller guard damaged',
         availability: 'Available',
+        activeLoanId: null,
       },
       { status: 201, statusText: 'Created' },
     );
@@ -70,6 +83,7 @@ describe('DroneService (REQ-001, REQ-002)', () => {
       name: 'TELLO-07',
       description: 'right propeller guard damaged',
       availability: 'Available',
+      activeLoanId: null,
     });
   });
 
@@ -78,6 +92,12 @@ describe('DroneService (REQ-001, REQ-002)', () => {
 
     const req = http.expectOne({ method: 'POST', url: '/api/drones' });
     expect(req.request.body).toEqual({ name: 'TELLO-08' });
-    req.flush({ id: 8, name: 'TELLO-08', description: '', availability: 'Available' });
+    req.flush({
+      id: 8,
+      name: 'TELLO-08',
+      description: '',
+      availability: 'Available',
+      activeLoanId: null,
+    });
   });
 });

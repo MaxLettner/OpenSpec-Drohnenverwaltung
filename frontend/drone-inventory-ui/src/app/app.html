@@ -5,7 +5,10 @@
       Drone Lending System
     </span>
 
-    <nav aria-label="Main navigation" class="order-3 flex w-full flex-wrap gap-1 sm:order-2 sm:w-auto">
+    <nav
+      aria-label="Main navigation"
+      class="order-3 flex w-full flex-wrap gap-1 sm:order-2 sm:w-auto"
+    >
       @for (link of links; track link.path) {
         <a
           [routerLink]="link.path"
@@ -17,7 +20,10 @@
         >
           @if (active.isActive) {
             <!-- One highlight on the page: a page change moves it to the new entry (design D3). -->
-            <span class="nav-highlight absolute inset-0 -z-10 rounded-md bg-primary/15" aria-hidden="true"></span>
+            <span
+              class="nav-highlight absolute inset-0 -z-10 rounded-md bg-primary/15"
+              aria-hidden="true"
+            ></span>
           }
           {{ link.label }}
         </a>
@@ -36,7 +42,10 @@
         (click)="choose('light')"
       >
         @if (theme() === 'light') {
-          <span class="theme-highlight absolute inset-0 -z-10 rounded-md bg-primary/15" aria-hidden="true"></span>
+          <span
+            class="theme-highlight absolute inset-0 -z-10 rounded-md bg-primary/15"
+            aria-hidden="true"
+          ></span>
         }
         <ng-icon name="lucideSun" />
       </button>
@@ -51,7 +60,10 @@
         (click)="choose('dark')"
       >
         @if (theme() === 'dark') {
-          <span class="theme-highlight absolute inset-0 -z-10 rounded-md bg-primary/15" aria-hidden="true"></span>
+          <span
+            class="theme-highlight absolute inset-0 -z-10 rounded-md bg-primary/15"
+            aria-hidden="true"
+          ></span>
         }
         <ng-icon name="lucideMoon" />
       </button>

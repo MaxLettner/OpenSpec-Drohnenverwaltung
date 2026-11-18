@@ -9,7 +9,9 @@ type Rgba = { r: number; g: number; b: number; a: number };
 /** Reads the custom properties declared in the rule with exactly this selector. */
 function readTokens(selector: string): Map<string, string> {
   const tokens = new Map<string, string>();
-  const rule = new RegExp(`(^|\\n)${selector.replace(/[.]/g, '\\.')}\\s*\\{([^}]*)\\}`).exec(styles);
+  const rule = new RegExp(`(^|\\n)${selector.replace(/[.]/g, '\\.')}\\s*\\{([^}]*)\\}`).exec(
+    styles,
+  );
   expect(rule, `rule ${selector} exists in styles.css`).not.toBeNull();
   for (const match of rule![2].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
     tokens.set(match[1], match[2].trim());
@@ -52,11 +54,17 @@ function parseColor(value: string): Rgba {
     const n = parseInt(hex[1], 16);
     return { r: (n >> 16) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255, a: 1 };
   }
-  const oklch = /^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+)(%?))?\s*\)$/.exec(value);
+  const oklch = /^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+)(%?))?\s*\)$/.exec(
+    value,
+  );
   if (!oklch) {
     throw new Error(`Unsupported colour: ${value}`);
   }
-  const [lightness, chroma, hue] = [Number(oklch[1]), Number(oklch[2]), (Number(oklch[3]) * Math.PI) / 180];
+  const [lightness, chroma, hue] = [
+    Number(oklch[1]),
+    Number(oklch[2]),
+    (Number(oklch[3]) * Math.PI) / 180,
+  ];
   const a = chroma * Math.cos(hue);
   const b = chroma * Math.sin(hue);
   const l = Math.pow(lightness + 0.3963377774 * a + 0.2158037573 * b, 3);
@@ -92,21 +100,36 @@ function contrast(foreground: Rgba, background: Rgba): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-const LATTE = { mauve: '#8839ef', red: '#d20f39', green: '#40a02b', peach: '#fe640b', blue: '#1e66f5' };
-const MACCHIATO = { mauve: '#c6a0f6', red: '#ed8796', green: '#a6da95', peach: '#f5a97f', blue: '#8aadf4' };
+const LATTE = {
+  mauve: '#8839ef',
+  red: '#d20f39',
+  green: '#40a02b',
+  peach: '#fe640b',
+  blue: '#1e66f5',
+};
+const MACCHIATO = {
+  mauve: '#c6a0f6',
+  red: '#ed8796',
+  green: '#a6da95',
+  peach: '#f5a97f',
+  blue: '#8aadf4',
+};
 
 describe('ui-theme: Accents come from the active flavor', () => {
   it.each([
     ['Latte (light theme)', false, LATTE],
     ['Macchiato (dark theme)', true, MACCHIATO],
-  ])('uses the %s accents for primary, focus ring, error, available and loaned', (_name, dark, flavor) => {
-    const tokens = themeTokens(dark);
-    expect(resolve(tokens, '--primary')).toBe(flavor.mauve);
-    expect(resolve(tokens, '--ring')).toBe(flavor.mauve);
-    expect(resolve(tokens, '--destructive')).toBe(flavor.red);
-    expect(resolve(tokens, '--success')).toBe(flavor.green);
-    expect(resolve(tokens, '--warning')).toBe(flavor.peach);
-  });
+  ])(
+    'uses the %s accents for primary, focus ring, error, available and loaned',
+    (_name, dark, flavor) => {
+      const tokens = themeTokens(dark);
+      expect(resolve(tokens, '--primary')).toBe(flavor.mauve);
+      expect(resolve(tokens, '--ring')).toBe(flavor.mauve);
+      expect(resolve(tokens, '--destructive')).toBe(flavor.red);
+      expect(resolve(tokens, '--success')).toBe(flavor.green);
+      expect(resolve(tokens, '--warning')).toBe(flavor.peach);
+    },
+  );
 
   it('keeps the surfaces neutral instead of using Catppuccin base colours', () => {
     for (const dark of [false, true]) {
@@ -137,10 +160,18 @@ describe('ui-theme: Readable text in both themes', () => {
       ['primary button', color('--primary-foreground'), color('--primary')],
       ['link and active navigation on the page', color('--primary'), background],
       ['link on a card', color('--primary'), card],
-      ['input text', color('--foreground'), dark ? over(color('--input'), 0.3, background) : background],
+      [
+        'input text',
+        color('--foreground'),
+        dark ? over(color('--input'), 0.3, background) : background,
+      ],
       ['error message on the page', color('--destructive'), background],
       ['error message on a card', color('--destructive'), card],
-      ['destructive badge', color('--destructive'), over(color('--destructive'), dark ? 0.2 : 0.1, background)],
+      [
+        'destructive badge',
+        color('--destructive'),
+        over(color('--destructive'), dark ? 0.2 : 0.1, background),
+      ],
       ['Available badge', color('--foreground'), over(color('--success'), 0.2, card)],
       ['Loaned badge', color('--foreground'), over(color('--warning'), 0.2, card)],
     ];
@@ -221,7 +252,9 @@ describe('ui-theme: Text on the page background stays readable', () => {
       ['both glows', bothGlows],
     ] as const) {
       for (const [text, foreground] of texts) {
-        expect(contrast(foreground, surface), `${text} on the ${point}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(foreground, surface), `${text} on the ${point}`).toBeGreaterThanOrEqual(
+          4.5,
+        );
       }
     }
   });
