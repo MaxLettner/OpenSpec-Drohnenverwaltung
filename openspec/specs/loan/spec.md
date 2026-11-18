@@ -161,7 +161,7 @@ Per REQ-009 the system SHALL set the `ReturnDate` of a loan to the current date 
 - **THEN** the loan has no return date
 
 ### Requirement: Show active loans
-Per REQ-007 the system SHALL list all active loans with group, drone, batteries, propellers and loan date. The accessory columns SHALL show the quantity of that type and 0 when the loan has no item of that type. The loan date SHALL be displayed as `dd.MM.yyyy`. Returned loans SHALL NOT be listed. Each row SHALL carry the loan `Id`, and group and drone as names.
+Per REQ-007 the system SHALL list all active loans with group, drone, batteries, propellers and loan date. The accessory columns SHALL show the quantity of that type and 0 when the loan has no item of that type. The loan date SHALL be displayed as `dd.MM.yyyy`. Returned loans SHALL NOT be listed. Each row SHALL carry the loan `Id`, group and drone as names and their `Id`s. On the Loans page group and drone names SHALL open their details dialogs.
 
 #### Scenario: Active loan list matches the reference example
 - **GIVEN** "TELLO-02" is loaned to "Group 1" with 3 batteries and 4 propellers on 19.08.2026
@@ -184,6 +184,12 @@ Per REQ-007 the system SHALL list all active loans with group, drone, batteries,
 - **GIVEN** no active loan exists
 - **WHEN** the active loan list is requested
 - **THEN** an empty list is returned
+
+#### Scenario: Open details from the Loans page
+- **GIVEN** the Loans page lists the active loan of "TELLO-02" by "Group 1"
+- **WHEN** the user clicks "Group 1", closes the dialog and clicks "TELLO-02"
+- **THEN** the dialog of "Group 1" opens first
+- **AND** then the dialog of "TELLO-02"
 
 ### Requirement: Show loan history
 Per REQ-010 the system SHALL list returned loans as a history with group, drone, batteries, propellers, loan date and return date, both displayed as `dd.MM.yyyy`. Active loans SHALL NOT be part of the history. Each row SHALL carry the loan `Id`, group and drone as names and their `Id`s. Retired drones and groups SHALL stay in the history. On the History page group and drone names SHALL open their details dialogs.
