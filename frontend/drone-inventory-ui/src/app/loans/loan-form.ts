@@ -135,6 +135,7 @@ function chooseSingleOption(
               name="batteries"
               type="number"
               min="0"
+              [max]="maxBatteries"
               step="1"
               inputmode="numeric"
               placeholder="optional"
@@ -151,6 +152,7 @@ function chooseSingleOption(
               name="propellers"
               type="number"
               min="0"
+              [max]="maxPropellers"
               step="1"
               inputmode="numeric"
               placeholder="optional"
@@ -162,6 +164,12 @@ function chooseSingleOption(
             <p class="text-sm text-destructive">
               Batteries and propellers must be whole numbers, 0 or more.
             </p>
+          }
+          @if (tooManyBatteries()) {
+            <p class="text-sm text-destructive">At most {{ maxBatteries }} batteries</p>
+          }
+          @if (tooManyPropellers()) {
+            <p class="text-sm text-destructive">At most {{ maxPropellers }} propellers</p>
           }
 
           <button hlmBtn type="submit" class="justify-self-start" [disabled]="!canSubmit()">
@@ -212,6 +220,13 @@ export class LoanForm {
   protected readonly quantitiesInvalid = computed(
     () => this.batteries() === null || this.propellers() === null,
   );
+  /** Limits per loan; the backend checks them too (loan spec "Loan accessories", design D6). */
+  protected readonly maxBatteries = 10;
+  protected readonly maxPropellers = 20;
+  protected readonly tooManyBatteries = computed(() => (this.batteries() ?? 0) > this.maxBatteries);
+  protected readonly tooManyPropellers = computed(
+    () => (this.propellers() ?? 0) > this.maxPropellers,
+  );
 
   /** The body to send, or null while a drone or group is missing or a quantity is invalid. */
   private readonly request = computed<CreateLoanRequest | null>(() => {
@@ -219,7 +234,14 @@ export class LoanForm {
     const studentGroupId = this.selectedGroupId();
     const batteries = this.batteries();
     const propellers = this.propellers();
-    if (droneId === null || studentGroupId === null || batteries === null || propellers === null) {
+    if (
+      droneId === null ||
+      studentGroupId === null ||
+      batteries === null ||
+      propellers === null ||
+      this.tooManyBatteries() ||
+      this.tooManyPropellers()
+    ) {
       return null;
     }
 

@@ -346,6 +346,28 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     http.expectNone({ method: 'POST', url: '/api/loans' });
   });
 
+  it('The loan form shows the limit: 11 batteries or 21 propellers are not submitted (REQ-006)', () => {
+    answerLists();
+    chooseReferenceDroneAndGroup();
+    expect(batteriesInput().max).toBe('10');
+    expect(propellersInput().max).toBe('20');
+
+    type(batteriesInput(), '11');
+    expect(submitButton().disabled).toBe(true);
+    expect(element().textContent).toContain('At most 10 batteries');
+    submit();
+    http.expectNone({ method: 'POST', url: '/api/loans' });
+
+    type(batteriesInput(), '10');
+    type(propellersInput(), '21');
+    expect(element().textContent).not.toContain('At most 10 batteries');
+    expect(element().textContent).toContain('At most 20 propellers');
+    expect(submitButton().disabled).toBe(true);
+
+    type(propellersInput(), '20');
+    expect(submitButton().disabled).toBe(false);
+  });
+
   it('disables Loan drone and sends nothing for a fractional quantity (REQ-006)', () => {
     answerLists();
     chooseReferenceDroneAndGroup();
