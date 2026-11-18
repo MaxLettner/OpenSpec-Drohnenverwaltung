@@ -153,7 +153,7 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     expect(form!.compareDocumentPosition(list!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('refreshes the active loan list after the loan form created a loan (REQ-004)', () => {
+  it('refreshes the active loan list after the loan form created a loan (REQ-004)', async () => {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([group1Loan]);
     answerLoanFormLists(
@@ -171,8 +171,8 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     fixture.detectChanges();
 
     const input = (id: string) => element().querySelector<HTMLInputElement>(`#${id}`)!;
-    chooseOption(element(), 'loan-drone', 'TELLO-07');
-    chooseOption(element(), 'loan-group', 'Group 3');
+    await chooseOption(fixture, element(), 'loan-drone', 'TELLO-07');
+    await chooseOption(fixture, element(), 'loan-group', 'Group 3');
     input('loan-batteries').value = '4';
     input('loan-batteries').dispatchEvent(new Event('input'));
     input('loan-propellers').value = '8';
@@ -351,7 +351,7 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
 
   const element = () => fixture.nativeElement as HTMLElement;
   const batteriesInput = () => element().querySelector<HTMLInputElement>('#loan-batteries')!;
-  const droneOptions = () => offeredOptions(element(), 'loan-drone');
+  const droneOptions = () => offeredOptions(fixture, element(), 'loan-drone');
   const returnButton = () =>
     element().querySelector<HTMLButtonElement>('tbody button:not([aria-label^="Details of"])')!;
   const submitButton = () => element().querySelector<HTMLButtonElement>('button[type="submit"]')!;
@@ -419,12 +419,12 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     });
   }
 
-  function choose(id: 'loan-drone' | 'loan-group', name: string): void {
-    chooseOption(element(), id, name);
+  async function choose(id: 'loan-drone' | 'loan-group', name: string): Promise<void> {
+    await chooseOption(fixture, element(), id, name);
     fixture.detectChanges();
   }
 
-  it('Returned drone is offered again without reloading the page', () => {
+  it('Returned drone is offered again without reloading the page', async () => {
     openPage([tello07('Loaned')]);
     expect(element().textContent).toContain('No drones available.');
     expect(optionList(element(), 'loan-drone')).toBeNull();
@@ -434,15 +434,15 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     fixture.detectChanges();
 
     expect(element().textContent).not.toContain('No drones available.');
-    expect(droneOptions()).toEqual(['TELLO-07']);
+    expect(await droneOptions()).toEqual(['TELLO-07']);
     // Only the drone list was requested again: the page was not reloaded.
     http.expectNone({ method: 'GET', url: '/api/loans/active' });
   });
 
-  it('Entered values are kept while the returned drone is added', () => {
+  it('Entered values are kept while the returned drone is added', async () => {
     openPage([tello07('Loaned'), tello08]);
-    choose('loan-drone', 'TELLO-08');
-    choose('loan-group', 'Group 1');
+    await choose('loan-drone', 'TELLO-08');
+    await choose('loan-group', 'Group 1');
     batteriesInput().value = '2';
     batteriesInput().dispatchEvent(new Event('input'));
     fixture.detectChanges();
@@ -451,10 +451,10 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available'), tello08]);
     fixture.detectChanges();
 
-    expect(chosenOption(element(), 'loan-drone')).toBe('TELLO-08');
-    expect(chosenOption(element(), 'loan-group')).toBe('Group 1');
+    expect(await chosenOption(fixture, element(), 'loan-drone')).toBe('TELLO-08');
+    expect(await chosenOption(fixture, element(), 'loan-group')).toBe('Group 1');
     expect(batteriesInput().value).toBe('2');
-    expect(droneOptions()).toEqual(['TELLO-07', 'TELLO-08']);
+    expect(await droneOptions()).toEqual(['TELLO-07', 'TELLO-08']);
   });
 
   it('Rejected return changes nothing', () => {
@@ -474,14 +474,14 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     expect(element().querySelectorAll('tbody tr').length).toBe(1);
   });
 
-  it('Returned drone can be loaned again at once', () => {
+  it('Returned drone can be loaned again at once', async () => {
     openPage([tello07('Loaned')]);
     returnTello07();
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available')]);
     fixture.detectChanges();
 
-    choose('loan-drone', 'TELLO-07');
-    choose('loan-group', 'Group 1');
+    await choose('loan-drone', 'TELLO-07');
+    await choose('loan-group', 'Group 1');
     submitButton().click();
 
     const req = http.expectOne({ method: 'POST', url: '/api/loans' });
@@ -558,26 +558,29 @@ describe('LoansPage: Open the loan form with a chosen drone (REQ-004, REQ-005)',
   it('Opened with an available drone: TELLO-08 is chosen', async () => {
     const page = await open('/loans?droneId=8');
 
-    expect(chosenOption(page, 'loan-drone')).toBe('TELLO-08');
+    expect(await chosenOption(harness.fixture, page, 'loan-drone')).toBe('TELLO-08');
   });
 
   it('Opened with a drone that is loaned: nothing is chosen, the available drones are offered', async () => {
     const page = await open('/loans?droneId=2');
 
-    expect(chosenOption(page, 'loan-drone')).toBeNull();
-    expect(offeredOptions(page, 'loan-drone')).toEqual(['TELLO-07', 'TELLO-08']);
+    expect(await chosenOption(harness.fixture, page, 'loan-drone')).toBeNull();
+    expect(await offeredOptions(harness.fixture, page, 'loan-drone')).toEqual([
+      'TELLO-07',
+      'TELLO-08',
+    ]);
   });
 
   it('Opened with an unknown drone: nothing is chosen and no error is shown', async () => {
     const page = await open('/loans?droneId=999');
 
-    expect(chosenOption(page, 'loan-drone')).toBeNull();
+    expect(await chosenOption(harness.fixture, page, 'loan-drone')).toBeNull();
     expect(TestBed.inject(ToastService).toasts()).toEqual([]);
   });
 
   it('ignores a droneId that is not a whole number', async () => {
     const page = await open('/loans?droneId=abc');
 
-    expect(chosenOption(page, 'loan-drone')).toBeNull();
+    expect(await chosenOption(harness.fixture, page, 'loan-drone')).toBeNull();
   });
 });

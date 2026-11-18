@@ -9,16 +9,16 @@ export interface PickerOption {
   readonly description?: string | null;
 }
 
-/** Up to this many options are shown as a list; more become a search box (polish-loan-form, design D1). */
-export const OPTION_LIST_LIMIT = 6;
+/** Up to this many options are shown as a list; more become a search box (search-loan-form-options, design D1). */
+export const OPTION_LIST_LIMIT = 1;
 
 /** Name match that ignores case but nothing else: "contains the typed text, ignoring case" (REQ-004). */
 const NAME_MATCH: Intl.CollatorOptions = { usage: 'search', sensitivity: 'accent' };
 
 /**
- * Lets the user choose one option. Up to `OPTION_LIST_LIMIT` options are shown as radio buttons,
- * each with its name and description; more options are offered through a search box that narrows
- * them by name. In the search box, changing the text away from the chosen name clears the choice,
+ * Lets the user choose one option. Up to `OPTION_LIST_LIMIT` options (a single one) are shown as
+ * a radio card with its name and description; 2 or more options are offered through a search box
+ * that offers all of them when opened and narrows them by name while the user types. In the search box, changing the text away from the chosen name clears the choice,
  * so the box never shows one option while another is chosen (design D3).
  */
 @Component({

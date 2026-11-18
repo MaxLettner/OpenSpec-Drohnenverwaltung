@@ -336,7 +336,7 @@ describe('DronesPage: Start a loan from the drone list (REQ-002, REQ-004)', () =
 
     const loansPage = harness.routeNativeElement!;
     expect(loansPage.querySelector('h1')?.textContent?.trim()).toBe('Loans');
-    expect(chosenOption(loansPage, 'loan-drone')).toBe('TELLO-07');
+    expect(await chosenOption(harness.fixture, loansPage, 'loan-drone')).toBe('TELLO-07');
   });
 });
 
