@@ -152,6 +152,19 @@ describe('Drone details dialog', () => {
     expect(row.textContent).toContain('Available');
   });
 
+  it('shows the availability next to the name and closes with the X in the top right', async () => {
+    open('TELLO-02', loanedDetails);
+    const title = dialog()!.querySelector('#drone-details-title')!;
+    expect(title.parentElement!.textContent).toContain('Loaned');
+
+    dialog()!.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(dialog()).toBeNull();
+    expect(document.activeElement).toBe(nameButton('TELLO-02'));
+  });
+
   it('Close with Escape', async () => {
     open('TELLO-02', loanedDetails);
 
