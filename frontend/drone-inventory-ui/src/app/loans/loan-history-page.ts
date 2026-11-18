@@ -21,19 +21,19 @@ import { LoanService } from './loan.service';
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">History</h1>
 
-    @switch (state()) {
-      @case ('loading') {
-        <p class="text-sm text-muted-foreground">Loading loan history...</p>
-      }
-      @case ('loaded') {
-        @if (rows().length === 0) {
-          <p class="text-sm text-muted-foreground">No returned loans yet.</p>
-        } @else {
-          <section hlmCard aria-labelledby="loan-history-title">
-            <div hlmCardHeader>
-              <h2 hlmCardTitle id="loan-history-title">Returned loans</h2>
-            </div>
-            <div hlmCardContent>
+    <section hlmCard aria-labelledby="loan-history-title">
+      <div hlmCardHeader>
+        <h2 hlmCardTitle id="loan-history-title">Returned loans</h2>
+      </div>
+      <div hlmCardContent>
+        @switch (state()) {
+          @case ('loading') {
+            <p class="text-sm text-muted-foreground">Loading loan history...</p>
+          }
+          @case ('loaded') {
+            @if (rows().length === 0) {
+              <p class="text-sm text-muted-foreground">No returned loans yet.</p>
+            } @else {
               <div hlmTableContainer>
                 <table hlmTable>
                   <thead hlmTHead>
@@ -60,14 +60,14 @@ import { LoanService } from './loan.service';
                   </tbody>
                 </table>
               </div>
-            </div>
-          </section>
+            }
+          }
+          @case ('failed') {
+            <p class="text-sm text-muted-foreground">The loan history could not be loaded.</p>
+          }
         }
-      }
-      @case ('failed') {
-        <p class="text-sm text-muted-foreground">The loan history could not be loaded.</p>
-      }
-    }
+      </div>
+    </section>
   `,
 })
 export class LoanHistoryPage {

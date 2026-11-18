@@ -12,6 +12,7 @@ import { Theme, ThemeService } from './shared/theme/theme.service';
   providers: [provideIcons({ lucideSun, lucideMoon })],
   selector: 'app-root',
   templateUrl: './app.html',
+  host: { '(document:pointermove)': 'trackPointer($event)' },
 })
 export class App {
   private readonly themeService = inject(ThemeService);
@@ -25,6 +26,20 @@ export class App {
     { path: '/loans', label: 'Loans', exact: true },
     { path: '/loans/history', label: 'History', exact: false },
   ];
+
+  /**
+   * Hands the pointer position to the card under it, which draws its border highlight there
+   * (styles.css, add-home-dashboard design D7). One listener serves every card.
+   */
+  protected trackPointer(event: PointerEvent): void {
+    const card = (event.target as Element | null)?.closest?.<HTMLElement>('[data-slot="card"]');
+    if (!card) {
+      return;
+    }
+    const box = card.getBoundingClientRect();
+    card.style.setProperty('--pointer-x', `${event.clientX - box.left}px`);
+    card.style.setProperty('--pointer-y', `${event.clientY - box.top}px`);
+  }
 
   protected choose(theme: Theme): void {
     this.themeService.choose(theme);

@@ -20,7 +20,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 4. Styling (no spec change)
 
-- [ ] 4.1 Show loading, empty and failed texts inside the list card on every page, make the page gradient clearly visible with 4.5:1 text contrast, and add the pointer-following card border highlight (design D7); verify that `theme-tokens.spec.ts` and the page specs pass and check every page in both themes in the browser (#130)
+- [x] 4.1 Show loading, empty and failed texts inside the list card on every page, make the page gradient clearly visible with 4.5:1 text contrast, and add the pointer-following card border highlight (design D7); verify that `theme-tokens.spec.ts` and the page specs pass and check every page in both themes in the browser (#130)
 
 ## Workflow follow-up
 

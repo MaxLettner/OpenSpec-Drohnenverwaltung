@@ -25,15 +25,16 @@
    * --page-tint is the strongest share of the accent; theme-tokens.spec.ts checks that the text
    * on the page keeps 4.5:1 against it. Cards stay opaque on top.
    */
+  /* Capped by the mauve link text, which must keep 4.5:1 where both glows overlap. */
   --page-tint: 6%;
   --page-gradient:
     radial-gradient(
-      ellipse 80% 60% at 0% 0%,
+      ellipse 110% 85% at 0% 0%,
       color-mix(in oklch, var(--ctp-mauve) var(--page-tint), transparent),
       transparent 70%
     ),
     radial-gradient(
-      ellipse 70% 60% at 100% 100%,
+      ellipse 100% 85% at 100% 100%,
       color-mix(in oklch, var(--ctp-blue) var(--page-tint), transparent),
       transparent 70%
     );
@@ -90,7 +91,7 @@
   --ctp-blue: #8aadf4;
   --ctp-crust: #181926;
 
-  --page-tint: 12%;
+  --page-tint: 18%;
 
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -108,7 +109,8 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  /* 0.76 instead of shadcn's 0.708 leaves room for the visible page gradient. */
+  --muted-foreground: oklch(0.76 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: var(--ctp-red);
@@ -224,11 +226,49 @@
   animation-duration: 250ms;
 }
 
+/*
+ * Card border highlight (add-home-dashboard design D7): a glow in the accent color follows the
+ * pointer along the border of the card under it. App sets --pointer-x/--pointer-y on that card.
+ * Only the 1px border ring is painted (mask), so the content stays untouched. No highlight on
+ * touch screens, where there is no hovering pointer.
+ */
+[data-slot='card'] {
+  position: relative;
+}
+[data-slot='card']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: radial-gradient(
+    20rem circle at var(--pointer-x, -100rem) var(--pointer-y, -100rem),
+    var(--primary),
+    color-mix(in oklab, var(--primary) 40%, transparent) 35%,
+    transparent 75%
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+@media (hover: hover) {
+  [data-slot='card']:hover::after {
+    opacity: 1;
+  }
+}
+
 /* One switch for all motion (design D5): the change is shown at once. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+  [data-slot='card']::after {
+    transition: none;
   }
 }

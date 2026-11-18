@@ -32,19 +32,19 @@ import { LoanService } from '../loans/loan.service';
 
     <app-drone-form (created)="reload()" />
 
-    @switch (state()) {
-      @case ('loading') {
-        <p class="text-sm text-muted-foreground">Loading drones...</p>
-      }
-      @case ('loaded') {
-        @if (drones().length === 0) {
-          <p class="text-sm text-muted-foreground">No drones yet.</p>
-        } @else {
-          <section hlmCard aria-labelledby="drone-list-title">
-            <div hlmCardHeader>
-              <h2 hlmCardTitle id="drone-list-title">All drones</h2>
-            </div>
-            <div hlmCardContent>
+    <section hlmCard aria-labelledby="drone-list-title">
+      <div hlmCardHeader>
+        <h2 hlmCardTitle id="drone-list-title">All drones</h2>
+      </div>
+      <div hlmCardContent>
+        @switch (state()) {
+          @case ('loading') {
+            <p class="text-sm text-muted-foreground">Loading drones...</p>
+          }
+          @case ('loaded') {
+            @if (drones().length === 0) {
+              <p class="text-sm text-muted-foreground">No drones yet.</p>
+            } @else {
               <div hlmTableContainer>
                 <table hlmTable>
                   <thead hlmTHead>
@@ -119,14 +119,14 @@ import { LoanService } from '../loans/loan.service';
                   </tbody>
                 </table>
               </div>
-            </div>
-          </section>
+            }
+          }
+          @case ('failed') {
+            <p class="text-sm text-muted-foreground">The drones could not be loaded.</p>
+          }
         }
-      }
-      @case ('failed') {
-        <p class="text-sm text-muted-foreground">The drones could not be loaded.</p>
-      }
-    }
+      </div>
+    </section>
   `,
 })
 export class DronesPage {
