@@ -19,7 +19,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 4. Background
 
-- [ ] 4.1 Add `--ctp-blue` and the `--page-gradient` token for Latte and Macchiato and use it on `body` with a fixed attachment (design D7); extend `theme-tokens.spec.ts` with the scenarios "Background gradient in both themes" and "Text on the page background stays readable", keep "Accents come from the active flavor" and "Readable text in both themes" passing, and check every page in the browser in both themes (#102)
+- [x] 4.1 Add `--ctp-blue` and the `--page-gradient` token for Latte and Macchiato and use it on `body` with a fixed attachment (design D7); extend `theme-tokens.spec.ts` with the scenarios "Background gradient in both themes" and "Text on the page background stays readable", keep "Accents come from the active flavor" and "Readable text in both themes" passing, and check every page in the browser in both themes (#102)
 
 ## Workflow follow-up
 

@@ -92,8 +92,8 @@ function contrast(foreground: Rgba, background: Rgba): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
-const LATTE = { mauve: '#8839ef', red: '#d20f39', green: '#40a02b', peach: '#fe640b' };
-const MACCHIATO = { mauve: '#c6a0f6', red: '#ed8796', green: '#a6da95', peach: '#f5a97f' };
+const LATTE = { mauve: '#8839ef', red: '#d20f39', green: '#40a02b', peach: '#fe640b', blue: '#1e66f5' };
+const MACCHIATO = { mauve: '#c6a0f6', red: '#ed8796', green: '#a6da95', peach: '#f5a97f', blue: '#8aadf4' };
 
 describe('ui-theme: Accents come from the active flavor', () => {
   it.each([
@@ -147,6 +147,82 @@ describe('ui-theme: Readable text in both themes', () => {
 
     for (const [description, foreground, surface] of pairs) {
       expect(contrast(foreground, surface), description).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
+/** The strongest share of the accent in the page gradient, e.g. `8%` → 0.08. */
+function pageTint(tokens: Map<string, string>): number {
+  const tint = /^([\d.]+)%$/.exec(resolve(tokens, '--page-tint'));
+  expect(tint, '--page-tint is a percentage').not.toBeNull();
+  return Number(tint![1]) / 100;
+}
+
+describe('ui-theme: Background gradient in both themes', () => {
+  it('paints the page gradient on the body and keeps it still while scrolling', () => {
+    const body = /@layer base\s*\{[\s\S]*?\bbody\s*\{([^}]*)\}/.exec(styles);
+    expect(body, 'body rule in the base layer').not.toBeNull();
+    expect(body![1]).toContain('bg-background');
+    expect(body![1]).toMatch(/background-image:\s*var\(--page-gradient\)/);
+    expect(body![1]).toMatch(/background-attachment:\s*fixed/);
+  });
+
+  it('tints the gradient with the mauve and blue of the shown flavor', () => {
+    const gradient = readTokens(':root').get('--page-gradient')!;
+    expect(gradient).toContain('var(--ctp-mauve)');
+    expect(gradient).toContain('var(--ctp-blue)');
+    // Both accents fade out into the background instead of covering it.
+    expect(gradient.match(/transparent 70%/g)?.length).toBe(2);
+
+    for (const [dark, flavor] of [
+      [false, LATTE],
+      [true, MACCHIATO],
+    ] as const) {
+      const tokens = themeTokens(dark);
+      expect(resolve(tokens, '--ctp-mauve')).toBe(flavor.mauve);
+      expect(resolve(tokens, '--ctp-blue')).toBe(flavor.blue);
+      expect(pageTint(tokens)).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps the cards solid and neutral on top of the gradient', () => {
+    for (const dark of [false, true]) {
+      const card = parseColor(resolve(themeTokens(dark), '--card'));
+      expect(card.a).toBe(1);
+    }
+  });
+});
+
+describe('ui-theme: Text on the page background stays readable', () => {
+  it.each([
+    ['Latte (light theme)', false],
+    ['Macchiato (dark theme)', true],
+  ])('keeps 4.5:1 for the text on the page at every point of the %s gradient', (_name, dark) => {
+    const tokens = themeTokens(dark);
+    const color = (name: string) => parseColor(resolve(tokens, name));
+    const tint = pageTint(tokens);
+    const background = color('--background');
+    const mauveGlow = over(color('--ctp-mauve'), tint, background);
+    const blueGlow = over(color('--ctp-blue'), tint, background);
+    // Where both glows overlap, as a worst case.
+    const bothGlows = over(color('--ctp-blue'), tint, mauveGlow);
+
+    // Text that sits directly on the page: the heading, empty-state and loading texts, the links
+    // and the active navigation entry.
+    const texts: [string, Rgba][] = [
+      ['page heading', color('--foreground')],
+      ['empty-state and loading text', color('--muted-foreground')],
+      ['link and active navigation', color('--primary')],
+    ];
+    for (const [point, surface] of [
+      ['plain background', background],
+      ['mauve glow', mauveGlow],
+      ['blue glow', blueGlow],
+      ['both glows', bothGlows],
+    ] as const) {
+      for (const [text, foreground] of texts) {
+        expect(contrast(foreground, surface), `${text} on the ${point}`).toBeGreaterThanOrEqual(4.5);
+      }
     }
   });
 });

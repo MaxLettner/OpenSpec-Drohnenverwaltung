@@ -15,7 +15,26 @@
   --ctp-red: #d20f39;
   --ctp-green: #40a02b;
   --ctp-peach: #fe640b;
+  --ctp-blue: #1e66f5;
   --ctp-base: #eff1f5;
+
+  /*
+   * Page background: two soft accent glows over the neutral background (ui-theme, design D7).
+   * --page-tint is the strongest share of the accent; theme-tokens.spec.ts checks that the text
+   * on the page keeps 4.5:1 against it. Cards stay opaque on top.
+   */
+  --page-tint: 6%;
+  --page-gradient:
+    radial-gradient(
+      ellipse 80% 60% at 0% 0%,
+      color-mix(in oklch, var(--ctp-mauve) var(--page-tint), transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 70% 60% at 100% 100%,
+      color-mix(in oklch, var(--ctp-blue) var(--page-tint), transparent),
+      transparent 70%
+    );
 
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
@@ -38,7 +57,8 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* 0.52 instead of shadcn's 0.556 leaves room for the page gradient (5.51:1 on white). */
+  --muted-foreground: oklch(0.52 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: var(--ctp-red);
@@ -65,7 +85,10 @@
   --ctp-red: #ed8796;
   --ctp-green: #a6da95;
   --ctp-peach: #f5a97f;
+  --ctp-blue: #8aadf4;
   --ctp-crust: #181926;
+
+  --page-tint: 12%;
 
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -114,5 +137,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Fixed, so that the glows stay where they are while the page scrolls. */
+    background-image: var(--page-gradient);
+    background-attachment: fixed;
   }
 }
