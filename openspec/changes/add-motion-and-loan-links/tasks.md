@@ -15,4 +15,4 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 3. Styling (no spec change)
 
-- [ ] 3.1 Make the card border highlight softer in the dark theme (design D4); check both themes in the browser (#163)
+- [x] 3.1 Make the card border highlight softer in the dark theme (design D4); check both themes in the browser (#163)
