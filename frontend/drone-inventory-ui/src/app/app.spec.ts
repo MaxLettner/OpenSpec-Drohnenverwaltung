@@ -41,7 +41,7 @@ describe('App', () => {
     const labels = Array.from(compiled.querySelectorAll('nav a')).map((link) =>
       link.textContent?.trim(),
     );
-    expect(labels).toEqual(['Home', 'Drones', 'Student groups', 'Loans', 'History']);
+    expect(labels).toEqual(['Drones', 'Student groups', 'Loans', 'History']);
   });
 
   it('renders the toast container once in the app shell', async () => {
@@ -104,13 +104,23 @@ describe('App shell (ui-theme)', () => {
     expect(current).toEqual(['Loans']);
   });
 
-  it('Open the app: the root address marks only Home (dashboard spec)', async () => {
+  it('Open the app: the root address marks the app name, no navigation entry (dashboard spec)', async () => {
     const fixture = await openApp('/');
+    const root = fixture.nativeElement as HTMLElement;
 
-    const current = links(fixture.nativeElement)
+    const current = links(root)
       .filter((link) => link.getAttribute('aria-current') === 'page')
       .map((link) => link.textContent?.trim());
-    expect(current).toEqual(['Home']);
+    expect(current).toEqual([]);
+    expect(links(root).map((link) => link.textContent?.trim())).toEqual([
+      'Drones',
+      'Student groups',
+      'Loans',
+      'History',
+    ]);
+    const appName = root.querySelector<HTMLAnchorElement>('header > div > a')!;
+    expect(appName.textContent?.trim()).toBe('Drone Lending System');
+    expect(appName.getAttribute('aria-current')).toBe('page');
   });
 
   it('Go home from the header: the app name leads from Loans to the Home page (dashboard spec)', async () => {

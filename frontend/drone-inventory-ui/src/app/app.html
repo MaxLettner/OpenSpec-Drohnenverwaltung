@@ -1,7 +1,11 @@
 <header class="site-header sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
   <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
+    <!-- The way to the Home page; there is no separate "Home" entry (dashboard spec). -->
     <a
       routerLink="/"
+      routerLinkActive
+      [routerLinkActiveOptions]="{ exact: true }"
+      ariaCurrentWhenActive="page"
       class="order-1 flex items-center gap-2 rounded-sm text-base font-semibold tracking-tight focus-visible:outline-2"
     >
       <app-logo class="size-6 text-primary" />
