@@ -112,6 +112,25 @@ describe('App shell (ui-theme)', () => {
     expect(current).toEqual(['Home']);
   });
 
+  it('hands the pointer position to the card under it for its border highlight (design D7)', async () => {
+    const fixture = await openApp('/loans');
+    const card = document.createElement('div');
+    card.dataset['slot'] = 'card';
+    (fixture.nativeElement as HTMLElement).querySelector('main')!.append(card);
+    const box = card.getBoundingClientRect();
+
+    card.dispatchEvent(
+      new PointerEvent('pointermove', {
+        bubbles: true,
+        clientX: box.left + 30,
+        clientY: box.top + 12,
+      }),
+    );
+
+    expect(card.style.getPropertyValue('--pointer-x')).toBe('30px');
+    expect(card.style.getPropertyValue('--pointer-y')).toBe('12px');
+  });
+
   it('marks History, not Loans, on the History page', async () => {
     const fixture = await openApp('/loans/history');
 
