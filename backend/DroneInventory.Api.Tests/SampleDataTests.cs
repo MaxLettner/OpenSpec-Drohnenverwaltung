@@ -102,21 +102,29 @@ public class SampleDataTests
     }
 
     [Fact]
-    public async Task Production_writes_no_sample_data()
+    public async Task Production_without_sample_data_setting_writes_no_sample_data()
+    {
+        using var folder = new TempDatabaseFolder();
+        using var production = new FileDatabaseFactory(folder.ConnectionString);
+        var client = production.CreateClient();
+
+        Assert.Equal(0, (await GetAsync(client, "/api/drones")).GetArrayLength());
+        Assert.Equal(0, (await GetAsync(client, "/api/student-groups")).GetArrayLength());
+        Assert.Equal(0, (await GetAsync(client, "/api/loans/active")).GetArrayLength());
+        Assert.Equal(0, (await GetAsync(client, "/api/loans/history")).GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Sample_data_switched_on_in_Production_fills_an_empty_database()
     {
         using var baseFactory = new ApiFactory { SeedSampleData = true };
-        using (OpenBeforeStart(baseFactory))
-        {
-        }
-
         using var production = baseFactory.WithWebHostBuilder(builder => builder.UseEnvironment("Production"));
-        production.CreateClient();
 
-        using var scope = production.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.False(await db.Drones.AnyAsync());
-        Assert.False(await db.StudentGroups.AnyAsync());
-        Assert.False(await db.Loans.AnyAsync());
+        var drones = (await GetAsync(production.CreateClient(), "/api/drones")).EnumerateArray().ToList();
+
+        Assert.Equal(10, drones.Count);
+        Assert.Contains(drones, d => d.GetProperty("availability").GetString() == "Available");
+        Assert.Contains(drones, d => d.GetProperty("availability").GetString() == "Loaned");
     }
 
     [Fact]
