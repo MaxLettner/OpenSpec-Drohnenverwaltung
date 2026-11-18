@@ -48,9 +48,9 @@ describe('errorToastInterceptor (REQ-001, REQ-004, REQ-005, REQ-008)', () => {
   });
 
   it('shows the detail of a 404 ProblemDetails (unknown loan)', () => {
-    loans.get(42).subscribe({ error: () => undefined });
+    loans.return(42).subscribe({ error: () => undefined });
 
-    http.expectOne({ method: 'GET', url: '/api/loans/42' }).flush(
+    http.expectOne({ method: 'POST', url: '/api/loans/42/return' }).flush(
       {
         title: 'Not Found',
         status: 404,
@@ -110,10 +110,10 @@ describe('errorToastInterceptor (REQ-001, REQ-004, REQ-005, REQ-008)', () => {
 
   it('rethrows the error so that the calling component can react to it', () => {
     let thrown: unknown;
-    loans.get(42).subscribe({ error: (error: unknown) => (thrown = error) });
+    loans.return(42).subscribe({ error: (error: unknown) => (thrown = error) });
 
     http
-      .expectOne({ method: 'GET', url: '/api/loans/42' })
+      .expectOne({ method: 'POST', url: '/api/loans/42/return' })
       .flush(
         { status: 404, detail: 'Loan 42 does not exist.' },
         { status: 404, statusText: 'Not Found' },
@@ -124,20 +124,20 @@ describe('errorToastInterceptor (REQ-001, REQ-004, REQ-005, REQ-008)', () => {
   });
 
   it('shows nothing for a successful response', () => {
-    let loaded = false;
-    loans.get(5).subscribe(() => (loaded = true));
+    let succeeded = false;
+    loans.return(5).subscribe(() => (succeeded = true));
 
-    http.expectOne({ method: 'GET', url: '/api/loans/5' }).flush({
+    http.expectOne({ method: 'POST', url: '/api/loans/5/return' }).flush({
       id: 5,
       droneId: 7,
       studentGroupId: 3,
-      status: 'Active',
+      status: 'Returned',
       loanDate: '2026-08-19',
-      returnDate: null,
+      returnDate: '2026-08-20',
       items: [],
     });
 
-    expect(loaded).toBe(true);
+    expect(succeeded).toBe(true);
     expect(messages()).toEqual([]);
   });
 });
