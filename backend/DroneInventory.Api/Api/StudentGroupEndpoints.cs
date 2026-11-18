@@ -1,3 +1,4 @@
+using DroneInventory.Api.Application;
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,17 @@ public static class StudentGroupEndpoints
         var group = app.MapGroup("/api/student-groups");
         group.MapPost("/", CreateAsync);
         group.MapGet("/", ListAsync);
+        group.MapGet("/{id:int}", GetAsync);
+    }
+
+    // Student-group spec "Show student group details" (design D3); "today" is the UTC date the loans use.
+    private static async Task<IResult> GetAsync(int id, AppDbContext db, TimeProvider timeProvider)
+    {
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var details = await db.GetStudentGroupDetailsAsync(id, today);
+        return details is null
+            ? ApiResults.NotFound($"No student group with the Id {id} exists.")
+            : Results.Ok(details);
     }
 
     // Fixed order by name (design D10); the NOCASE collation makes it case-insensitive.
