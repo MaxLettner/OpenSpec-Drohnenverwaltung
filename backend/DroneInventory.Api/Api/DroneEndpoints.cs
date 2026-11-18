@@ -16,6 +16,18 @@ public static class DroneEndpoints
         var group = app.MapGroup("/api/drones");
         group.MapPost("/", CreateAsync);
         group.MapGet("/", ListAsync);
+        // {id:int}: a non-integer id does not match and ends as a 404 ProblemDetails.
+        group.MapGet("/{id:int}", GetAsync);
+    }
+
+    // Drone spec "Show drone details" (design D3); "today" is the same UTC date the loans use.
+    private static async Task<IResult> GetAsync(int id, AppDbContext db, TimeProvider timeProvider)
+    {
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var details = await db.GetDroneDetailsAsync(id, today);
+        return details is null
+            ? ApiResults.NotFound($"No drone with the Id {id} exists.")
+            : Results.Ok(details);
     }
 
     // REQ-002: the derived availability comes from the query, not from a stored column (design D2).

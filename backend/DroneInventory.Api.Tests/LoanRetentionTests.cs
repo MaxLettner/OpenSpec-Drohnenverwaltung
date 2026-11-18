@@ -79,8 +79,8 @@ public class LoanRetentionTests
 
         var response = await client.DeleteAsync(url);
 
-        // Drones and groups have no route with an id, so 404; /api/loans has POST, so 405.
-        var expected = url == "/api/loans" ? HttpStatusCode.MethodNotAllowed : HttpStatusCode.NotFound;
+        // Groups have no route with an id, so 404; /api/loans has POST and /api/drones/{id} GET, so 405.
+        var expected = url == "/api/student-groups/1" ? HttpStatusCode.NotFound : HttpStatusCode.MethodNotAllowed;
         Assert.Equal(expected, response.StatusCode);
     }
 
