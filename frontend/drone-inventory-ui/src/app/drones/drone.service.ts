@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateDroneRequest, Drone, DroneDetails } from './drone.models';
+import { CreateDroneRequest, Drone, DroneDetails, UpdateDroneRequest } from './drone.models';
 
 /** Talks to the drone endpoints of the backend (REQ-001, REQ-002). */
 @Injectable({ providedIn: 'root' })
@@ -19,5 +19,10 @@ export class DroneService {
 
   create(request: CreateDroneRequest): Observable<Drone> {
     return this.http.post<Drone>('/api/drones', request);
+  }
+
+  /** Changes the name and description of a drone (drone spec "Edit a drone"). */
+  update(id: number, request: UpdateDroneRequest): Observable<Drone> {
+    return this.http.put<Drone>(`/api/drones/${id}`, request);
   }
 }

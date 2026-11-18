@@ -77,7 +77,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
     ]);
     fixture.detectChanges();
 
-    expect(listedNames()).toEqual(['Group 1', 'Group 3']);
+    expect(listedNames()).toEqual(['Group 1', 'Edit', 'Group 3', 'Edit']);
     expect(nameInput().value).toBe('');
   });
 
@@ -87,7 +87,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
       { id: 3, name: 'Group 3' },
     ]);
 
-    expect(listedNames()).toEqual(['Group 1', 'Group 3']);
+    expect(listedNames()).toEqual(['Group 1', 'Edit', 'Group 3', 'Edit']);
   });
 
   it('shows the empty state when no student group exists', () => {
@@ -141,7 +141,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
     fixture.detectChanges();
 
     expect(nameInput().value).toBe('Group 1');
-    expect(listedNames()).toEqual(['Group 1']);
+    expect(listedNames()).toEqual(['Group 1', 'Edit']);
     expect(createButton().disabled).toBe(false);
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'A student group named "Group 1" already exists.',

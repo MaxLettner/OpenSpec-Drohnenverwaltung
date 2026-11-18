@@ -19,6 +19,11 @@ export interface CreateDroneRequest {
   description?: string;
 }
 
+export interface UpdateDroneRequest {
+  name: string;
+  description: string | null;
+}
+
 /** The active Loan in the drone details (`GET /api/drones/{id}`); dates are ISO `yyyy-MM-dd`. */
 export interface DroneActiveLoan {
   id: number;

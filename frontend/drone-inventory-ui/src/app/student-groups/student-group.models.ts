@@ -10,6 +10,10 @@ export interface CreateStudentGroupRequest {
   name: string;
 }
 
+export interface UpdateStudentGroupRequest {
+  name: string;
+}
+
 /** An active loan in the group details (student-group spec "Show student group details"). */
 export interface StudentGroupActiveLoan {
   id: number;

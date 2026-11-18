@@ -8,6 +8,7 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { LoadState } from '../shared/load-state';
 import { DroneDetailsDialog, DroneDetailsDialogData } from './drone-details-dialog';
+import { DroneEditDialog, DroneEditDialogData } from './drone-edit-dialog';
 import { DroneForm } from './drone-form';
 import { Drone } from './drone.models';
 import { DroneService } from './drone.service';
@@ -89,7 +90,17 @@ import { LoanService } from '../loans/loan.service';
                         <td hlmTd class="min-w-48 whitespace-normal">
                           {{ drone.description || '—' }}
                         </td>
-                        <td hlmTd>
+                        <td hlmTd class="space-x-2">
+                          <button
+                            hlmBtn
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            [attr.aria-label]="'Edit ' + drone.name"
+                            (click)="openEdit(drone)"
+                          >
+                            Edit
+                          </button>
                           @if (drone.availability === 'Available') {
                             <a
                               hlmBtn
@@ -163,6 +174,15 @@ export class DronesPage {
     this.dialog.open<void, DroneDetailsDialogData>(DroneDetailsDialog, {
       data: { droneId: drone.id, returned: () => this.reload() },
       ariaLabelledBy: 'drone-details-title',
+      autoFocus: 'first-tabbable',
+    });
+  }
+
+  /** Opens the edit dialog; a save reloads the list (design D5). */
+  openEdit(drone: Drone): void {
+    this.dialog.open<void, DroneEditDialogData>(DroneEditDialog, {
+      data: { drone, saved: () => this.reload() },
+      ariaLabelledBy: 'drone-edit-title',
       autoFocus: 'first-tabbable',
     });
   }

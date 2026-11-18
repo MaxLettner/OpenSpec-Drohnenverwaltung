@@ -81,8 +81,8 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     fixture.detectChanges();
 
     expect(rows()).toEqual([
-      ['TELLO-02', 'Loaned', 'SSID: TELLO-1A2B3C', 'Return'],
-      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Loan'],
+      ['TELLO-02', 'Loaned', 'SSID: TELLO-1A2B3C', 'Edit  Return'],
+      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Edit Loan'],
     ]);
 
     const badges = Array.from(element().querySelectorAll<HTMLElement>('tbody [data-slot="badge"]'));
@@ -126,7 +126,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     ]);
     fixture.detectChanges();
 
-    expect(rows()).toEqual([['TELLO-08', 'Available', '—', 'Loan']]);
+    expect(rows()).toEqual([['TELLO-08', 'Available', '—', 'Edit Loan']]);
   });
 
   it('shows the empty state when no drone exists (REQ-002)', () => {
@@ -199,7 +199,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     ]);
     fixture.detectChanges();
 
-    expect(rows()).toEqual([['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Loan']]);
+    expect(rows()).toEqual([['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Edit Loan']]);
     expect(nameInput().value).toBe('');
     expect(descriptionInput().value).toBe('');
   });
@@ -235,7 +235,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'A drone with this name already exists.',
     ]);
-    expect(rows()).toEqual([['TELLO-07', 'Available', '—', 'Loan']]);
+    expect(rows()).toEqual([['TELLO-07', 'Available', '—', 'Edit Loan']]);
     expect(nameInput().value).toBe('tello-07');
     expect(descriptionInput().value).toBe('second unit');
   });

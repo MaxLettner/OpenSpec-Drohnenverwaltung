@@ -7,6 +7,8 @@ namespace DroneInventory.Api.Api;
 
 public record CreateDroneRequest(string? Name, string? Description);
 
+public record UpdateDroneRequest(string? Name, string? Description);
+
 public record DroneResponse(int Id, string Name, string? Description);
 
 public static class DroneEndpoints
@@ -16,6 +18,7 @@ public static class DroneEndpoints
         var group = app.MapGroup("/api/drones");
         group.MapPost("/", CreateAsync);
         group.MapGet("/", ListAsync);
+        group.MapPut("/{id:int}", UpdateAsync);
         // {id:int}: a non-integer id does not match and ends as a 404 ProblemDetails.
         group.MapGet("/{id:int}", GetAsync);
     }
@@ -61,6 +64,41 @@ public static class DroneEndpoints
         }
 
         return Results.Created($"/api/drones/{drone.Id}", new DroneResponse(drone.Id, drone.Name, drone.Description));
+    }
+
+    // REQ-001: the same validation as create; the name stays unique ignoring case (design D2).
+    private static async Task<IResult> UpdateAsync(int id, UpdateDroneRequest request, AppDbContext db)
+    {
+        var drone = await db.Drones.SingleOrDefaultAsync(d => d.Id == id);
+        if (drone is null)
+        {
+            return ApiResults.NotFound($"No drone with the Id {id} exists.");
+        }
+
+        var (name, nameErrors) = NameValidation.Validate(request.Name, Drone.NameMaxLength);
+        if (name is null)
+        {
+            return ApiResults.ValidationErrors(nameErrors);
+        }
+
+        var (description, descriptionError) = ValidateDescription(request.Description);
+        if (descriptionError is not null)
+        {
+            return ApiResults.ValidationError("description", descriptionError);
+        }
+
+        drone.Name = name;
+        drone.Description = description;
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (SqliteConstraints.IsUniqueViolation(ex))
+        {
+            return ApiResults.DuplicateName("drone", name);
+        }
+
+        return Results.Ok((await db.GetDronesAsync()).Single(d => d.Id == id));
     }
 
     /// <summary>REQ-001: the description is optional, trimmed, stored as null when blank and at most 500 characters.</summary>
