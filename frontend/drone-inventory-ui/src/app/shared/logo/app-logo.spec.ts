@@ -20,7 +20,7 @@ describe('ui-theme: Show the logo', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
 
-    const brand = (fixture.nativeElement as HTMLElement).querySelector('header span')!;
+    const brand = (fixture.nativeElement as HTMLElement).querySelector('header a')!;
     const logo = brand.firstElementChild!;
     expect(logo.tagName.toLowerCase()).toBe('app-logo');
     expect(logo.classList).toContain('text-primary');
