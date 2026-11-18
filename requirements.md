@@ -32,7 +32,8 @@ Deliberately excluded from this change, not to be implemented on the side:
 - No damage management, no return discrepancies
 - No reports, statistics or exports
 - No edit or delete operations for drones, groups or loans
-- No search, filtering or sorting
+- No search, filtering or sorting of lists. Exception: the loan form may search its
+  drone and student group options by name (`polish-loan-form`).
 
 Further features arrive as separate change requests (`drohnenverwaltung.md` §7).
 
