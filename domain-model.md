@@ -10,8 +10,8 @@ domain terms, not in implementation terms.
 
 | Term | Meaning | Fields | Do not say |
 |---|---|---|---|
-| **Drone** | Lendable aircraft | `Id`, `Name`, `Description` | device, inventory item |
-| **StudentGroup** | Borrowing, responsible student group | `Id`, `Name` | class, team, user |
+| **Drone** | Lendable aircraft | `Id`, `Name`, `Description`, `Retired` | device, inventory item |
+| **StudentGroup** | Borrowing, responsible student group | `Id`, `Name`, `Retired` | class, team, user |
 | **Loan** | Lending transaction — the central entity, connects drone, group, time and accessories | `Id`, `DroneId`, `StudentGroupId`, `LoanDate`, `ReturnDate`, `Status` | rental, issue, booking, reservation |
 | **LoanItem** | Accessory line of a loan | `Id`, `LoanId`, `Type` (`Battery` \| `Propeller`), `Quantity` | accessory list, attachment |
 | **Status** (`LoanStatus`) | State of a loan | `Active`, `Returned` | open/closed |
