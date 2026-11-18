@@ -22,14 +22,14 @@ public sealed class TempDatabaseFolder : IDisposable
 }
 
 /// <summary>
-/// Runs the real API, startup included, on a SQLite file in Production, like a container does.
+/// Runs the real API, startup included, on a SQLite file, by default in Production like a container does.
 /// Unlike <see cref="ApiFactory"/> it keeps the app's own DbContext registration.
 /// </summary>
-public sealed class FileDatabaseFactory(string connectionString) : WebApplicationFactory<Program>
+public sealed class FileDatabaseFactory(string connectionString, string environment = "Production") : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Production");
+        builder.UseEnvironment(environment);
         builder.UseSetting("ConnectionStrings:Default", connectionString);
     }
 }

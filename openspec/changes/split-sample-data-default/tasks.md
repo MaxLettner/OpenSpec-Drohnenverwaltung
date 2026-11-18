@@ -4,7 +4,7 @@ One task, one GitHub issue, one branch and one pull request. Every Given/When/Th
 
 ## 1. Backend
 
-- [ ] 1.1 Test that sample data is on by default in Development: `FileDatabaseFactory` takes an optional environment; test for "On by default in Development" without a sample data setting of its own, and `dotnet test backend` still passes (REQ-001 to REQ-010) (#191)
+- [x] 1.1 Test that sample data is on by default in Development: `FileDatabaseFactory` takes an optional environment; test for "On by default in Development" without a sample data setting of its own, and `dotnet test backend` still passes (REQ-001 to REQ-010) (#191)
 
 ## Workflow follow-up
 
