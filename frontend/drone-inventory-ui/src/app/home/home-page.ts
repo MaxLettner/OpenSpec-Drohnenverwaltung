@@ -12,6 +12,7 @@ import { lucideBatteryMedium, lucideFan } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { CountUp } from '../shared/count-up';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoadState } from '../shared/load-state';
 import { LoanService } from '../loans/loan.service';
@@ -31,7 +32,7 @@ const RING = 2 * Math.PI * 52;
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
-  imports: [DateDisplayPipe, NgIcon, HlmButton, HlmCardImports, HlmTableImports],
+  imports: [CountUp, DateDisplayPipe, NgIcon, HlmButton, HlmCardImports, HlmTableImports],
   providers: [provideIcons({ lucideBatteryMedium, lucideFan })],
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">Home</h1>
@@ -51,7 +52,7 @@ const RING = 2 * Math.PI * 52;
                 <div hlmCardContent>
                   <p class="text-sm text-muted-foreground">{{ stat.label }}</p>
                   <p class="text-3xl font-semibold tabular-nums" [attr.data-stat]="stat.key">
-                    {{ stat.value }}
+                    <app-count-up [value]="stat.value" />
                   </p>
                 </div>
               </div>
@@ -91,7 +92,7 @@ const RING = 2 * Math.PI * 52;
                       cy="60"
                       r="52"
                       fill="none"
-                      class="stroke-success"
+                      class="ring-arc stroke-success"
                       stroke-width="14"
                       [attr.stroke-dasharray]="arc(d.drones.available, d.drones.total)"
                     />
@@ -100,7 +101,7 @@ const RING = 2 * Math.PI * 52;
                       cy="60"
                       r="52"
                       fill="none"
-                      class="stroke-warning"
+                      class="ring-arc stroke-warning"
                       stroke-width="14"
                       [attr.stroke-dasharray]="arc(d.drones.loaned, d.drones.total)"
                       [attr.stroke-dashoffset]="-ringLength(d.drones.available, d.drones.total)"
@@ -111,18 +112,18 @@ const RING = 2 * Math.PI * 52;
                   <li class="flex items-center gap-2">
                     <span class="size-3 rounded-full bg-success" aria-hidden="true"></span>
                     <span
-                      ><strong class="tabular-nums" data-stat="available">{{
-                        d.drones.available
-                      }}</strong>
+                      ><strong class="tabular-nums" data-stat="available"
+                        ><app-count-up [value]="d.drones.available"
+                      /></strong>
                       available</span
                     >
                   </li>
                   <li class="flex items-center gap-2">
                     <span class="size-3 rounded-full bg-warning" aria-hidden="true"></span>
                     <span
-                      ><strong class="tabular-nums" data-stat="loaned">{{
-                        d.drones.loaned
-                      }}</strong>
+                      ><strong class="tabular-nums" data-stat="loaned"
+                        ><app-count-up [value]="d.drones.loaned"
+                      /></strong>
                       loaned</span
                     >
                   </li>
@@ -144,7 +145,7 @@ const RING = 2 * Math.PI * 52;
                   />
                   <div>
                     <p class="text-3xl font-semibold tabular-nums" data-stat="batteries">
-                      {{ d.accessoriesOut.batteries }}
+                      <app-count-up [value]="d.accessoriesOut.batteries" />
                     </p>
                     <p class="text-sm text-muted-foreground">Batteries</p>
                   </div>
@@ -153,7 +154,7 @@ const RING = 2 * Math.PI * 52;
                   <ng-icon name="lucideFan" class="text-primary" size="28" aria-hidden="true" />
                   <div>
                     <p class="text-3xl font-semibold tabular-nums" data-stat="propellers">
-                      {{ d.accessoriesOut.propellers }}
+                      <app-count-up [value]="d.accessoriesOut.propellers" />
                     </p>
                     <p class="text-sm text-muted-foreground">Propellers</p>
                   </div>
@@ -232,7 +233,7 @@ const RING = 2 * Math.PI * 52;
                       week.count
                     }}</span>
                     <span
-                      class="w-full max-w-10 rounded-t-md bg-primary/80"
+                      class="week-bar w-full max-w-10 rounded-t-md bg-primary/80"
                       [style.height.%]="barHeight(week.count)"
                       aria-hidden="true"
                     ></span>
