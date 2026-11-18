@@ -396,10 +396,12 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     openPage([tello07('Loaned')]);
 
     returnButton().click();
-    http.expectOne({ method: 'POST', url: '/api/loans/5/return' }).flush(
-      { title: 'Conflict', status: 409, detail: 'The loan is already returned.' },
-      { status: 409, statusText: 'Conflict' },
-    );
+    http
+      .expectOne({ method: 'POST', url: '/api/loans/5/return' })
+      .flush(
+        { title: 'Conflict', status: 409, detail: 'The loan is already returned.' },
+        { status: 409, statusText: 'Conflict' },
+      );
     fixture.detectChanges();
 
     http.expectNone({ method: 'GET', url: '/api/drones' });

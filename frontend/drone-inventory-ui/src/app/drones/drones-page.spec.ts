@@ -1,6 +1,11 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { LoansPage } from '../loans/loans-page';
+import { chosenOption } from '../shared/option-picker/option-picker.testing';
+import { Drone } from './drone.models';
 import { errorToastInterceptor } from '../shared/http/error-toast.interceptor';
 import { ToastService } from '../shared/toast/toast.service';
 import { DronesPage } from './drones-page';
@@ -12,7 +17,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
 
   const element = () => fixture.nativeElement as HTMLElement;
 
-  /** Text of every table row as the cells of name, availability and description. */
+  /** Text of every table row as the cells of name, availability, description and action. */
   const rows = () =>
     Array.from(element().querySelectorAll('tbody tr')).map((row) =>
       Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent?.trim()),
@@ -33,6 +38,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         provideHttpClient(withInterceptors([errorToastInterceptor])),
         provideHttpClientTesting(),
       ],
@@ -63,8 +69,8 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     fixture.detectChanges();
 
     expect(rows()).toEqual([
-      ['TELLO-02', 'Loaned', 'SSID: TELLO-1A2B3C'],
-      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B'],
+      ['TELLO-02', 'Loaned', 'SSID: TELLO-1A2B3C', ''],
+      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Loan'],
     ]);
 
     const badges = Array.from(element().querySelectorAll<HTMLElement>('tbody [data-slot="badge"]'));
@@ -96,7 +102,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
       .flush([{ id: 3, name: 'TELLO-08', description: null, availability: 'Available' }]);
     fixture.detectChanges();
 
-    expect(rows()).toEqual([['TELLO-08', 'Available', '—']]);
+    expect(rows()).toEqual([['TELLO-08', 'Available', '—', 'Loan']]);
   });
 
   it('shows the empty state when no drone exists (REQ-002)', () => {
@@ -155,7 +161,7 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
       ]);
     fixture.detectChanges();
 
-    expect(rows()).toEqual([['TELLO-07', 'Available', 'SSID: TELLO-9FA21B']]);
+    expect(rows()).toEqual([['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Loan']]);
     expect(nameInput().value).toBe('');
     expect(descriptionInput().value).toBe('');
   });
@@ -185,8 +191,73 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'A drone with this name already exists.',
     ]);
-    expect(rows()).toEqual([['TELLO-07', 'Available', '—']]);
+    expect(rows()).toEqual([['TELLO-07', 'Available', '—', 'Loan']]);
     expect(nameInput().value).toBe('tello-07');
     expect(descriptionInput().value).toBe('second unit');
+  });
+});
+
+/** drone spec: Start a loan from the drone list (REQ-002, REQ-004). */
+describe('DronesPage: Start a loan from the drone list (REQ-002, REQ-004)', () => {
+  let harness: RouterTestingHarness;
+  let http: HttpTestingController;
+
+  const tello02: Drone = { id: 2, name: 'TELLO-02', description: null, availability: 'Loaned' };
+  const tello07: Drone = { id: 7, name: 'TELLO-07', description: null, availability: 'Available' };
+  const tello08: Drone = { id: 8, name: 'TELLO-08', description: null, availability: 'Available' };
+
+  /** The Loan link in the row of the drone with this name, or null. */
+  const loanLink = (page: HTMLElement, name: string) =>
+    Array.from(page.querySelectorAll('tbody tr'))
+      .find((row) => row.querySelector('td')?.textContent?.trim() === name)
+      ?.querySelector<HTMLAnchorElement>('a') ?? null;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(
+          [
+            { path: 'drones', component: DronesPage },
+            { path: 'loans', component: LoansPage },
+          ],
+          withComponentInputBinding(),
+        ),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create();
+  });
+
+  afterEach(() => http.verify());
+
+  async function openDronesPage(drones: Drone[]): Promise<HTMLElement> {
+    await harness.navigateByUrl('/drones', DronesPage);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush(drones);
+    harness.detectChanges();
+    return harness.routeNativeElement!;
+  }
+
+  it('Loan action for an available drone, none for a loaned drone', async () => {
+    const page = await openDronesPage([tello02, tello07]);
+
+    expect(loanLink(page, 'TELLO-07')?.textContent?.trim()).toBe('Loan');
+    expect(loanLink(page, 'TELLO-02')).toBeNull();
+  });
+
+  it('Loan action opens the loan form with the drone chosen', async () => {
+    const page = await openDronesPage([tello02, tello07, tello08]);
+
+    loanLink(page, 'TELLO-07')!.click();
+    await harness.fixture.whenStable();
+    http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([]);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello02, tello07, tello08]);
+    http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush([]);
+    harness.detectChanges();
+
+    const loansPage = harness.routeNativeElement!;
+    expect(loansPage.querySelector('h1')?.textContent?.trim()).toBe('Loans');
+    expect(chosenOption(loansPage, 'loan-drone')).toBe('TELLO-07');
   });
 });

@@ -15,7 +15,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 3. Drones page
 
-- [ ] 3.1 Add an "Action" column with a "Loan" link for every `Available` drone on the Drones page (design D6); verify component tests for the scenarios "Loan action for an available drone" and "Loan action opens the loan form" (router test that lands on the Loans page with the drone chosen) — REQ-002, REQ-004 (#101)
+- [x] 3.1 Add an "Action" column with a "Loan" link for every `Available` drone on the Drones page (design D6); verify component tests for the scenarios "Loan action for an available drone" and "Loan action opens the loan form" (router test that lands on the Loans page with the drone chosen) — REQ-002, REQ-004 (#101)
 
 ## 4. Background
 
