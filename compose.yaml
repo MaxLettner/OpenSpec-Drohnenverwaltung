@@ -1,0 +1,13 @@
+# docker compose up --build  ->  http://localhost:8080 (openspec run-in-docker, design D4)
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      SampleData__SeedWhenEmpty: ${SAMPLE_DATA:-false}
+    volumes:
+      - drone-data:/data
+
+volumes:
+  drone-data:

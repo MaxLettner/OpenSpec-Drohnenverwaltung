@@ -10,7 +10,7 @@ One task, one GitHub issue, one branch and one pull request. Every Given/When/Th
 
 ## 2. Container
 
-- [ ] 2.1 Add `Dockerfile`, `.dockerignore`, `compose.yaml` and `scripts/docker-smoke.sh` (design D3, D4, D5); the script passes for "Start the container", "Recreate the container" and "Remove the volume", its output is in the PR body, and the README has a "Run with Docker" section whose commands work as written (REQ-010) (#184)
+- [x] 2.1 Add `Dockerfile`, `.dockerignore`, `compose.yaml` and `scripts/docker-smoke.sh` (design D3, D4, D5); the script passes for "Start the container", "Recreate the container" and "Remove the volume", its output is in the PR body, and the README has a "Run with Docker" section whose commands work as written (REQ-010) (#184)
 
 ## Workflow follow-up
 
