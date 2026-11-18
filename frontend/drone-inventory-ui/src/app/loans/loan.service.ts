@@ -12,10 +12,6 @@ export class LoanService {
     return this.http.post<Loan>('/api/loans', request);
   }
 
-  get(id: number): Observable<Loan> {
-    return this.http.get<Loan>(`/api/loans/${id}`);
-  }
-
   return(id: number): Observable<Loan> {
     return this.http.post<Loan>(`/api/loans/${id}/return`, null);
   }

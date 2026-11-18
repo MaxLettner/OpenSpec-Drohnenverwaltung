@@ -1,11 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   inject,
   output,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -74,6 +76,7 @@ import { DroneService } from './drone.service';
 })
 export class DroneForm {
   private readonly droneService = inject(DroneService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Emits the created drone once the backend has accepted it. */
   readonly created = output<Drone>();
@@ -81,22 +84,22 @@ export class DroneForm {
   protected readonly maxNameLength = MAX_DRONE_NAME_LENGTH;
   protected readonly maxDescriptionLength = MAX_DRONE_DESCRIPTION_LENGTH;
 
-  readonly name = signal('');
-  readonly description = signal('');
-  readonly submitting = signal(false);
+  protected readonly name = signal('');
+  protected readonly description = signal('');
+  protected readonly submitting = signal(false);
 
   /** A blank name (empty or only whitespace) and a running request both disable the button. */
-  readonly canSubmit = computed(() => this.name().trim() !== '' && !this.submitting());
+  protected readonly canSubmit = computed(() => this.name().trim() !== '' && !this.submitting());
 
-  onNameInput(event: Event): void {
+  protected onNameInput(event: Event): void {
     this.name.set((event.target as HTMLInputElement).value);
   }
 
-  onDescriptionInput(event: Event): void {
+  protected onDescriptionInput(event: Event): void {
     this.description.set((event.target as HTMLTextAreaElement).value);
   }
 
-  onSubmit(event: Event): void {
+  protected onSubmit(event: Event): void {
     event.preventDefault();
     if (!this.canSubmit()) {
       return;
@@ -107,14 +110,18 @@ export class DroneForm {
     const request: CreateDroneRequest = description ? { name, description } : { name };
 
     this.submitting.set(true);
-    this.droneService.create(request).subscribe({
-      next: (drone) => {
-        this.name.set('');
-        this.description.set('');
-        this.submitting.set(false);
-        this.created.emit(drone);
-      },
-      error: () => this.submitting.set(false),
-    });
+    this.droneService
+      .create(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (drone) => {
+          this.name.set('');
+          this.description.set('');
+          this.submitting.set(false);
+          this.created.emit(drone);
+        },
+        // The error interceptor has already shown the message; keep the entered values.
+        error: () => this.submitting.set(false),
+      });
   }
 }

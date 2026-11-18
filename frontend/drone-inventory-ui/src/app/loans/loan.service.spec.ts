@@ -66,17 +66,6 @@ describe('LoanService (REQ-004 to REQ-010)', () => {
     req.flush({ ...activeLoan, items: [] }, { status: 201, statusText: 'Created' });
   });
 
-  it('gets one loan with GET /api/loans/{id} (REQ-004)', () => {
-    let result: Loan | undefined;
-    service.get(5).subscribe((loan) => (result = loan));
-
-    const req = http.expectOne({ method: 'GET', url: '/api/loans/5' });
-    expect(req.request.body).toBeNull();
-    req.flush(activeLoan);
-
-    expect(result).toEqual(activeLoan);
-  });
-
   it('returns a loan with POST /api/loans/{id}/return (REQ-008, REQ-009)', () => {
     let result: Loan | undefined;
     service.return(5).subscribe((loan) => (result = loan));
