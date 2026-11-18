@@ -1,6 +1,8 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { Drone } from '../drones/drone.models';
 import { errorToastInterceptor } from '../shared/http/error-toast.interceptor';
 import {
@@ -428,5 +430,69 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
       items: [],
     });
     http.match({ method: 'GET' }).forEach((request) => request.flush([]));
+  });
+});
+
+/** loan spec: Open the loan form with a chosen drone (REQ-004, REQ-005). */
+describe('LoansPage: Open the loan form with a chosen drone (REQ-004, REQ-005)', () => {
+  let harness: RouterTestingHarness;
+  let http: HttpTestingController;
+
+  const tello02: Drone = { id: 2, name: 'TELLO-02', description: null, availability: 'Loaned' };
+  const tello07: Drone = { id: 7, name: 'TELLO-07', description: null, availability: 'Available' };
+  const tello08: Drone = { id: 8, name: 'TELLO-08', description: null, availability: 'Available' };
+  const groups: StudentGroup[] = [
+    { id: 1, name: 'Group 1' },
+    { id: 3, name: 'Group 3' },
+  ];
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: 'loans', component: LoansPage }], withComponentInputBinding()),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create();
+  });
+
+  afterEach(() => http.verify());
+
+  /** Opens the address through the router, the way a link or a typed URL does. */
+  async function open(url: string): Promise<HTMLElement> {
+    await harness.navigateByUrl(url, LoansPage);
+    http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([]);
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello02, tello07, tello08]);
+    http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(groups);
+    harness.detectChanges();
+    return harness.routeNativeElement!;
+  }
+
+  it('Opened with an available drone: TELLO-08 is chosen', async () => {
+    const page = await open('/loans?droneId=8');
+
+    expect(chosenOption(page, 'loan-drone')).toBe('TELLO-08');
+  });
+
+  it('Opened with a drone that is loaned: nothing is chosen, the available drones are offered', async () => {
+    const page = await open('/loans?droneId=2');
+
+    expect(chosenOption(page, 'loan-drone')).toBeNull();
+    expect(offeredOptions(page, 'loan-drone')).toEqual(['TELLO-07', 'TELLO-08']);
+  });
+
+  it('Opened with an unknown drone: nothing is chosen and no error is shown', async () => {
+    const page = await open('/loans?droneId=999');
+
+    expect(chosenOption(page, 'loan-drone')).toBeNull();
+    expect(TestBed.inject(ToastService).toasts()).toEqual([]);
+  });
+
+  it('ignores a droneId that is not a whole number', async () => {
+    const page = await open('/loans?droneId=abc');
+
+    expect(chosenOption(page, 'loan-drone')).toBeNull();
   });
 });

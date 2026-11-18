@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -25,6 +26,11 @@ import { LoanService } from './loan.service';
  * The loan form (REQ-004) sits above the list and calls `loadActiveLoans()` after a loan was created.
  * After a return the page asks the form to reload its drones, so the returned drone is offered again.
  */
+function parseDroneId(value: string | undefined): number | undefined {
+  const id = Number(value);
+  return value !== undefined && Number.isInteger(id) ? id : undefined;
+}
+
 @Component({
   selector: 'app-loans-page',
   imports: [DateDisplayPipe, LoanForm, HlmButton, HlmCardImports, HlmTableImports],
@@ -33,7 +39,7 @@ import { LoanService } from './loan.service';
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">Loans</h1>
 
-    <app-loan-form (loaned)="loadActiveLoans()" />
+    <app-loan-form [initialDroneId]="droneId()" (loaned)="loadActiveLoans()" />
 
     <section hlmCard aria-labelledby="active-loans-heading">
       <div hlmCardHeader>
@@ -98,6 +104,14 @@ import { LoanService } from './loan.service';
 export class LoansPage {
   private readonly loanService = inject(LoanService);
   private readonly destroyRef = inject(DestroyRef);
+
+  /**
+   * The drone to choose in the loan form, from `/loans?droneId=<id>` (loan spec "Open the loan form
+   * with a chosen drone"). Anything that is not a whole number is ignored.
+   */
+  readonly droneId = input<number | undefined, string | undefined>(undefined, {
+    transform: parseDroneId,
+  });
 
   private readonly loanForm = viewChild(LoanForm);
 
