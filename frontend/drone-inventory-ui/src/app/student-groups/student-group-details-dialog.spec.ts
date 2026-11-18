@@ -139,6 +139,17 @@ describe('Student group details dialog', () => {
     expect(dialog()).toBeNull();
   });
 
+  it('closes with the X in the top right', async () => {
+    open();
+
+    dialog()!.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(dialog()).toBeNull();
+    expect(document.activeElement).toBe(nameButton());
+  });
+
   it('Close the group dialog with Escape', async () => {
     open();
 

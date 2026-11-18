@@ -1,6 +1,8 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideX } from '@ng-icons/lucide';
 import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
@@ -23,16 +25,29 @@ export interface StudentGroupDetailsDialogData {
 @Component({
   selector: 'app-student-group-details-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DateDisplayPipe, HlmBadge, HlmButton],
+  imports: [DateDisplayPipe, NgIcon, HlmBadge, HlmButton],
+  providers: [provideIcons({ lucideX })],
   host: {
     // Lets the card border highlight reach the dialog too (design D7).
     'data-slot': 'card',
     class:
-      'block max-h-[85vh] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border bg-card p-6 text-card-foreground shadow-lg',
+      'relative block max-h-[85vh] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border bg-card p-6 text-card-foreground shadow-lg',
   },
   template: `
+    <button
+      hlmBtn
+      variant="ghost"
+      size="icon-sm"
+      type="button"
+      class="absolute top-3 right-3"
+      aria-label="Close"
+      (click)="close()"
+    >
+      <ng-icon name="lucideX" aria-hidden="true" />
+    </button>
+
     @if (details(); as group) {
-      <div class="flex items-start justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-2 pr-8">
         <h2 id="student-group-details-title" class="text-lg font-semibold">{{ group.name }}</h2>
         @if (group.retired) {
           <span hlmBadge variant="outline" class="text-muted-foreground">Retired</span>
@@ -94,10 +109,6 @@ export interface StudentGroupDetailsDialogData {
     } @else {
       <p class="text-sm text-muted-foreground">Loading student group...</p>
     }
-
-    <button hlmBtn variant="ghost" size="sm" type="button" class="mt-6 w-full" (click)="close()">
-      Close
-    </button>
   `,
 })
 export class StudentGroupDetailsDialog {
