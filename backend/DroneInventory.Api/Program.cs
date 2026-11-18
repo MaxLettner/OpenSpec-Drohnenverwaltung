@@ -21,14 +21,18 @@ var app = builder.Build();
 
 app.UseApiErrorHandling();
 
+// Creates the database file on first start and applies new migrations, in every environment (deployment spec).
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 
-    // Creates the database file on first start and applies new migrations.
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
 
     // appsettings.Development.json turns this on; the test factory turns it off (sample-data spec).
     if (app.Configuration.GetValue<bool>("SampleData:SeedWhenEmpty"))
