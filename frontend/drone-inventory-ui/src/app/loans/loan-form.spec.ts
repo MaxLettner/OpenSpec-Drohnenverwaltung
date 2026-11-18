@@ -449,4 +449,51 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     req.flush(createdLoan, { status: 201, statusText: 'Created' });
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([loanedDrone]);
   });
+
+  it('Only one drone and one group: both are chosen already and the loan can be submitted (REQ-004)', () => {
+    answerLists([loanedDrone, availableDrone], [group3]);
+
+    expect(chosen('loan-drone')).toBe('TELLO-07');
+    expect(chosen('loan-group')).toBe('Group 3');
+    expect(submitButton().disabled).toBe(false);
+
+    submit();
+    const req = http.expectOne({ method: 'POST', url: '/api/loans' });
+    expect(req.request.body).toEqual({ droneId: 2, studentGroupId: 3 });
+    req.flush(createdLoan, { status: 201, statusText: 'Created' });
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([loanedDrone]);
+  });
+
+  it('Several options are not chosen automatically (REQ-004)', () => {
+    answerLists(
+      [availableDrone, { id: 3, name: 'TELLO-08', description: null, availability: 'Available' }],
+      [group1, group3],
+    );
+
+    expect(chosen('loan-drone')).toBeNull();
+    expect(chosen('loan-group')).toBeNull();
+  });
+
+  it('Single option is chosen again after a loan: the only group stays chosen after the form is cleared (REQ-004)', () => {
+    const tello08: Drone = { id: 3, name: 'TELLO-08', description: null, availability: 'Available' };
+    answerLists([availableDrone, tello08], [group3]);
+    expect(chosen('loan-group')).toBe('Group 3');
+    choose('loan-drone', 'TELLO-07');
+    type(batteriesInput(), '2');
+
+    submit();
+    http.expectOne({ method: 'POST', url: '/api/loans' }).flush(createdLoan, {
+      status: 201,
+      statusText: 'Created',
+    });
+    http
+      .expectOne({ method: 'GET', url: '/api/drones' })
+      .flush([{ ...availableDrone, availability: 'Loaned' }, tello08]);
+    fixture.detectChanges();
+
+    expect(batteriesInput().value).toBe('');
+    expect(chosen('loan-group')).toBe('Group 3');
+    // TELLO-08 is now the only available drone, so it is chosen as well.
+    expect(chosen('loan-drone')).toBe('TELLO-08');
+  });
 });

@@ -9,6 +9,7 @@ import {
   output,
   signal,
   viewChild,
+  WritableSignal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -43,6 +44,19 @@ function readQuantity(event: Event): Quantity {
   }
   const value = Number(text);
   return Number.isInteger(value) && value >= 0 ? value : null;
+}
+
+/**
+ * Chooses the only option of a list when nothing is chosen yet (loan spec "Choose a single option
+ * automatically", design D4). A choice the user made, or a list of several options, stays as it is.
+ */
+function chooseSingleOption(
+  chosenId: WritableSignal<number | null>,
+  options: readonly { id: number }[],
+): void {
+  if (chosenId() === null && options.length === 1) {
+    chosenId.set(options[0].id);
+  }
 }
 
 /**
@@ -270,9 +284,15 @@ export class LoanForm {
     this.propellers.set(undefined);
     this.batteriesInput().nativeElement.value = '';
     this.propellersInput().nativeElement.value = '';
+    // The drone is chosen again, if it is the only one, when the drone list is reloaded after the
+    // loan: the current list still offers the drone that was just loaned.
+    chooseSingleOption(this.selectedGroupId, this.groups());
   }
 
-  /** Loads the drones; a drone that is no longer available is deselected. */
+  /**
+   * Loads the drones; a drone that is no longer available is deselected, and the only available
+   * drone is chosen when nothing is.
+   */
   private loadDrones(): void {
     this.droneService
       .list()
@@ -288,6 +308,7 @@ export class LoanForm {
           if (selected !== null && !stillAvailable) {
             this.selectedDroneId.set(null);
           }
+          chooseSingleOption(this.selectedDroneId, this.availableDrones());
         },
         // The error interceptor has already shown the message.
         error: () => this.droneState.set('failed'),
@@ -302,6 +323,7 @@ export class LoanForm {
         next: (groups) => {
           this.groups.set(groups);
           this.groupState.set('loaded');
+          chooseSingleOption(this.selectedGroupId, groups);
         },
         // The error interceptor has already shown the message.
         error: () => this.groupState.set('failed'),
