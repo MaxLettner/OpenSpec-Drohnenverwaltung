@@ -20,7 +20,10 @@
       "@spartan-ng/helm/card": ["./src/app/ui/card/src/index.ts"],
       "@spartan-ng/helm/badge": ["./src/app/ui/badge/src/index.ts"],
       "@spartan-ng/helm/table": ["./src/app/ui/table/src/index.ts"],
-      "@spartan-ng/helm/native-select": ["./src/app/ui/native-select/src/index.ts"]
+      "@spartan-ng/helm/native-select": ["./src/app/ui/native-select/src/index.ts"],
+      "@spartan-ng/helm/radio-group": ["./src/app/ui/radio-group/src/index.ts"],
+      "@spartan-ng/helm/combobox": ["./src/app/ui/combobox/src/index.ts"],
+      "@spartan-ng/helm/input-group": ["./src/app/ui/input-group/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

@@ -4,6 +4,8 @@
 @import 'tailwindcss/utilities.css';
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
+/* Open and close animations of the combobox popup (data-open:animate-in ...). */
+@import 'tw-animate-css';
 
 :root {
   color-scheme: light;

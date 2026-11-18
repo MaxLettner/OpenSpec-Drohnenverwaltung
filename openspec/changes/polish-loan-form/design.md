@@ -24,7 +24,7 @@ A new standalone component in `src/app/shared/option-picker/` takes the options 
 *Alternative:* keep the native select and add a search input next to it. Rejected: still needs a menu to see the options and gives two controls for one choice.
 
 ### D2. Spartan radio-group and combobox, generated with the CLI
-List mode uses the Spartan `radio-group` helm (keyboard arrows, `role="radiogroup"`), search mode the Spartan `combobox` (WAI-ARIA combobox with a listbox popup, filtering done by our own `computed` over the options). Both are generated with `npx ng g @spartan-ng/cli:ui` into `src/app/ui/`, like the existing helm components; only these two are added. The match rule is `name.toLocaleLowerCase().includes(text.toLocaleLowerCase())`.
+List mode uses the Spartan `radio-group` helm (native radios in one group, `role="radiogroup"`), search mode the Spartan `combobox` (WAI-ARIA combobox with a listbox popup). Both are generated with `npx ng g @spartan-ng/cli:ui` into `src/app/ui/`, like the existing helm components; the combobox brings `input-group` and `tw-animate-css` (popup animation) with it. The match rule is the combobox's own "contains" filter with the collator set to `sensitivity: 'accent'`, which ignores case and nothing else; its default (`'base'`, ignoring punctuation) would match more than the spec says. A test setup file stubs `scrollIntoView` and `ResizeObserver`, which jsdom lacks and the combobox calls.
 *Alternative:* hand-written listbox on `@angular/cdk/listbox`. Kept as fallback if the Spartan combobox cannot be driven in the jsdom tests (see Risks); `@angular/cdk` is already a dependency.
 
 ### D3. Editing the search text clears the choice
