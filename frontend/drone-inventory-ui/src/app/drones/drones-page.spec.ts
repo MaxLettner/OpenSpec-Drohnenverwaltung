@@ -63,13 +63,25 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
   it('lists a loaned and an available drone with their availability text (REQ-002)', () => {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
-      { id: 1, name: 'TELLO-02', description: 'SSID: TELLO-1A2B3C', availability: 'Loaned' },
-      { id: 2, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+      {
+        id: 1,
+        name: 'TELLO-02',
+        description: 'SSID: TELLO-1A2B3C',
+        availability: 'Loaned',
+        activeLoanId: 1,
+      },
+      {
+        id: 2,
+        name: 'TELLO-07',
+        description: 'SSID: TELLO-9FA21B',
+        availability: 'Available',
+        activeLoanId: null,
+      },
     ]);
     fixture.detectChanges();
 
     expect(rows()).toEqual([
-      ['TELLO-02', 'Loaned', 'SSID: TELLO-1A2B3C', ''],
+      ['TELLO-02', 'Loaned', 'SSID: TELLO-1A2B3C', 'Return'],
       ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B', 'Loan'],
     ]);
 
@@ -84,7 +96,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     fixture.detectChanges();
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([{ id: 2, name: 'TELLO-07', description: null, availability: 'Available' }]);
+      .flush([
+        {
+          id: 2,
+          name: 'TELLO-07',
+          description: null,
+          availability: 'Available',
+          activeLoanId: null,
+        },
+      ]);
     fixture.detectChanges();
 
     expect(
@@ -99,7 +119,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     fixture.detectChanges();
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([{ id: 3, name: 'TELLO-08', description: null, availability: 'Available' }]);
+      .flush([
+        {
+          id: 3,
+          name: 'TELLO-08',
+          description: null,
+          availability: 'Available',
+          activeLoanId: null,
+        },
+      ]);
     fixture.detectChanges();
 
     expect(rows()).toEqual([['TELLO-08', 'Available', '—', 'Loan']]);
@@ -117,9 +145,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
   it('keeps the order in which the backend delivers the drones (REQ-002)', () => {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
-      { id: 5, name: 'ALPHA-1', description: null, availability: 'Loaned' },
-      { id: 4, name: 'BRAVO-2', description: null, availability: 'Available' },
-      { id: 9, name: 'CHARLIE-3', description: null, availability: 'Available' },
+      { id: 5, name: 'ALPHA-1', description: null, availability: 'Loaned', activeLoanId: 1 },
+      { id: 4, name: 'BRAVO-2', description: null, availability: 'Available', activeLoanId: null },
+      {
+        id: 9,
+        name: 'CHARLIE-3',
+        description: null,
+        availability: 'Available',
+        activeLoanId: null,
+      },
     ]);
     fixture.detectChanges();
 
@@ -151,13 +185,25 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     http
       .expectOne({ method: 'POST', url: '/api/drones' })
       .flush(
-        { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+        {
+          id: 7,
+          name: 'TELLO-07',
+          description: 'SSID: TELLO-9FA21B',
+          availability: 'Available',
+          activeLoanId: null,
+        },
         { status: 201, statusText: 'Created' },
       );
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
       .flush([
-        { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', availability: 'Available' },
+        {
+          id: 7,
+          name: 'TELLO-07',
+          description: 'SSID: TELLO-9FA21B',
+          availability: 'Available',
+          activeLoanId: null,
+        },
       ]);
     fixture.detectChanges();
 
@@ -170,7 +216,15 @@ describe('DronesPage (REQ-001, REQ-002)', () => {
     fixture.detectChanges();
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
-      .flush([{ id: 2, name: 'TELLO-07', description: null, availability: 'Available' }]);
+      .flush([
+        {
+          id: 2,
+          name: 'TELLO-07',
+          description: null,
+          availability: 'Available',
+          activeLoanId: null,
+        },
+      ]);
     fixture.detectChanges();
 
     type(nameInput(), 'tello-07');
@@ -202,9 +256,27 @@ describe('DronesPage: Start a loan from the drone list (REQ-002, REQ-004)', () =
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
 
-  const tello02: Drone = { id: 2, name: 'TELLO-02', description: null, availability: 'Loaned' };
-  const tello07: Drone = { id: 7, name: 'TELLO-07', description: null, availability: 'Available' };
-  const tello08: Drone = { id: 8, name: 'TELLO-08', description: null, availability: 'Available' };
+  const tello02: Drone = {
+    id: 2,
+    name: 'TELLO-02',
+    description: null,
+    availability: 'Loaned',
+    activeLoanId: 1,
+  };
+  const tello07: Drone = {
+    id: 7,
+    name: 'TELLO-07',
+    description: null,
+    availability: 'Available',
+    activeLoanId: null,
+  };
+  const tello08: Drone = {
+    id: 8,
+    name: 'TELLO-08',
+    description: null,
+    availability: 'Available',
+    activeLoanId: null,
+  };
 
   /** The Loan link in the row of the drone with this name, or null. */
   const loanLink = (page: HTMLElement, name: string) =>
@@ -259,5 +331,84 @@ describe('DronesPage: Start a loan from the drone list (REQ-002, REQ-004)', () =
     const loansPage = harness.routeNativeElement!;
     expect(loansPage.querySelector('h1')?.textContent?.trim()).toBe('Loans');
     expect(chosenOption(loansPage, 'loan-drone')).toBe('TELLO-07');
+  });
+});
+
+/** drone spec: Return a loan from the drone list (REQ-008). */
+describe('DronesPage: Return a loan from the drone list (REQ-008)', () => {
+  let fixture: ComponentFixture<DronesPage>;
+  let http: HttpTestingController;
+
+  const loaned: Drone = {
+    id: 2,
+    name: 'TELLO-02',
+    description: null,
+    availability: 'Loaned',
+    activeLoanId: 41,
+  };
+  const available: Drone = {
+    id: 7,
+    name: 'TELLO-07',
+    description: null,
+    availability: 'Available',
+    activeLoanId: null,
+  };
+  const element = () => fixture.nativeElement as HTMLElement;
+  const returnButton = (name: string) =>
+    element().querySelector<HTMLButtonElement>(`button[aria-label="Return ${name}"]`);
+  const row = (name: string) =>
+    Array.from(element().querySelectorAll('tbody tr')).find((r) => r.textContent?.includes(name))!;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(withInterceptors([errorToastInterceptor])),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(DronesPage);
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([loaned, available]);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => http.verify());
+
+  it('Return action for a loaned drone, none for an available drone', () => {
+    expect(returnButton('TELLO-02')).not.toBeNull();
+    expect(returnButton('TELLO-07')).toBeNull();
+  });
+
+  it('Return from the drone list', () => {
+    returnButton('TELLO-02')!.click();
+    fixture.detectChanges();
+    expect(returnButton('TELLO-02')!.disabled).toBe(true);
+
+    http.expectOne({ method: 'POST', url: '/api/loans/41/return' }).flush({});
+    http
+      .expectOne({ method: 'GET', url: '/api/drones' })
+      .flush([{ ...loaned, availability: 'Available', activeLoanId: null }, available]);
+    fixture.detectChanges();
+
+    expect(row('TELLO-02').textContent).toContain('Available');
+    expect(row('TELLO-02').querySelector('a[aria-label="Loan TELLO-02"]')).not.toBeNull();
+    expect(returnButton('TELLO-02')).toBeNull();
+  });
+
+  it('Rejected return leaves the row unchanged', () => {
+    returnButton('TELLO-02')!.click();
+    http
+      .expectOne({ method: 'POST', url: '/api/loans/41/return' })
+      .flush(
+        { title: 'The loan is already returned.', status: 409 },
+        { status: 409, statusText: 'Conflict' },
+      );
+    fixture.detectChanges();
+
+    http.expectNone({ method: 'GET', url: '/api/drones' });
+    expect(row('TELLO-02').textContent).toContain('Loaned');
+    expect(returnButton('TELLO-02')!.disabled).toBe(false);
   });
 });

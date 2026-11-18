@@ -9,10 +9,12 @@ import { LoadState } from '../shared/load-state';
 import { DroneForm } from './drone-form';
 import { Drone } from './drone.models';
 import { DroneService } from './drone.service';
+import { LoanService } from '../loans/loan.service';
 
 /**
  * Lists all drones with their availability (REQ-002) and embeds the form that adds drones (REQ-001).
- * Every Available drone has a "Loan" link that opens the loan form with that drone chosen (REQ-004).
+ * Every Available drone has a "Loan" link that opens the loan form with that drone chosen (REQ-004),
+ * every Loaned drone a "Return" button that returns its active loan and reloads the list (REQ-008).
  * The backend delivers the drones already ordered by name and derives the availability, so the page
  * shows them as received and reloads the list after a drone was created.
  * A failed request is reported by the global error toast, so the page only leaves out the list.
@@ -86,6 +88,18 @@ import { DroneService } from './drone.service';
                               [attr.aria-label]="'Loan ' + drone.name"
                               >Loan</a
                             >
+                          } @else if (drone.activeLoanId !== null) {
+                            <button
+                              hlmBtn
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              [disabled]="returningIds().has(drone.activeLoanId)"
+                              [attr.aria-label]="'Return ' + drone.name"
+                              (click)="returnLoan(drone.activeLoanId)"
+                            >
+                              Return
+                            </button>
                           }
                         </td>
                       </tr>
@@ -105,8 +119,11 @@ import { DroneService } from './drone.service';
 })
 export class DronesPage {
   private readonly droneService = inject(DroneService);
+  private readonly loanService = inject(LoanService);
   private readonly destroyRef = inject(DestroyRef);
 
+  /** Ids of the loans whose return request is running; their Return button is disabled. */
+  protected readonly returningIds = signal<ReadonlySet<number>>(new Set());
   protected readonly state = signal<LoadState>('loading');
   protected readonly drones = signal<readonly Drone[]>([]);
 
@@ -126,5 +143,38 @@ export class DronesPage {
         },
         error: () => this.state.set('failed'),
       });
+  }
+
+  /**
+   * Returns a drone's active loan (REQ-008) and reloads the list, so the drone shows as Available.
+   * A rejected return is reported by the error toast and leaves the list as it is.
+   */
+  returnLoan(loanId: number): void {
+    if (this.returningIds().has(loanId)) {
+      return;
+    }
+    this.setReturning(loanId, true);
+    this.loanService
+      .return(loanId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.setReturning(loanId, false);
+          this.reload();
+        },
+        error: () => this.setReturning(loanId, false),
+      });
+  }
+
+  private setReturning(id: number, returning: boolean): void {
+    this.returningIds.update((ids) => {
+      const next = new Set(ids);
+      if (returning) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
   }
 }

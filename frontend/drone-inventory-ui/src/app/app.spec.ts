@@ -12,7 +12,11 @@ class BlankPage {}
 function setSystemTheme(dark: boolean): void {
   const matchMedia = () => ({ matches: dark, addEventListener: () => undefined });
   for (const target of [globalThis, window, document.defaultView]) {
-    Object.defineProperty(target, 'matchMedia', { value: matchMedia, configurable: true, writable: true });
+    Object.defineProperty(target, 'matchMedia', {
+      value: matchMedia,
+      configurable: true,
+      writable: true,
+    });
   }
 }
 
@@ -21,8 +25,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideRouter(routes)],
-    })
-      .compileComponents();
+    }).compileComponents();
   });
 
   it('should create the app', () => {
@@ -35,7 +38,9 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    const labels = Array.from(compiled.querySelectorAll('nav a')).map((link) => link.textContent?.trim());
+    const labels = Array.from(compiled.querySelectorAll('nav a')).map((link) =>
+      link.textContent?.trim(),
+    );
     expect(labels).toEqual(['Drones', 'Student groups', 'Loans', 'History']);
   });
 
@@ -68,7 +73,11 @@ describe('App shell (ui-theme)', () => {
   afterEach(() => {
     document.documentElement.classList.remove('dark');
     for (const target of [globalThis, window, document.defaultView]) {
-      Object.defineProperty(target, 'matchMedia', { value: undefined, configurable: true, writable: true });
+      Object.defineProperty(target, 'matchMedia', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
     }
   });
 
@@ -80,7 +89,8 @@ describe('App shell (ui-theme)', () => {
     return fixture;
   }
 
-  const links = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLAnchorElement>('nav a'));
+  const links = (root: HTMLElement) =>
+    Array.from(root.querySelectorAll<HTMLAnchorElement>('nav a'));
   const themeButton = (root: HTMLElement, label: string) =>
     root.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
 

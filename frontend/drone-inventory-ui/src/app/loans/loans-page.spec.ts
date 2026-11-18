@@ -110,7 +110,15 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     fixture.detectChanges();
     http.expectOne({ method: 'GET', url: '/api/loans/active' }).flush([group1Loan]);
     answerLoanFormLists(
-      [{ id: 2, name: 'TELLO-07', description: null, availability: 'Available' }],
+      [
+        {
+          id: 2,
+          name: 'TELLO-07',
+          description: null,
+          availability: 'Available',
+          activeLoanId: null,
+        },
+      ],
       [{ id: 3, name: 'Group 3' }],
     );
     fixture.detectChanges();
@@ -313,8 +321,15 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     name: 'TELLO-07',
     description: null,
     availability,
+    activeLoanId: availability === 'Loaned' ? 5 : null,
   });
-  const tello08: Drone = { id: 8, name: 'TELLO-08', description: null, availability: 'Available' };
+  const tello08: Drone = {
+    id: 8,
+    name: 'TELLO-08',
+    description: null,
+    availability: 'Available',
+    activeLoanId: null,
+  };
   const group1: StudentGroup = { id: 1, name: 'Group 1' };
   const group3: StudentGroup = { id: 3, name: 'Group 3' };
 
@@ -440,9 +455,27 @@ describe('LoansPage: Open the loan form with a chosen drone (REQ-004, REQ-005)',
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
 
-  const tello02: Drone = { id: 2, name: 'TELLO-02', description: null, availability: 'Loaned' };
-  const tello07: Drone = { id: 7, name: 'TELLO-07', description: null, availability: 'Available' };
-  const tello08: Drone = { id: 8, name: 'TELLO-08', description: null, availability: 'Available' };
+  const tello02: Drone = {
+    id: 2,
+    name: 'TELLO-02',
+    description: null,
+    availability: 'Loaned',
+    activeLoanId: 1,
+  };
+  const tello07: Drone = {
+    id: 7,
+    name: 'TELLO-07',
+    description: null,
+    availability: 'Available',
+    activeLoanId: null,
+  };
+  const tello08: Drone = {
+    id: 8,
+    name: 'TELLO-08',
+    description: null,
+    availability: 'Available',
+    activeLoanId: null,
+  };
   const groups: StudentGroup[] = [
     { id: 1, name: 'Group 1' },
     { id: 3, name: 'Group 3' },

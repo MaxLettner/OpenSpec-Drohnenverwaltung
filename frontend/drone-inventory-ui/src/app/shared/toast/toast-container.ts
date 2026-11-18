@@ -7,7 +7,9 @@ import { ToastService } from './toast.service';
   selector: 'app-toast-container',
   imports: [HlmButton],
   template: `
-    <div class="fixed right-4 bottom-4 z-50 flex max-w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
+    <div
+      class="fixed right-4 bottom-4 z-50 flex max-w-[min(360px,calc(100vw-2rem))] flex-col gap-2"
+    >
       @for (toast of toastService.toasts(); track toast.id) {
         <div
           class="toast border-destructive/40 bg-destructive/10 text-foreground border-l-destructive flex items-start gap-3 rounded-md border border-l-4 p-3 text-sm shadow-md"
