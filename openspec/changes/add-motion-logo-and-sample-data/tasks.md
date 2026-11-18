@@ -13,7 +13,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 3. Logo
 
-- [ ] 3.1 Draw the quadcopter-and-lock logo, add `shared/logo/AppLogo` in the header in place of the dot, add `public/favicon.svg`, and set the title "Drone Lending System" in `index.html` (design D6); verify tests for the scenarios "Header logo" and "Browser tab", and check the drawing by eye at 16, 24 and 32 px in both themes (#115)
+- [x] 3.1 Draw the quadcopter-and-lock logo, add `shared/logo/AppLogo` in the header in place of the dot, add `public/favicon.svg`, and set the title "Drone Lending System" in `index.html` (design D6); verify tests for the scenarios "Header logo" and "Browser tab", and check the drawing by eye at 16, 24 and 32 px in both themes (#115)
 
 ## Workflow follow-up
 
