@@ -42,7 +42,8 @@ describe('OptionPicker (REQ-004)', () => {
   let host: PickerHost;
 
   const element = () => fixture.nativeElement as HTMLElement;
-  const radios = () => Array.from(element().querySelectorAll<HTMLInputElement>('input[type="radio"]'));
+  const radios = () =>
+    Array.from(element().querySelectorAll<HTMLInputElement>('input[type="radio"]'));
   const searchInput = () => element().querySelector<HTMLInputElement>('input#drone');
   /** The search popup is rendered into an overlay outside the picker. */
   const offeredNames = () =>

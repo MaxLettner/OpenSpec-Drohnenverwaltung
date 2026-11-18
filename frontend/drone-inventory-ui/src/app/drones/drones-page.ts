@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { HlmBadge } from '@spartan-ng/helm/badge';
+import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { LoadState } from '../shared/load-state';
@@ -10,6 +12,7 @@ import { DroneService } from './drone.service';
 
 /**
  * Lists all drones with their availability (REQ-002) and embeds the form that adds drones (REQ-001).
+ * Every Available drone has a "Loan" link that opens the loan form with that drone chosen (REQ-004).
  * The backend delivers the drones already ordered by name and derives the availability, so the page
  * shows them as received and reloads the list after a drone was created.
  * A failed request is reported by the global error toast, so the page only leaves out the list.
@@ -18,7 +21,7 @@ import { DroneService } from './drone.service';
   selector: 'app-drones-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
-  imports: [DroneForm, HlmBadge, HlmCardImports, HlmTableImports],
+  imports: [DroneForm, RouterLink, HlmBadge, HlmButton, HlmCardImports, HlmTableImports],
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">Drones</h1>
 
@@ -44,6 +47,7 @@ import { DroneService } from './drone.service';
                       <th hlmTh scope="col">Name</th>
                       <th hlmTh scope="col">Availability</th>
                       <th hlmTh scope="col">Description</th>
+                      <th hlmTh scope="col">Action</th>
                     </tr>
                   </thead>
                   <tbody hlmTBody>
@@ -67,7 +71,23 @@ import { DroneService } from './drone.service';
                             >
                           }
                         </td>
-                        <td hlmTd>{{ drone.description || '—' }}</td>
+                        <!-- Wraps, so that a long description does not push the Loan link out of view. -->
+                        <td hlmTd class="min-w-48 whitespace-normal">
+                          {{ drone.description || '—' }}
+                        </td>
+                        <td hlmTd>
+                          @if (drone.availability === 'Available') {
+                            <a
+                              hlmBtn
+                              variant="outline"
+                              size="sm"
+                              routerLink="/loans"
+                              [queryParams]="{ droneId: drone.id }"
+                              [attr.aria-label]="'Loan ' + drone.name"
+                              >Loan</a
+                            >
+                          }
+                        </td>
                       </tr>
                     }
                   </tbody>
