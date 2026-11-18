@@ -19,6 +19,7 @@ export class App {
   protected readonly theme = this.themeService.theme;
 
   protected readonly links = [
+    { path: '/', label: 'Home', exact: true },
     { path: '/drones', label: 'Drones', exact: false },
     { path: '/student-groups', label: 'Student groups', exact: false },
     { path: '/loans', label: 'Loans', exact: true },
