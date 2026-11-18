@@ -5,7 +5,7 @@ One task, one GitHub issue, one branch and one pull request. Every Given/When/Th
 ## 1. Backend
 
 - [x] 1.1 Create and migrate the database at every start, in every environment (design D1, D5); tests for "First start in Production", "Start on an older database" and "Restart keeps the loans" on a file database in a temp folder, and every existing test still passes with `dotnet test backend` (REQ-001 to REQ-010) (#181)
-- [ ] 1.2 Make sample data depend only on `SampleData:SeedWhenEmpty`, with `false` in `appsettings.json` (design D1, D5); tests for "Sample data switched on in Production" and the adjusted "Production", the other sample-data tests still pass, README sample data paragraph updated (REQ-001 to REQ-010) (#182)
+- [x] 1.2 Make sample data depend only on `SampleData:SeedWhenEmpty`, with `false` in `appsettings.json` (design D1, D5); tests for "Sample data switched on in Production" and the adjusted "Production", the other sample-data tests still pass, README sample data paragraph updated (REQ-001 to REQ-010) (#182)
 - [ ] 1.3 Serve the built web app from `wwwroot` with a fallback to `index.html` and a 404 ProblemDetails fallback for `/api` (design D2, D5); tests for "Open the root address", "Open a page directly", "API next to the app" and "Unknown API address" with a temp web root (REQ-002, REQ-007, REQ-010) (#183)
 
 ## 2. Container

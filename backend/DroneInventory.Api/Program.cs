@@ -24,21 +24,19 @@ app.UseApiErrorHandling();
 // Creates the database file on first start and applies new migrations, in every environment (deployment spec).
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+
+    // Off in appsettings.json, on in appsettings.Development.json; the test factory sets it (sample-data spec).
+    if (app.Configuration.GetValue<bool>("SampleData:SeedWhenEmpty"))
+    {
+        await SampleData.SeedIfEmptyAsync(db);
+    }
 }
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    // appsettings.Development.json turns this on; the test factory turns it off (sample-data spec).
-    if (app.Configuration.GetValue<bool>("SampleData:SeedWhenEmpty"))
-    {
-        await SampleData.SeedIfEmptyAsync(db);
-    }
 }
 
 app.MapStudentGroupEndpoints();
