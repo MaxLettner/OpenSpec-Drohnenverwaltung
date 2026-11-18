@@ -272,6 +272,33 @@
   }
 }
 
+/*
+ * Dialogs and buttons (ui-theme "Subtle motion", add-motion-and-loan-links design D3). A dialog fades
+ * in and grows from 96 %, the backdrop blurs the page a little, and a pressed button shrinks a bit.
+ * Closing is not animated: the CDK removes the dialog at once.
+ */
+.cdk-dialog-container {
+  animation: 150ms ease-out both dialog-in;
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+.cdk-overlay-dark-backdrop {
+  backdrop-filter: blur(2px);
+}
+button,
+[hlmBtn] {
+  transition-property: scale, color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 100ms;
+}
+button:not(:disabled):active,
+a[hlmBtn]:active {
+  scale: 0.97;
+}
+
 /* One switch for all motion (design D5): the change is shown at once. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
@@ -281,5 +308,12 @@
   }
   [data-slot='card']::after {
     transition: none;
+  }
+  .cdk-dialog-container {
+    animation: none;
+  }
+  button:not(:disabled):active,
+  a[hlmBtn]:active {
+    scale: none;
   }
 }

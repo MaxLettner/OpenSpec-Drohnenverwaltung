@@ -9,7 +9,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 2. Motion
 
-- [ ] 2.1 Dialog fade and scale, blurred backdrop and button press feedback (design D3); tests for the dialog and press part of "Reduced motion" (#160)
+- [x] 2.1 Dialog fade and scale, blurred backdrop and button press feedback (design D3); tests for the dialog and press part of "Reduced motion" (#160)
 - [ ] 2.2 Count up the Home figures and grow the ring chart and weekly bars (design D3); tests for "Home figures count up" and the Home part of "Reduced motion" — REQ-002 (#161)
 - [ ] 2.3 Fade in table rows one after another and show loading placeholders (design D3); tests for "Loading the drone list" and the list part of "Reduced motion" (#162)
 
