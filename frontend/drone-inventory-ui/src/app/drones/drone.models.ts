@@ -50,6 +50,8 @@ export interface DroneDetails {
   name: string;
   description: string | null;
   availability: Availability;
+  /** True for a retired drone; the details endpoint still returns it. */
+  retired: boolean;
   activeLoan: DroneActiveLoan | null;
   recentLoans: DroneRecentLoan[];
 }

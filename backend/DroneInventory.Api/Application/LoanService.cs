@@ -39,6 +39,9 @@ public abstract record CreateLoanResult
     /// <summary>REQ-004: the drone or student group the request refers to does not exist.</summary>
     public sealed record MissingReference(LoanReference Reference, int Id) : CreateLoanResult;
 
+    /// <summary>REQ-004: the drone or student group is retired and cannot be loaned (design D1).</summary>
+    public sealed record RetiredReference(LoanReference Reference, int Id) : CreateLoanResult;
+
     /// <summary>REQ-005: the drone already has an active loan.</summary>
     public sealed record NotAvailable(int DroneId) : CreateLoanResult;
 }
@@ -90,14 +93,32 @@ public class LoanService(AppDbContext db, TimeProvider timeProvider)
             return new CreateLoanResult.InvalidInput(errors);
         }
 
-        if (!await db.Drones.AnyAsync(d => d.Id == droneId))
+        var droneRetired = await db.Drones
+            .Where(d => d.Id == droneId)
+            .Select(d => (bool?)d.Retired)
+            .SingleOrDefaultAsync();
+        if (droneRetired is null)
         {
             return new CreateLoanResult.MissingReference(LoanReference.Drone, droneId);
         }
 
-        if (!await db.StudentGroups.AnyAsync(g => g.Id == studentGroupId))
+        var groupRetired = await db.StudentGroups
+            .Where(g => g.Id == studentGroupId)
+            .Select(g => (bool?)g.Retired)
+            .SingleOrDefaultAsync();
+        if (groupRetired is null)
         {
             return new CreateLoanResult.MissingReference(LoanReference.StudentGroup, studentGroupId);
+        }
+
+        if (droneRetired.Value)
+        {
+            return new CreateLoanResult.RetiredReference(LoanReference.Drone, droneId);
+        }
+
+        if (groupRetired.Value)
+        {
+            return new CreateLoanResult.RetiredReference(LoanReference.StudentGroup, studentGroupId);
         }
 
         // REQ-005 friendly path; the partial unique index still decides when requests race (design D4).

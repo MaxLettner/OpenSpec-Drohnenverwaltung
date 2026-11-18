@@ -21,6 +21,11 @@ export class DroneService {
     return this.http.post<Drone>('/api/drones', request);
   }
 
+  /** Retires a drone without an active loan (drone spec "Retire a drone"). */
+  retire(id: number): Observable<void> {
+    return this.http.post<void>(`/api/drones/${id}/retire`, null);
+  }
+
   /** Changes the name and description of a drone (drone spec "Edit a drone"). */
   update(id: number, request: UpdateDroneRequest): Observable<Drone> {
     return this.http.put<Drone>(`/api/drones/${id}`, request);
