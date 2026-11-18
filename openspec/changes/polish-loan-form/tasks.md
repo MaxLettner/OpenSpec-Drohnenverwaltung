@@ -4,7 +4,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 1. Documentation
 
-- [ ] 1.1 Narrow the out-of-scope rule "search/filter/sort" in `requirements.md` (§1 Out of scope), `AGENTS.md` (Rules) and `openspec/config.yaml` (`context`) to the wording of design D8; verify that all three files say the same and that `openspec validate polish-loan-form` still passes — REQ-004 (#96)
+- [x] 1.1 Narrow the out-of-scope rule "search/filter/sort" in `requirements.md` (§1 Out of scope), `AGENTS.md` (Rules) and `openspec/config.yaml` (`context`) to the wording of design D8; verify that all three files say the same and that `openspec validate polish-loan-form` still passes — REQ-004 (#96)
 
 ## 2. Loan form pickers
 

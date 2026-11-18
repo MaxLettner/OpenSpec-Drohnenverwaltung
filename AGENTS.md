@@ -29,7 +29,8 @@ Backend, frontend and specs live in this one repository.
 - Drone availability is derived from the active loan. Never store it as a field.
 - Keep requirement IDs (`REQ-001` … `REQ-010`) in specs, tasks, issues and test names.
 - Out of scope (do not implement): login/roles, item-level batteries,
-  reservations, damage management, reports/exports, edit/delete, search/filter/sort.
+  reservations, damage management, reports/exports, edit/delete, search/filter/sort
+  of lists. Exception: the loan form may search its drone and student group options by name.
 
 ## Working on a task
 

@@ -18,7 +18,8 @@ context: |
   - Returned loans are kept forever (no deletion).
   Out of scope: login/roles, item-level battery inventory, reservations,
   damage management, reports/statistics/exports, edit/delete of drones,
-  groups or loans, search/filter/sort.
+  groups or loans, search/filter/sort of lists. Exception: the loan form
+  may search its drone and student group options by name.
   Business logic and validation live in the backend, never only in Angular.
   Requirement IDs (REQ-xxx) must be kept in specs, tasks and issues.
 
