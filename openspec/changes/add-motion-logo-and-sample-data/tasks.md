@@ -8,7 +8,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 2. Motion
 
-- [ ] 2.1 Turn on `withViewTransitions()`, give the active nav entry a `nav-highlight` element, add the 200 ms page fade and the reduced-motion rule to `styles.css` (design D3, D5); verify tests for the scenarios "Switch to another page" (router option and highlight element on the active entry only) and "Reduced motion" (the rule exists), and check page changes in the browser with and without emulated reduced motion (#113)
+- [x] 2.1 Turn on `withViewTransitions()`, give the active nav entry a `nav-highlight` element, add the 200 ms page fade and the reduced-motion rule to `styles.css` (design D3, D5); verify tests for the scenarios "Switch to another page" (router option and highlight element on the active entry only) and "Reduced motion" (the rule exists), and check page changes in the browser with and without emulated reduced motion (#113)
 - [ ] 2.2 Fade between themes in `ThemeService` with a view transition, skipped for reduced motion, missing support and the first application (design D4); verify `theme.service.spec.ts` tests for the scenarios "Choose the dark theme", "Reduced motion" and "Page load", and check both directions in the browser (#114)
 
 ## 3. Logo

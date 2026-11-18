@@ -132,6 +132,15 @@
 }
 
 @layer base {
+  /*
+   * Always keep room for the scrollbar: otherwise a short page (History) is 15px wider than a
+   * long one (Loans), and a page change slides the centred header and content sideways.
+   * `scrollbar-gutter: stable` is not enough: Chromium ignores it on the root while the page
+   * does not overflow. With overlay scrollbars (macOS default) this shows nothing.
+   */
+  html {
+    overflow-y: scroll;
+  }
   * {
     @apply border-border outline-ring/50;
   }
@@ -140,5 +149,65 @@
     /* Fixed, so that the glows stay where they are while the page scrolls. */
     background-image: var(--page-gradient);
     background-attachment: fixed;
+  }
+}
+
+/*
+ * Page changes (ui-theme "Animate page changes", design D3). The router wraps every navigation
+ * in a view transition. The header stays where it is, the nav highlight moves to the new entry,
+ * and the new page content fades in and rises 4px. Everything stays under 300 ms.
+ */
+.site-header {
+  view-transition-name: site-header;
+}
+.nav-highlight {
+  view-transition-name: nav-highlight;
+}
+.page-content {
+  view-transition-name: page-content;
+}
+/*
+ * The moving highlight is drawn as the group's own background: the browser would otherwise
+ * stretch a picture of the old and new highlight, which bends the rounded corners when the
+ * entries differ in width ("Drones" to "Student groups"). Same colour and radius as .nav-highlight.
+ */
+::view-transition-group(nav-highlight) {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--primary) 15%, transparent);
+}
+::view-transition-old(nav-highlight),
+::view-transition-new(nav-highlight) {
+  display: none;
+}
+/* Pages differ in height: the content snaps to the new size instead of stretching. */
+::view-transition-group(page-content) {
+  animation: none;
+}
+::view-transition-old(page-content) {
+  animation: 120ms ease-out both page-fade-out;
+}
+::view-transition-new(page-content) {
+  animation: 200ms ease-out both page-fade-in;
+}
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* One switch for all motion (design D5): the change is shown at once. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

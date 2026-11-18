@@ -5,7 +5,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import { routes } from './app.routes';
 import { errorToastInterceptor } from './shared/http/error-toast.interceptor';
 import { ThemeService } from './shared/theme/theme.service';
@@ -18,7 +18,8 @@ export const appConfig: ApplicationConfig = {
       inject(ThemeService);
     }),
     // Binds query parameters to inputs of routed pages; only LoansPage declares one (`droneId`).
-    provideRouter(routes, withComponentInputBinding()),
+    // View transitions animate page changes; styles.css says how (ui-theme, design D3).
+    provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
     provideHttpClient(withInterceptors([errorToastInterceptor])),
   ],
 };
