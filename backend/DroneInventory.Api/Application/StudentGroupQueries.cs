@@ -28,6 +28,7 @@ public record StudentGroupRecentLoan(
 public record StudentGroupDetails(
     int Id,
     string Name,
+    bool Retired,
     IReadOnlyList<StudentGroupActiveLoan> ActiveLoans,
     IReadOnlyList<StudentGroupRecentLoan> RecentLoans);
 
@@ -80,6 +81,6 @@ public static class StudentGroupDetailsQuery
                 l.Id, l.DroneId, l.Drone, l.LoanDate, l.ReturnDate!.Value, l.Batteries, l.Propellers))
             .ToList();
 
-        return new StudentGroupDetails(studentGroup.Id, studentGroup.Name, active, recent);
+        return new StudentGroupDetails(studentGroup.Id, studentGroup.Name, studentGroup.Retired, active, recent);
     }
 }

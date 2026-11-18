@@ -1,6 +1,7 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoanService } from '../loans/loan.service';
@@ -15,13 +16,14 @@ export interface StudentGroupDetailsDialogData {
 
 /**
  * The details of one student group (student-group spec "Show student group details", design D3):
- * all active loans with a "Return" action each, and the last returned loans. Built like the drone
+ * all active loans with a "Return" action each, the last returned loans, and "Retired" for a
+ * retired group (design D4). Built like the drone
  * details dialog: the CDK dialog traps the focus, closes on Escape and gives the focus back.
  */
 @Component({
   selector: 'app-student-group-details-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DateDisplayPipe, HlmButton],
+  imports: [DateDisplayPipe, HlmBadge, HlmButton],
   host: {
     // Lets the card border highlight reach the dialog too (design D7).
     'data-slot': 'card',
@@ -30,7 +32,12 @@ export interface StudentGroupDetailsDialogData {
   },
   template: `
     @if (details(); as group) {
-      <h2 id="student-group-details-title" class="text-lg font-semibold">{{ group.name }}</h2>
+      <div class="flex items-start justify-between gap-4">
+        <h2 id="student-group-details-title" class="text-lg font-semibold">{{ group.name }}</h2>
+        @if (group.retired) {
+          <span hlmBadge variant="outline" class="text-muted-foreground">Retired</span>
+        }
+      </div>
 
       <section class="mt-5" aria-labelledby="student-group-active-loans">
         <h3 id="student-group-active-loans" class="text-sm font-medium">Active loans</h3>

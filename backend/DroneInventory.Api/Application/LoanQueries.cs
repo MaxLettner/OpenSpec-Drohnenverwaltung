@@ -25,7 +25,9 @@ public record LoanHistoryRow(
     int Batteries,
     int Propellers,
     DateOnly LoanDate,
-    DateOnly ReturnDate);
+    DateOnly ReturnDate,
+    int StudentGroupId,
+    int DroneId);
 
 public static class LoanQueries
 {
@@ -73,6 +75,8 @@ public static class LoanQueries
                  .Sum(i => (int?)i.Quantity) ?? 0,
              loan.LoanDate,
              // A returned loan always carries its ReturnDate (REQ-009).
-             loan.ReturnDate!.Value))
+             loan.ReturnDate!.Value,
+             studentGroup.Id,
+             drone.Id))
         .ToListAsync(ct);
 }

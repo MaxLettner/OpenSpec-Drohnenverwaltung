@@ -38,6 +38,7 @@ public class DroneDetailsTests
         Assert.Equal(5, active.GetProperty("daysOut").GetInt32());
         Assert.Equal(2, active.GetProperty("batteries").GetInt32());
         Assert.Equal(4, active.GetProperty("propellers").GetInt32());
+        Assert.True(active.GetProperty("studentGroupId").GetInt32() > 0);
         Assert.Empty(details.GetProperty("recentLoans").EnumerateArray());
     }
 
@@ -59,6 +60,7 @@ public class DroneDetailsTests
         Assert.Equal(["2026-03-07", "2026-03-06", "2026-03-05", "2026-03-04", "2026-03-03"], returnDates);
         var latest = details.GetProperty("recentLoans")[0];
         Assert.Equal("Group 3", latest.GetProperty("group").GetString());
+        Assert.Equal(group, latest.GetProperty("studentGroupId").GetInt32());
         Assert.Equal("2026-03-06", latest.GetProperty("loanDate").GetString());
     }
 

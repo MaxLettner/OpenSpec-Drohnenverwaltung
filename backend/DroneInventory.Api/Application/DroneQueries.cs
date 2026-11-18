@@ -49,7 +49,8 @@ public record DroneActiveLoan(
     DateOnly LoanDate,
     int DaysOut,
     int Batteries,
-    int Propellers);
+    int Propellers,
+    int StudentGroupId);
 
 /// <summary>A returned loan in the drone details (design D3).</summary>
 public record DroneRecentLoan(
@@ -58,7 +59,8 @@ public record DroneRecentLoan(
     DateOnly LoanDate,
     DateOnly ReturnDate,
     int Batteries,
-    int Propellers);
+    int Propellers,
+    int StudentGroupId);
 
 /// <summary>The details of one drone, retired or not (drone spec "Show drone details", design D3).</summary>
 public record DroneDetails(
@@ -97,6 +99,7 @@ public static class DroneDetailsQuery
                 loan.Id,
                 loan.Status,
                 Group = studentGroup.Name,
+                StudentGroupId = studentGroup.Id,
                 loan.LoanDate,
                 loan.ReturnDate,
                 Batteries = db.LoanItems.Where(i => i.LoanId == loan.Id && i.Type == LoanItemType.Battery)
@@ -111,7 +114,8 @@ public static class DroneDetailsQuery
             .OrderByDescending(l => l.ReturnDate)
             .ThenByDescending(l => l.Id)
             .Take(RecentLoanCount)
-            .Select(l => new DroneRecentLoan(l.Id, l.Group, l.LoanDate, l.ReturnDate!.Value, l.Batteries, l.Propellers))
+            .Select(l => new DroneRecentLoan(
+                l.Id, l.Group, l.LoanDate, l.ReturnDate!.Value, l.Batteries, l.Propellers, l.StudentGroupId))
             .ToList();
 
         return new DroneDetails(
@@ -128,7 +132,8 @@ public static class DroneDetailsQuery
                     active.LoanDate,
                     today.DayNumber - active.LoanDate.DayNumber,
                     active.Batteries,
-                    active.Propellers),
+                    active.Propellers,
+                    active.StudentGroupId),
             recent);
     }
 }
