@@ -59,7 +59,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
   function listedNames(): string[] {
     return Array.from(
       fixture.nativeElement.querySelectorAll('tbody td') as NodeListOf<HTMLElement>,
-    ).map((cell) => cell.textContent.trim());
+    ).map((cell) => cell.textContent.replace(/\s+/g, ' ').trim());
   }
 
   it('adds the created group to the list and clears the name field', () => {
@@ -77,7 +77,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
     ]);
     fixture.detectChanges();
 
-    expect(listedNames()).toEqual(['Group 1', 'Edit', 'Group 3', 'Edit']);
+    expect(listedNames()).toEqual(['Group 1', 'Edit Retire', 'Group 3', 'Edit Retire']);
     expect(nameInput().value).toBe('');
   });
 
@@ -87,7 +87,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
       { id: 3, name: 'Group 3' },
     ]);
 
-    expect(listedNames()).toEqual(['Group 1', 'Edit', 'Group 3', 'Edit']);
+    expect(listedNames()).toEqual(['Group 1', 'Edit Retire', 'Group 3', 'Edit Retire']);
   });
 
   it('shows the empty state when no student group exists', () => {
@@ -141,7 +141,7 @@ describe('StudentGroupsPage (REQ-003)', () => {
     fixture.detectChanges();
 
     expect(nameInput().value).toBe('Group 1');
-    expect(listedNames()).toEqual(['Group 1', 'Edit']);
+    expect(listedNames()).toEqual(['Group 1', 'Edit Retire']);
     expect(createButton().disabled).toBe(false);
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'A student group named "Group 1" already exists.',

@@ -72,6 +72,8 @@ public static class LoanEndpoints
                 return ApiResults.ValidationErrors(invalid.Errors);
             case CreateLoanResult.MissingReference missing:
                 return ApiResults.NotFound(MissingReference(missing));
+            case CreateLoanResult.RetiredReference retired:
+                return ApiResults.Conflict(RetiredReference(retired));
             case CreateLoanResult.NotAvailable notAvailable:
                 return ApiResults.Conflict(DroneNotAvailable(notAvailable.DroneId));
             default:
@@ -85,6 +87,11 @@ public static class LoanEndpoints
     private static string AlreadyReturned(int id) => $"Loan {id} is already returned.";
 
     private static string DroneNotAvailable(int droneId) => $"Drone {droneId} is not available.";
+
+    private static string RetiredReference(CreateLoanResult.RetiredReference retired) =>
+        retired.Reference == LoanReference.Drone
+            ? $"Drone {retired.Id} is retired."
+            : $"Student group {retired.Id} is retired.";
 
     private static string MissingReference(CreateLoanResult.MissingReference missing) =>
         missing.Reference == LoanReference.Drone

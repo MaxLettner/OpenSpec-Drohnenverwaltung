@@ -6,6 +6,7 @@ import { HlmBadge } from '@spartan-ng/helm/badge';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { RetireDialog, RetireDialogData } from '../shared/retire-dialog/retire-dialog';
 import { LoadState } from '../shared/load-state';
 import { DroneDetailsDialog, DroneDetailsDialogData } from './drone-details-dialog';
 import { DroneEditDialog, DroneEditDialogData } from './drone-edit-dialog';
@@ -101,6 +102,16 @@ import { LoanService } from '../loans/loan.service';
                           >
                             Edit
                           </button>
+                          <button
+                            hlmBtn
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            [attr.aria-label]="'Retire ' + drone.name"
+                            (click)="openRetire(drone)"
+                          >
+                            Retire
+                          </button>
                           @if (drone.availability === 'Available') {
                             <a
                               hlmBtn
@@ -176,6 +187,28 @@ export class DronesPage {
       ariaLabelledBy: 'drone-details-title',
       autoFocus: 'first-tabbable',
     });
+  }
+
+  /**
+   * Asks for confirmation and retires the drone (design D5). A rejection, e.g. the drone has an
+   * active loan, is reported by the error toast and leaves the list as it is.
+   */
+  openRetire(drone: Drone): void {
+    this.dialog
+      .open<boolean, RetireDialogData>(RetireDialog, {
+        data: { name: drone.name },
+        ariaLabelledBy: 'retire-dialog-title',
+        autoFocus: 'first-tabbable',
+      })
+      .closed.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.droneService
+            .retire(drone.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: () => this.reload(), error: () => undefined });
+        }
+      });
   }
 
   /** Opens the edit dialog; a save reloads the list (design D5). */

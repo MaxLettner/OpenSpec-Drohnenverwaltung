@@ -20,6 +20,8 @@ public static class StudentGroupEndpoints
         group.MapGet("/", ListAsync);
         group.MapGet("/{id:int}", GetAsync);
         group.MapPut("/{id:int}", UpdateAsync);
+        group.MapPost("/{id:int}/retire", RetireAsync);
+        group.MapPost("/{id:int}/restore", RestoreAsync);
     }
 
     // Student-group spec "Show student group details" (design D3); "today" is the UTC date the loans use.
@@ -36,6 +38,7 @@ public static class StudentGroupEndpoints
     private static async Task<IResult> ListAsync(AppDbContext db) =>
         Results.Ok(await db.StudentGroups
             .AsNoTracking()
+            .Where(g => !g.Retired)
             .OrderBy(g => g.Name)
             .Select(g => new StudentGroupResponse(g.Id, g.Name))
             .ToListAsync());
@@ -74,6 +77,11 @@ public static class StudentGroupEndpoints
             return ApiResults.NotFound($"No student group with the Id {id} exists.");
         }
 
+        if (studentGroup.Retired)
+        {
+            return ApiResults.Conflict($"Student group {id} is retired and cannot be edited.");
+        }
+
         var (name, nameErrors) = NameValidation.Validate(request.Name, StudentGroup.NameMaxLength);
         if (name is null)
         {
@@ -91,5 +99,48 @@ public static class StudentGroupEndpoints
         }
 
         return Results.Ok(new StudentGroupResponse(studentGroup.Id, studentGroup.Name));
+    }
+
+    // REQ-003, REQ-010: retiring keeps the group and its loans; only a group without active loans can retire.
+    private static async Task<IResult> RetireAsync(int id, AppDbContext db)
+    {
+        var studentGroup = await db.StudentGroups.SingleOrDefaultAsync(g => g.Id == id);
+        if (studentGroup is null)
+        {
+            return ApiResults.NotFound($"No student group with the Id {id} exists.");
+        }
+
+        if (studentGroup.Retired)
+        {
+            return ApiResults.Conflict($"Student group {id} is already retired.");
+        }
+
+        if (await db.Loans.AnyAsync(l => l.StudentGroupId == id && l.Status == LoanStatus.Active))
+        {
+            return ApiResults.Conflict($"Student group {id} has an active loan and cannot be retired.");
+        }
+
+        studentGroup.Retired = true;
+        await db.SaveChangesAsync();
+        return Results.NoContent();
+    }
+
+    // REQ-003: backend only; the group is listed and can borrow again.
+    private static async Task<IResult> RestoreAsync(int id, AppDbContext db)
+    {
+        var studentGroup = await db.StudentGroups.SingleOrDefaultAsync(g => g.Id == id);
+        if (studentGroup is null)
+        {
+            return ApiResults.NotFound($"No student group with the Id {id} exists.");
+        }
+
+        if (!studentGroup.Retired)
+        {
+            return ApiResults.Conflict($"Student group {id} is not retired.");
+        }
+
+        studentGroup.Retired = false;
+        await db.SaveChangesAsync();
+        return Results.NoContent();
     }
 }

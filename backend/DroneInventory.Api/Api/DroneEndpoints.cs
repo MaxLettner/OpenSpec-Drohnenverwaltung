@@ -19,6 +19,8 @@ public static class DroneEndpoints
         group.MapPost("/", CreateAsync);
         group.MapGet("/", ListAsync);
         group.MapPut("/{id:int}", UpdateAsync);
+        group.MapPost("/{id:int}/retire", RetireAsync);
+        group.MapPost("/{id:int}/restore", RestoreAsync);
         // {id:int}: a non-integer id does not match and ends as a 404 ProblemDetails.
         group.MapGet("/{id:int}", GetAsync);
     }
@@ -75,6 +77,11 @@ public static class DroneEndpoints
             return ApiResults.NotFound($"No drone with the Id {id} exists.");
         }
 
+        if (drone.Retired)
+        {
+            return ApiResults.Conflict($"Drone {id} is retired and cannot be edited.");
+        }
+
         var (name, nameErrors) = NameValidation.Validate(request.Name, Drone.NameMaxLength);
         if (name is null)
         {
@@ -99,6 +106,49 @@ public static class DroneEndpoints
         }
 
         return Results.Ok((await db.GetDronesAsync()).Single(d => d.Id == id));
+    }
+
+    // REQ-001, REQ-010: retiring keeps the drone and its loans; only a drone without an active loan can retire.
+    private static async Task<IResult> RetireAsync(int id, AppDbContext db)
+    {
+        var drone = await db.Drones.SingleOrDefaultAsync(d => d.Id == id);
+        if (drone is null)
+        {
+            return ApiResults.NotFound($"No drone with the Id {id} exists.");
+        }
+
+        if (drone.Retired)
+        {
+            return ApiResults.Conflict($"Drone {id} is already retired.");
+        }
+
+        if (await db.Loans.AnyAsync(l => l.DroneId == id && l.Status == LoanStatus.Active))
+        {
+            return ApiResults.Conflict($"Drone {id} has an active loan and cannot be retired.");
+        }
+
+        drone.Retired = true;
+        await db.SaveChangesAsync();
+        return Results.NoContent();
+    }
+
+    // REQ-001: backend only; the drone is listed and can be loaned again.
+    private static async Task<IResult> RestoreAsync(int id, AppDbContext db)
+    {
+        var drone = await db.Drones.SingleOrDefaultAsync(d => d.Id == id);
+        if (drone is null)
+        {
+            return ApiResults.NotFound($"No drone with the Id {id} exists.");
+        }
+
+        if (!drone.Retired)
+        {
+            return ApiResults.Conflict($"Drone {id} is not retired.");
+        }
+
+        drone.Retired = false;
+        await db.SaveChangesAsync();
+        return Results.NoContent();
     }
 
     /// <summary>REQ-001: the description is optional, trimmed, stored as null when blank and at most 500 characters.</summary>

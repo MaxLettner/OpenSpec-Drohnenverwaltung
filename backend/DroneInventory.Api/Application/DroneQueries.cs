@@ -20,6 +20,7 @@ public static class DroneQueries
     public static Task<List<DroneListItem>> GetDronesAsync(this AppDbContext db, CancellationToken ct = default) =>
         db.Drones
             .AsNoTracking()
+            .Where(d => !d.Retired)
             .OrderBy(d => d.Name)
             .Select(d => new
             {
@@ -59,12 +60,13 @@ public record DroneRecentLoan(
     int Batteries,
     int Propellers);
 
-/// <summary>The details of one drone (drone spec "Show drone details", design D3).</summary>
+/// <summary>The details of one drone, retired or not (drone spec "Show drone details", design D3).</summary>
 public record DroneDetails(
     int Id,
     string Name,
     string? Description,
     Availability Availability,
+    bool Retired,
     DroneActiveLoan? ActiveLoan,
     IReadOnlyList<DroneRecentLoan> RecentLoans);
 
@@ -117,6 +119,7 @@ public static class DroneDetailsQuery
             drone.Name,
             drone.Description,
             active is null ? Availability.Available : Availability.Loaned,
+            drone.Retired,
             active is null
                 ? null
                 : new DroneActiveLoan(

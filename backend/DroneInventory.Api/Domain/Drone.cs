@@ -11,4 +11,7 @@ public class Drone
     public required string Name { get; set; }
 
     public string? Description { get; set; }
+
+    /// <summary>Retired drones are kept for the loan history but are not listed, edited or loaned (design D1).</summary>
+    public bool Retired { get; set; }
 }

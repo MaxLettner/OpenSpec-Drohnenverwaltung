@@ -34,10 +34,10 @@ public static class DashboardQuery
     /// </summary>
     public static async Task<Dashboard> GetDashboardAsync(this AppDbContext db, DateOnly today, CancellationToken ct = default)
     {
-        var droneCount = await db.Drones.CountAsync(ct);
+        var droneCount = await db.Drones.CountAsync(d => !d.Retired, ct);
         var activeCount = await db.Loans.CountAsync(l => l.Status == LoanStatus.Active, ct);
         var returnedCount = await db.Loans.CountAsync(l => l.Status == LoanStatus.Returned, ct);
-        var groupCount = await db.StudentGroups.CountAsync(ct);
+        var groupCount = await db.StudentGroups.CountAsync(g => !g.Retired, ct);
 
         var activeItems = db.LoanItems.Where(i => db.Loans.Any(l => l.Id == i.LoanId && l.Status == LoanStatus.Active));
         var batteries = await activeItems.Where(i => i.Type == LoanItemType.Battery).SumAsync(i => (int?)i.Quantity, ct) ?? 0;

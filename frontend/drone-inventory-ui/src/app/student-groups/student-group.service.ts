@@ -26,6 +26,11 @@ export class StudentGroupService {
     return this.http.post<StudentGroup>('/api/student-groups', request);
   }
 
+  /** Retires a student group without an active loan (student group spec "Retire a student group"). */
+  retire(id: number): Observable<void> {
+    return this.http.post<void>(`/api/student-groups/${id}/retire`, null);
+  }
+
   /** Changes the name of a student group (student group spec "Edit a student group"). */
   update(id: number, request: UpdateStudentGroupRequest): Observable<StudentGroup> {
     return this.http.put<StudentGroup>(`/api/student-groups/${id}`, request);

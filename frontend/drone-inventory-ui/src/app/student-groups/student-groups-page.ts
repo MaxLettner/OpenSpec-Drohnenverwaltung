@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { RetireDialog, RetireDialogData } from '../shared/retire-dialog/retire-dialog';
 import { LoadState } from '../shared/load-state';
 import {
   StudentGroupEditDialog,
@@ -67,7 +68,7 @@ import { StudentGroupService } from './student-group.service';
                             {{ group.name }}
                           </button>
                         </td>
-                        <td hlmTd>
+                        <td hlmTd class="space-x-2">
                           <button
                             hlmBtn
                             variant="outline"
@@ -77,6 +78,16 @@ import { StudentGroupService } from './student-group.service';
                             (click)="openEdit(group)"
                           >
                             Edit
+                          </button>
+                          <button
+                            hlmBtn
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            [attr.aria-label]="'Retire ' + group.name"
+                            (click)="openRetire(group)"
+                          >
+                            Retire
                           </button>
                         </td>
                       </tr>
@@ -128,6 +139,28 @@ export class StudentGroupsPage {
       ariaLabelledBy: 'student-group-details-title',
       autoFocus: 'first-tabbable',
     });
+  }
+
+  /**
+   * Asks for confirmation and retires the group (design D5). A rejection, e.g. the group has an
+   * active loan, is reported by the error toast and leaves the list as it is.
+   */
+  protected openRetire(group: StudentGroup): void {
+    this.dialog
+      .open<boolean, RetireDialogData>(RetireDialog, {
+        data: { name: group.name },
+        ariaLabelledBy: 'retire-dialog-title',
+        autoFocus: 'first-tabbable',
+      })
+      .closed.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.service
+            .retire(group.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: () => this.loadGroups(), error: () => undefined });
+        }
+      });
   }
 
   /** Opens the edit dialog; a save reloads the list (design D5). */

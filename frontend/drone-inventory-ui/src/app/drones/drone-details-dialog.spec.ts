@@ -30,6 +30,7 @@ describe('Drone details dialog', () => {
     name: 'TELLO-02',
     description: 'SSID: TELLO-1A2B3C',
     availability: 'Loaned',
+    retired: false,
     activeLoan: {
       id: 41,
       group: 'Group 1',
@@ -109,6 +110,7 @@ describe('Drone details dialog', () => {
       name: 'TELLO-07',
       description: null,
       availability: 'Available',
+      retired: false,
       activeLoan: null,
       recentLoans: [5, 4, 3, 2, 1].map(recent),
     });

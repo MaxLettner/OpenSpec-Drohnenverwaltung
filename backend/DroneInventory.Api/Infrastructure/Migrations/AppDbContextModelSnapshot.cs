@@ -33,6 +33,9 @@ namespace DroneInventory.Api.Infrastructure.Migrations
                         .HasColumnType("TEXT")
                         .UseCollation("NOCASE");
 
+                    b.Property<bool>("Retired")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -114,6 +117,9 @@ namespace DroneInventory.Api.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT")
                         .UseCollation("NOCASE");
+
+                    b.Property<bool>("Retired")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
