@@ -1,8 +1,13 @@
+import { Dialog } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { LoadState } from '../shared/load-state';
+import {
+  StudentGroupDetailsDialog,
+  StudentGroupDetailsDialogData,
+} from './student-group-details-dialog';
 import { StudentGroupForm } from './student-group-form';
 import { StudentGroup } from './student-group.models';
 import { StudentGroupService } from './student-group.service';
@@ -10,7 +15,8 @@ import { StudentGroupService } from './student-group.service';
 /**
  * Lists the student groups (REQ-003) and embeds the form that creates them. The backend delivers
  * the groups already ordered by name, so the page shows them as received and reloads the list
- * after a group was created.
+ * after a group was created. Clicking a group name opens its details in a dialog
+ * (student-group spec "Show student group details").
  */
 @Component({
   selector: 'app-student-groups-page',
@@ -45,7 +51,16 @@ import { StudentGroupService } from './student-group.service';
                   <tbody hlmTBody>
                     @for (group of groups(); track group.id) {
                       <tr hlmTr>
-                        <td hlmTd>{{ group.name }}</td>
+                        <td hlmTd>
+                          <button
+                            type="button"
+                            class="rounded-sm font-medium underline-offset-4 hover:text-primary hover:underline focus-visible:outline-2"
+                            [attr.aria-label]="'Details of ' + group.name"
+                            (click)="openDetails(group)"
+                          >
+                            {{ group.name }}
+                          </button>
+                        </td>
                       </tr>
                     }
                   </tbody>
@@ -64,6 +79,7 @@ import { StudentGroupService } from './student-group.service';
 export class StudentGroupsPage {
   private readonly service = inject(StudentGroupService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialog = inject(Dialog);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly groups = signal<readonly StudentGroup[]>([]);
@@ -85,5 +101,14 @@ export class StudentGroupsPage {
         // The error interceptor has already shown the message; the page says the list is missing.
         error: () => this.state.set('failed'),
       });
+  }
+
+  /** Opens the details dialog of a group (design D3). */
+  protected openDetails(group: StudentGroup): void {
+    this.dialog.open<void, StudentGroupDetailsDialogData>(StudentGroupDetailsDialog, {
+      data: { studentGroupId: group.id },
+      ariaLabelledBy: 'student-group-details-title',
+      autoFocus: 'first-tabbable',
+    });
   }
 }

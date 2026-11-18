@@ -64,7 +64,7 @@ internal static class TestApi
         return problem;
     }
 
-    /// <summary>Seeds loans with their drones, groups and accessories directly; returns the loan Ids in input order.</summary>
+    /// <summary>Seeds loans with their drones, groups (one per name) and accessories directly; returns the loan Ids in input order.</summary>
     public static async Task<int[]> SeedLoansAsync(ApiFactory factory, params LoanSeed[] seeds)
     {
         using var scope = factory.Services.CreateScope();
@@ -72,10 +72,20 @@ internal static class TestApi
         var ids = new List<int>();
         foreach (var seed in seeds)
         {
-            var drone = new Drone { Name = seed.Drone };
-            var group = new StudentGroup { Name = seed.Group };
-            db.Drones.Add(drone);
-            db.StudentGroups.Add(group);
+            // A name used by an earlier seed reuses that drone or group.
+            var drone = db.Drones.SingleOrDefault(d => d.Name == seed.Drone) ?? new Drone { Name = seed.Drone };
+            var group = db.StudentGroups.SingleOrDefault(g => g.Name == seed.Group)
+                ?? new StudentGroup { Name = seed.Group };
+            if (drone.Id == 0)
+            {
+                db.Drones.Add(drone);
+            }
+
+            if (group.Id == 0)
+            {
+                db.StudentGroups.Add(group);
+            }
+
             await db.SaveChangesAsync();
 
             var loan = new Loan
