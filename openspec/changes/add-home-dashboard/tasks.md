@@ -9,7 +9,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 ## 2. Backend
 
 - [x] 2.1 Add the derived `activeLoanId` to `GET /api/drones` (design D2); verify tests for "List drones with and without a loan", "Drone is available again after return", "Empty inventory" — REQ-002, REQ-008 (#124)
-- [ ] 2.2 Add `GET /api/drones/{id}` with active loan and last 5 returned loans (design D3); verify tests for the backend parts of "Details of a loaned drone", "Details of an available drone" and "Unknown drone" — REQ-002, REQ-007, REQ-010 (#125)
+- [x] 2.2 Add `GET /api/drones/{id}` with active loan and last 5 returned loans (design D3); verify tests for the backend parts of "Details of a loaned drone", "Details of an available drone" and "Unknown drone" — REQ-002, REQ-007, REQ-010 (#125)
 - [ ] 2.3 Add `GET /api/dashboard` (design D1); verify tests for "Figures match the data", "Empty database", "Only active loans count", "Oldest loans first", "Loans counted by week" — REQ-002, REQ-006, REQ-007, REQ-010 (#126)
 
 ## 3. Frontend
