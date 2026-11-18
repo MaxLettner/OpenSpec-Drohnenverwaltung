@@ -49,6 +49,17 @@ public class DroneListTests
     private static string AvailabilityOf(JsonElement[] drones, string name) =>
         drones.Single(d => d.GetProperty("name").GetString() == name).GetProperty("availability").GetString()!;
 
+    private static JsonElement ActiveLoanIdOf(JsonElement[] drones, string name) =>
+        drones.Single(d => d.GetProperty("name").GetString() == name).GetProperty("activeLoanId");
+
+    private static int ActiveLoanIdInDatabase(ApiFactory factory, string drone)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var droneId = db.Drones.Single(d => d.Name == drone).Id;
+        return db.Loans.Single(l => l.DroneId == droneId && l.Status == LoanStatus.Active).Id;
+    }
+
     [Fact]
     public async Task REQ_002_List_drones_with_and_without_a_loan()
     {
@@ -61,6 +72,8 @@ public class DroneListTests
         Assert.Equal("Loaned", AvailabilityOf(drones, "TELLO-02"));
         Assert.Equal("Available", AvailabilityOf(drones, "TELLO-07"));
         Assert.All(drones, d => Assert.True(d.GetProperty("id").GetInt32() > 0));
+        Assert.Equal(ActiveLoanIdInDatabase(factory, "TELLO-02"), ActiveLoanIdOf(drones, "TELLO-02").GetInt32());
+        Assert.Equal(JsonValueKind.Null, ActiveLoanIdOf(drones, "TELLO-07").ValueKind);
     }
 
     [Fact]
@@ -86,6 +99,7 @@ public class DroneListTests
         var drones = await ListAsync(factory);
 
         Assert.Equal("Available", AvailabilityOf(drones, "TELLO-07"));
+        Assert.Equal(JsonValueKind.Null, ActiveLoanIdOf(drones, "TELLO-07").ValueKind);
     }
 
     [Fact]
@@ -97,6 +111,7 @@ public class DroneListTests
         var drones = await ListAsync(factory);
 
         Assert.Equal("Loaned", AvailabilityOf(drones, "TELLO-07"));
+        Assert.Equal(ActiveLoanIdInDatabase(factory, "TELLO-07"), ActiveLoanIdOf(drones, "TELLO-07").GetInt32());
     }
 
     [Fact]

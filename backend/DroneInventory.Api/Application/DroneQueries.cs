@@ -5,10 +5,11 @@ using Microsoft.EntityFrameworkCore;
 namespace DroneInventory.Api.Application;
 
 /// <summary>
-/// One row of the drone list (REQ-002): a drone with its derived availability. The API returns the
+/// One row of the drone list (REQ-002): a drone with its derived availability and the Id of its
+/// active loan, null when it is available (add-home-dashboard design D2). The API returns the
 /// projection as it is, so the members carry the JSON names of the API contract (design D5).
 /// </summary>
-public record DroneListItem(int Id, string Name, string? Description, Availability Availability);
+public record DroneListItem(int Id, string Name, string? Description, Availability Availability, int? ActiveLoanId);
 
 public static class DroneQueries
 {
@@ -20,12 +21,22 @@ public static class DroneQueries
         db.Drones
             .AsNoTracking()
             .OrderBy(d => d.Name)
+            .Select(d => new
+            {
+                d.Id,
+                d.Name,
+                d.Description,
+                // At most one active loan per drone (REQ-005), so the first one is the one.
+                ActiveLoanId = db.Loans
+                    .Where(l => l.DroneId == d.Id && l.Status == LoanStatus.Active)
+                    .Select(l => (int?)l.Id)
+                    .FirstOrDefault(),
+            })
             .Select(d => new DroneListItem(
                 d.Id,
                 d.Name,
                 d.Description,
-                db.Loans.Any(l => l.DroneId == d.Id && l.Status == LoanStatus.Active)
-                    ? Availability.Loaned
-                    : Availability.Available))
+                d.ActiveLoanId != null ? Availability.Loaned : Availability.Available,
+                d.ActiveLoanId))
             .ToListAsync(ct);
 }
