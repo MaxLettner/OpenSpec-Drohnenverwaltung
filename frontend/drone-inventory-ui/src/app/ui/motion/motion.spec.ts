@@ -39,7 +39,7 @@ describe('ui-theme: Subtle motion of dialogs and buttons', () => {
 
   it('Reduced motion: dialogs appear and buttons stay at their size at once', () => {
     const reduced = reducedMotion();
-    expect(reduced).toMatch(/\.cdk-dialog-container\s*\{\s*animation:\s*none/);
+    expect(reduced).toMatch(/\.cdk-dialog-container,[^{]*\{\s*animation:\s*none/);
     expect(reduced).toMatch(/a\[hlmBtn\]:active\s*\{\s*scale:\s*none/);
   });
 });

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -37,8 +38,11 @@ describe('HomePage', () => {
   let http: HttpTestingController;
 
   const element = () => fixture.nativeElement as HTMLElement;
+  /** The figure as it is shown; screen readers get the same value from a hidden twin. */
   const stat = (key: string) =>
-    element().querySelector(`[data-stat="${key}"]`)!.textContent!.trim();
+    element().querySelector(`[data-stat="${key}"] [aria-hidden="true"]`)!.textContent!.trim();
+  const spokenStat = (key: string) =>
+    element().querySelector(`[data-stat="${key}"] .sr-only`)!.textContent!.trim();
   const rows = () =>
     Array.from(element().querySelectorAll('tbody tr')).map((row) =>
       Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent!.trim()),
@@ -62,6 +66,72 @@ describe('HomePage', () => {
   });
 
   afterEach(() => http.verify());
+
+  describe('ui-theme: Subtle motion', () => {
+    let frames: FrameRequestCallback[];
+
+    /** A browser that animates: no reduced motion, and frames that the test runs by hand. */
+    function allowMotion(): void {
+      frames = [];
+      vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => undefined }));
+      vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      vi.stubGlobal('cancelAnimationFrame', () => undefined);
+    }
+
+    function runFrame(now: number): void {
+      const due = frames;
+      frames = [];
+      due.forEach((callback) => callback(now));
+      fixture.detectChanges();
+    }
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('Home figures count up: the drone figure counts to 3, its spoken value is 3 from the start', () => {
+      allowMotion();
+      show({ ...empty, drones: { total: 3, available: 2, loaned: 1 } });
+
+      expect(spokenStat('drones')).toBe('3');
+      runFrame(0);
+      expect(stat('drones')).toBe('0');
+      runFrame(150);
+      const midway = Number(stat('drones'));
+      expect(midway).toBeGreaterThan(0);
+      expect(midway).toBeLessThan(3);
+      runFrame(600);
+      expect(stat('drones')).toBe('3');
+      runFrame(1000);
+      expect(stat('drones')).toBe('3');
+    });
+
+    it('Reduced motion: the Home figures are shown at once', () => {
+      allowMotion();
+      vi.stubGlobal('matchMedia', (query: string) => ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        addEventListener: () => undefined,
+      }));
+      show({ ...empty, drones: { total: 3, available: 2, loaned: 1 } });
+
+      expect(stat('drones')).toBe('3');
+    });
+
+    it('draws the ring and grows the bars, switched off under reduced motion', () => {
+      const styles = readFileSync('src/styles.css', 'utf8');
+      expect(styles).toMatch(/\.ring-arc\s*\{\s*animation:\s*500ms ease-out both ring-draw/);
+      expect(styles).toMatch(/\.week-bar\s*\{[^}]*animation:\s*500ms ease-out both bar-grow/);
+      const reduced = /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/.exec(
+        styles,
+      )![1];
+      expect(reduced).toMatch(/\.ring-arc,\s*\.week-bar\s*\{\s*animation:\s*none/);
+
+      show({ ...empty, drones: { total: 3, available: 2, loaned: 1 } });
+      expect(element().querySelectorAll('circle.ring-arc')).toHaveLength(2);
+      expect(element().querySelectorAll('.week-bar')).toHaveLength(8);
+    });
+  });
 
   it('Figures match the data', () => {
     show(sample);

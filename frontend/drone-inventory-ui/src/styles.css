@@ -299,6 +299,28 @@ a[hlmBtn]:active {
   scale: 0.97;
 }
 
+/*
+ * Home figures (ui-theme "Subtle motion", design D3): the ring arcs draw from empty and the weekly
+ * bars grow from the bottom once per load. The numbers count up in CountUp.
+ */
+.ring-arc {
+  animation: 500ms ease-out both ring-draw;
+}
+@keyframes ring-draw {
+  from {
+    stroke-dasharray: 0 400;
+  }
+}
+.week-bar {
+  transform-origin: bottom;
+  animation: 500ms ease-out both bar-grow;
+}
+@keyframes bar-grow {
+  from {
+    scale: 1 0;
+  }
+}
+
 /* One switch for all motion (design D5): the change is shown at once. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
@@ -309,7 +331,9 @@ a[hlmBtn]:active {
   [data-slot='card']::after {
     transition: none;
   }
-  .cdk-dialog-container {
+  .cdk-dialog-container,
+  .ring-arc,
+  .week-bar {
     animation: none;
   }
   button:not(:disabled):active,
