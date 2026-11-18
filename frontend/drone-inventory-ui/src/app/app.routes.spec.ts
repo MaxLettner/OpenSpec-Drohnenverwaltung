@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 import { DronesPage } from './drones/drones-page';
+import { HomePage } from './home/home-page';
 import { StudentGroupsPage } from './student-groups/student-groups-page';
 import { LoansPage } from './loans/loans-page';
 import { LoanHistoryPage } from './loans/loan-history-page';
@@ -14,10 +15,10 @@ describe('app routes', () => {
     });
   });
 
-  it('shows the drones page for the empty path', async () => {
+  it('Open the app: shows the Home page for the empty path (dashboard spec)', async () => {
     const harness = await RouterTestingHarness.create();
-    const page = await harness.navigateByUrl('/', DronesPage);
-    expect(page).toBeInstanceOf(DronesPage);
+    const page = await harness.navigateByUrl('/', HomePage);
+    expect(page).toBeInstanceOf(HomePage);
   });
 
   it('shows the drones page for /drones', async () => {
@@ -44,9 +45,9 @@ describe('app routes', () => {
     expect(page).toBeInstanceOf(LoanHistoryPage);
   });
 
-  it('redirects unknown paths to the drones page', async () => {
+  it('redirects unknown paths to the Home page (dashboard spec)', async () => {
     const harness = await RouterTestingHarness.create();
-    const page = await harness.navigateByUrl('/does-not-exist', DronesPage);
-    expect(page).toBeInstanceOf(DronesPage);
+    const page = await harness.navigateByUrl('/does-not-exist', HomePage);
+    expect(page).toBeInstanceOf(HomePage);
   });
 });
