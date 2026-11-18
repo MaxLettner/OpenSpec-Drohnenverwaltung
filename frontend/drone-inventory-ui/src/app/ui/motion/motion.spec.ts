@@ -52,6 +52,13 @@ describe('ui-theme: Subtle motion of lists', () => {
     expect(row).toMatch(/animation-delay:\s*calc\(min\(var\(--row, 0\), 10\) \* 20ms\)/);
   });
 
+  it('fades rows in place, so the table container never overflows and shows a scrollbar', () => {
+    const keyframes = /@keyframes row-in\s*\{([\s\S]*?)\n\}/.exec(styles);
+    expect(keyframes, '@keyframes row-in').not.toBeNull();
+    expect(keyframes![1]).toContain('opacity: 0');
+    expect(keyframes![1]).not.toMatch(/translate|transform|scale|margin|top/);
+  });
+
   it('Reduced motion: rows appear at once and placeholders do not shimmer', () => {
     expect(rule('.skeleton')).toContain('skeleton-shimmer');
     expect(reducedMotion()).toMatch(/\.list-row,\s*\.skeleton\s*\{\s*animation:\s*none/);
