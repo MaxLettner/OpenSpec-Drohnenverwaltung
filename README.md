@@ -51,6 +51,21 @@ npm start
 - `proxy.conf.json` forwards every `/api` request of the dev server to `http://localhost:5035`, so the frontend calls the backend through relative URLs such as `/api/drones`.
 - A production build is created with `npm run build` (output in `frontend/drone-inventory-ui/dist/`).
 
+## Run with Docker
+
+Needs only Docker. From the repository root:
+
+```bash
+docker compose up --build
+```
+
+- One container serves the app and the API at **http://localhost:8080** (`/api` for the API). The image builds the Angular frontend and publishes the backend (`Dockerfile`, `compose.yaml`).
+- The SQLite file lives at `/data/droneinventory.db` on the named volume `drone-data`, so it survives stopping and recreating the container. The container runs in Production and migrates the database at every start.
+- A fresh container starts empty. To fill an empty volume with the sample set, start it with `SAMPLE_DATA=true docker compose up --build`.
+- If port 8080 is taken, start it with another port, for example `PORT=8081 docker compose up --build`.
+- `docker compose down` stops the container and keeps the data; `docker compose down -v` also removes the volume and starts over with an empty database.
+- `scripts/docker-smoke.sh` checks the container scenarios of the deployment spec (start, recreate, remove the volume) on port 18080 with its own compose project, and cleans up afterwards.
+
 ## Run with Rider (macOS)
 
 Shared run configurations live in `backend/.run/`, next to the solution, because Rider reads them from the solution directory: `Backend` (launch profile `http`, port 5035), `Frontend` (npm script `start`, port 4200) and the compound `Drone Lending System`, which starts both.
