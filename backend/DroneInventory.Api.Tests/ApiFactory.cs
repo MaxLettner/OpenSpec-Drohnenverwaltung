@@ -31,6 +31,15 @@ public class ApiFactory : WebApplicationFactory<Program>
     /// </summary>
     public Action<SqliteConnection>? BeforeNextNonQuery { get; set; }
 
+    /// <summary>
+    /// Whether the API writes its sample data into the empty database at startup. Off by default,
+    /// so that every other test starts with an empty database although it runs in Development.
+    /// </summary>
+    public bool SeedSampleData { get; init; }
+
+    /// <summary>The in-memory database; open for the factory's lifetime, usable before the API starts.</summary>
+    public SqliteConnection Connection => _connection;
+
     public ApiFactory()
     {
         _connection.Open();
@@ -39,6 +48,7 @@ public class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseSetting("SampleData:SeedWhenEmpty", SeedSampleData ? "true" : "false");
         builder.ConfigureServices(services =>
         {
             var existing = services.Where(d =>

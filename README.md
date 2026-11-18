@@ -24,6 +24,7 @@ dotnet run --project backend/DroneInventory.Api
 
 - The API listens on **http://localhost:5035** (profile `http` in `backend/DroneInventory.Api/Properties/launchSettings.json`). All endpoints are under `/api`.
 - The launch profile sets `ASPNETCORE_ENVIRONMENT=Development`. In Development the app creates the SQLite database file on first start and applies the EF Core migrations at startup. The file is `backend/DroneInventory.Api/droneinventory.db` when started this way, and it is git-ignored.
+- An empty development database gets a fixed sample set at startup (10 drones, 5 student groups, 3 active and 4 returned loans; `Infrastructure/SampleData.cs`). A database that already holds data is left alone; delete `droneinventory.db` to start over with the sample set. `SampleData:SeedWhenEmpty` in `appsettings.Development.json` turns it off.
 - In Development the OpenAPI document is served at **http://localhost:5035/openapi/v1.json**.
 
 | Endpoint | Purpose |

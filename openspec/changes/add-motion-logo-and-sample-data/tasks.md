@@ -4,7 +4,7 @@ Each task becomes one GitHub issue, one branch and one pull request. Every Given
 
 ## 1. Sample data
 
-- [ ] 1.1 Add `Infrastructure/SampleData.SeedIfEmptyAsync` with the fixed set of design D2, call it after `Migrate()` in Development when `SampleData:SeedWhenEmpty` is true, add `appsettings.Development.json` with the setting on, and switch it off in `ApiFactory` (design D1); verify backend tests for the scenarios "Empty development database", "Sample data follows the loan rules", "Two fresh databases", "Database with own data", "Production" and "Sample data disabled", and that `dotnet test backend` passes — REQ-001 to REQ-010 (#112)
+- [x] 1.1 Add `Infrastructure/SampleData.SeedIfEmptyAsync` with the fixed set of design D2, call it after `Migrate()` in Development when `SampleData:SeedWhenEmpty` is true, add `appsettings.Development.json` with the setting on, and switch it off in `ApiFactory` (design D1); verify backend tests for the scenarios "Empty development database", "Sample data follows the loan rules", "Two fresh databases", "Database with own data", "Production" and "Sample data disabled", and that `dotnet test backend` passes — REQ-001 to REQ-010 (#112)
 
 ## 2. Motion
 
