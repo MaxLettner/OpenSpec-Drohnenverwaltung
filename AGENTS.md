@@ -30,9 +30,10 @@ Backend, frontend and specs live in this one repository.
 - Keep requirement IDs (`REQ-001` … `REQ-010`) in specs, tasks, issues and test names.
 - Out of scope (do not implement): login/roles, item-level batteries,
   reservations, damage management, exports, printable reports, stored statistics,
-  edit/delete, search/filter/sort of lists. Exceptions: the loan form may search
+  edit/delete of loans, search/filter/sort of lists. Exceptions: the loan form may search
   its drone and student group options by name; the Home page may show live figures
-  computed from the current data.
+  computed from the current data; drones and student groups may be edited and
+  retired (stored `Retired` flag, never a real delete).
 
 ## Working on a task
 

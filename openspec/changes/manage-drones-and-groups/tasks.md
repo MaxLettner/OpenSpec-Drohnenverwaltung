@@ -4,7 +4,7 @@ Each task becomes one GitHub issue, one branch and one pull request, with its ba
 
 ## 1. Documentation
 
-- [ ] 1.1 Narrow the out-of-scope rule "edit/delete" in `requirements.md`, `AGENTS.md` and `openspec/config.yaml`, and add the `Retired` attribute to `domain-model.md`: drones and student groups may be edited and retired, loans still cannot be edited or deleted — REQ-001, REQ-003, REQ-010 (#147)
+- [x] 1.1 Narrow the out-of-scope rule "edit/delete" in `requirements.md`, `AGENTS.md` and `openspec/config.yaml`, and add the `Retired` attribute to `domain-model.md`: drones and student groups may be edited and retired, loans still cannot be edited or deleted — REQ-001, REQ-003, REQ-010 (#147)
 
 ## 2. Features
 
