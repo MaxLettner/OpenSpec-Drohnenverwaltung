@@ -15,6 +15,7 @@ import { HlmTableImports } from '@spartan-ng/helm/table';
 import { CountUp } from '../shared/count-up';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoadState } from '../shared/load-state';
+import { LoadingRows } from '../shared/loading-rows';
 import { LoanService } from '../loans/loan.service';
 import { Dashboard } from './dashboard.models';
 import { DashboardService } from './dashboard.service';
@@ -32,14 +33,22 @@ const RING = 2 * Math.PI * 52;
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
-  imports: [CountUp, DateDisplayPipe, NgIcon, HlmButton, HlmCardImports, HlmTableImports],
+  imports: [
+    LoadingRows,
+    CountUp,
+    DateDisplayPipe,
+    NgIcon,
+    HlmButton,
+    HlmCardImports,
+    HlmTableImports,
+  ],
   providers: [provideIcons({ lucideBatteryMedium, lucideFan })],
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">Home</h1>
 
     @switch (state()) {
       @case ('loading') {
-        <p class="text-sm text-muted-foreground">Loading figures...</p>
+        <app-loading-rows label="Loading figures..." />
       }
       @case ('failed') {
         <p class="text-sm text-muted-foreground">The figures could not be loaded.</p>
@@ -184,7 +193,7 @@ const RING = 2 * Math.PI * 52;
                     </thead>
                     <tbody hlmTBody>
                       @for (loan of d.longestActiveLoans; track loan.id) {
-                        <tr hlmTr>
+                        <tr hlmTr class="list-row" [style.--row]="$index">
                           <td hlmTd>{{ loan.group }}</td>
                           <td hlmTd>{{ loan.drone }}</td>
                           <td hlmTd>{{ loan.loanDate | dateDisplay }}</td>

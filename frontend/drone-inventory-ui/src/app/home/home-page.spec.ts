@@ -125,7 +125,7 @@ describe('HomePage', () => {
       const reduced = /@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/.exec(
         styles,
       )![1];
-      expect(reduced).toMatch(/\.ring-arc,\s*\.week-bar\s*\{\s*animation:\s*none/);
+      expect(reduced).toMatch(/\.ring-arc,\s*\.week-bar,[^{]*\{\s*animation:\s*none/);
 
       show({ ...empty, drones: { total: 3, available: 2, loaned: 1 } });
       expect(element().querySelectorAll('circle.ring-arc')).toHaveLength(2);

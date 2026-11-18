@@ -15,6 +15,7 @@ import { HlmTableImports } from '@spartan-ng/helm/table';
 import { DroneDetailsDialog, DroneDetailsDialogData } from '../drones/drone-details-dialog';
 import { DateDisplayPipe } from '../shared/date-display.pipe';
 import { LoadState } from '../shared/load-state';
+import { LoadingRows } from '../shared/loading-rows';
 import {
   StudentGroupDetailsDialog,
   StudentGroupDetailsDialogData,
@@ -39,7 +40,7 @@ function parseDroneId(value: string | undefined): number | undefined {
 
 @Component({
   selector: 'app-loans-page',
-  imports: [DateDisplayPipe, LoanForm, HlmButton, HlmCardImports, HlmTableImports],
+  imports: [LoadingRows, DateDisplayPipe, LoanForm, HlmButton, HlmCardImports, HlmTableImports],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
   template: `
@@ -54,7 +55,7 @@ function parseDroneId(value: string | undefined): number | undefined {
       <div hlmCardContent>
         @switch (state()) {
           @case ('loading') {
-            <p class="text-sm text-muted-foreground">Loading active loans...</p>
+            <app-loading-rows label="Loading active loans..." />
           }
           @case ('loaded') {
             @if (loans().length === 0) {
@@ -74,7 +75,7 @@ function parseDroneId(value: string | undefined): number | undefined {
                   </thead>
                   <tbody hlmTBody>
                     @for (loan of loans(); track loan.id) {
-                      <tr hlmTr>
+                      <tr hlmTr class="list-row" [style.--row]="$index">
                         <td hlmTd>
                           <button
                             type="button"

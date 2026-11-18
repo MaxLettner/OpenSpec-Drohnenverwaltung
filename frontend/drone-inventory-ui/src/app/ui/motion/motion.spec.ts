@@ -43,3 +43,17 @@ describe('ui-theme: Subtle motion of dialogs and buttons', () => {
     expect(reduced).toMatch(/a\[hlmBtn\]:active\s*\{\s*scale:\s*none/);
   });
 });
+
+/** ui-theme "Subtle motion" and "Loading placeholders" for lists (design D3). */
+describe('ui-theme: Subtle motion of lists', () => {
+  it('fades rows in one after another, each within 300 ms and at most 200 ms late', () => {
+    const row = rule('.list-row');
+    expect(row).toMatch(/animation:\s*200ms ease-out both row-in/);
+    expect(row).toMatch(/animation-delay:\s*calc\(min\(var\(--row, 0\), 10\) \* 20ms\)/);
+  });
+
+  it('Reduced motion: rows appear at once and placeholders do not shimmer', () => {
+    expect(rule('.skeleton')).toContain('skeleton-shimmer');
+    expect(reducedMotion()).toMatch(/\.list-row,\s*\.skeleton\s*\{\s*animation:\s*none/);
+  });
+});

@@ -8,6 +8,7 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { RetireDialog, RetireDialogData } from '../shared/retire-dialog/retire-dialog';
 import { LoadState } from '../shared/load-state';
+import { LoadingRows } from '../shared/loading-rows';
 import { DroneDetailsDialog, DroneDetailsDialogData } from './drone-details-dialog';
 import { DroneEditDialog, DroneEditDialogData } from './drone-edit-dialog';
 import { DroneForm } from './drone-form';
@@ -28,7 +29,15 @@ import { LoanService } from '../loans/loan.service';
   selector: 'app-drones-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block space-y-6' },
-  imports: [DroneForm, RouterLink, HlmBadge, HlmButton, HlmCardImports, HlmTableImports],
+  imports: [
+    LoadingRows,
+    DroneForm,
+    RouterLink,
+    HlmBadge,
+    HlmButton,
+    HlmCardImports,
+    HlmTableImports,
+  ],
   template: `
     <h1 class="text-2xl font-semibold tracking-tight">Drones</h1>
 
@@ -41,7 +50,7 @@ import { LoanService } from '../loans/loan.service';
       <div hlmCardContent>
         @switch (state()) {
           @case ('loading') {
-            <p class="text-sm text-muted-foreground">Loading drones...</p>
+            <app-loading-rows label="Loading drones..." />
           }
           @case ('loaded') {
             @if (drones().length === 0) {
@@ -59,7 +68,7 @@ import { LoanService } from '../loans/loan.service';
                   </thead>
                   <tbody hlmTBody>
                     @for (drone of drones(); track drone.id) {
-                      <tr hlmTr>
+                      <tr hlmTr class="list-row" [style.--row]="$index">
                         <td hlmTd>
                           <button
                             type="button"
