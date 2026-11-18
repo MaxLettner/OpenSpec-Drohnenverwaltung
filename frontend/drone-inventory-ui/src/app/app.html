@@ -30,11 +30,14 @@
         type="button"
         variant="ghost"
         size="icon-sm"
-        class="aria-pressed:bg-primary/15"
+        class="relative isolate"
         aria-label="Light theme"
         [attr.aria-pressed]="theme() === 'light'"
         (click)="choose('light')"
       >
+        @if (theme() === 'light') {
+          <span class="theme-highlight absolute inset-0 -z-10 rounded-md bg-primary/15" aria-hidden="true"></span>
+        }
         <ng-icon name="lucideSun" />
       </button>
       <button
@@ -42,11 +45,14 @@
         type="button"
         variant="ghost"
         size="icon-sm"
-        class="aria-pressed:bg-primary/15"
+        class="relative isolate"
         aria-label="Dark theme"
         [attr.aria-pressed]="theme() === 'dark'"
         (click)="choose('dark')"
       >
+        @if (theme() === 'dark') {
+          <span class="theme-highlight absolute inset-0 -z-10 rounded-md bg-primary/15" aria-hidden="true"></span>
+        }
         <ng-icon name="lucideMoon" />
       </button>
     </div>
