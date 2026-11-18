@@ -40,6 +40,8 @@ export interface StudentGroupRecentLoan {
 export interface StudentGroupDetails {
   id: number;
   name: string;
+  /** True for a retired group; the details endpoint still returns it. */
+  retired: boolean;
   /** Oldest loan date first. */
   activeLoans: StudentGroupActiveLoan[];
   /** The last 5 returned loans, latest return first. */

@@ -17,7 +17,8 @@ export interface DroneDetailsDialogData {
 
 /**
  * The details of one drone (drone spec "Show drone details", design D5): availability, the active
- * loan with a "Return" action or a "Loan" action, and the last returned loans. Opened with the CDK
+ * loan with a "Return" action or a "Loan" action, and the last returned loans. A retired drone
+ * shows "Retired" and no "Loan" action (manage-drones-and-groups design D4). Opened with the CDK
  * dialog, which traps the focus, closes on Escape and gives the focus back to the drone name.
  */
 @Component({
@@ -37,7 +38,9 @@ export interface DroneDetailsDialogData {
           <h2 id="drone-details-title" class="text-lg font-semibold">{{ drone.name }}</h2>
           <p class="text-sm text-muted-foreground">{{ drone.description || 'No description' }}</p>
         </div>
-        @if (drone.availability === 'Available') {
+        @if (drone.retired) {
+          <span hlmBadge variant="outline" class="text-muted-foreground">Retired</span>
+        } @else if (drone.availability === 'Available') {
           <span hlmBadge variant="outline" class="border-success bg-success/20 text-foreground"
             >Available</span
           >
@@ -75,7 +78,7 @@ export interface DroneDetailsDialogData {
             Return
           </button>
         </section>
-      } @else {
+      } @else if (!drone.retired) {
         <a
           hlmBtn
           class="mt-5"

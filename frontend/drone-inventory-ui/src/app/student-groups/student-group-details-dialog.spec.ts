@@ -23,6 +23,7 @@ describe('Student group details dialog', () => {
   const details: StudentGroupDetails = {
     id: 1,
     name: 'Group 1',
+    retired: false,
     activeLoans: [
       {
         id: 41,
@@ -87,6 +88,7 @@ describe('Student group details dialog', () => {
     open();
 
     expect(dialog()!.textContent).toContain('Group 1');
+    expect(dialog()!.textContent).not.toContain('Retired');
     expect(field('drone')).toBe('TELLO-02');
     expect(field('loanDate')).toBe('10.03.2026');
     expect(field('daysOut')).toBe('5 days');

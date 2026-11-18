@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { LoanHistoryPage } from './loan-history-page';
 
 describe('LoanHistoryPage (REQ-010)', () => {
@@ -21,13 +22,122 @@ describe('LoanHistoryPage (REQ-010)', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(LoanHistoryPage);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    document.querySelectorAll('.cdk-overlay-container').forEach((c) => (c.innerHTML = ''));
+  });
+
+  it('Details of a retired drone and of a retired group: "Retired" and no Loan action (REQ-010)', async () => {
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/loans/history' }).flush([
+      {
+        id: 6,
+        group: 'Group 9',
+        drone: 'TELLO-05',
+        batteries: 0,
+        propellers: 0,
+        loanDate: '2026-08-19',
+        returnDate: '2026-08-20',
+        studentGroupId: 9,
+        droneId: 5,
+      },
+    ]);
+    fixture.detectChanges();
+    const nameButton = (label: string) =>
+      element().querySelector<HTMLButtonElement>(`button[aria-label="Details of ${label}"]`)!;
+
+    nameButton('TELLO-05').click();
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones/5' }).flush({
+      id: 5,
+      name: 'TELLO-05',
+      description: null,
+      availability: 'Available',
+      retired: true,
+      activeLoan: null,
+      recentLoans: [],
+    });
+    fixture.detectChanges();
+    const droneDialog = document.querySelector<HTMLElement>('app-drone-details-dialog')!;
+    expect(droneDialog.textContent).toContain('TELLO-05');
+    expect(droneDialog.textContent).toContain('Retired');
+    expect(droneDialog.textContent).not.toContain('Available');
+    const actions = Array.from(droneDialog.querySelectorAll('a, button')).map((b) =>
+      b.textContent!.trim(),
+    );
+    expect(actions).not.toContain('Loan');
+
+    droneDialog.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }),
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    nameButton('Group 9').click();
+    fixture.detectChanges();
+    http
+      .expectOne({ method: 'GET', url: '/api/student-groups/9' })
+      .flush({ id: 9, name: 'Group 9', retired: true, activeLoans: [], recentLoans: [] });
+    fixture.detectChanges();
+    const groupDialog = document.querySelector('app-student-group-details-dialog')!;
+    expect(groupDialog.textContent).toContain('Group 9');
+    expect(groupDialog.textContent).toContain('Retired');
+  });
+
+  it('Open details from the history: the group dialog first, then the drone dialog (REQ-010)', async () => {
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/loans/history' }).flush([
+      {
+        id: 5,
+        group: 'Group 3',
+        drone: 'TELLO-07',
+        batteries: 4,
+        propellers: 8,
+        loanDate: '2026-08-19',
+        returnDate: '2026-08-20',
+        studentGroupId: 3,
+        droneId: 7,
+      },
+    ]);
+    fixture.detectChanges();
+    const nameButton = (label: string) =>
+      element().querySelector<HTMLButtonElement>(`button[aria-label="Details of ${label}"]`)!;
+
+    nameButton('Group 3').click();
+    fixture.detectChanges();
+    http
+      .expectOne({ method: 'GET', url: '/api/student-groups/3' })
+      .flush({ id: 3, name: 'Group 3', activeLoans: [], recentLoans: [] });
+    fixture.detectChanges();
+    const groupDialog = document.querySelector('app-student-group-details-dialog')!;
+    expect(groupDialog.textContent).toContain('Group 3');
+
+    groupDialog.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }),
+    );
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.querySelector('app-student-group-details-dialog')).toBeNull();
+
+    nameButton('TELLO-07').click();
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones/7' }).flush({
+      id: 7,
+      name: 'TELLO-07',
+      description: null,
+      availability: 'Available',
+      activeLoan: null,
+      recentLoans: [],
+    });
+    fixture.detectChanges();
+    expect(document.querySelector('app-drone-details-dialog')!.textContent).toContain('TELLO-07');
+  });
 
   it('shows the loading state until the history has arrived (REQ-010)', () => {
     fixture.detectChanges();

@@ -1,3 +1,5 @@
+using DroneInventory.Api.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -31,6 +33,11 @@ public class LoanHistoryTests
             ["Group 3 | TELLO-07 | 4 | 8 | 2026-08-19 | 2026-08-21"],
             rows.Select(TestApi.DescribeRow));
         Assert.Equal(ids[0], Id(rows[0]));
+        // The History opens the drone and group details by these Ids (manage-drones-and-groups D4).
+        using var scope = factory.Services.CreateScope();
+        var loan = scope.ServiceProvider.GetRequiredService<AppDbContext>().Loans.Single();
+        Assert.Equal(loan.DroneId, rows[0].GetProperty("droneId").GetInt32());
+        Assert.Equal(loan.StudentGroupId, rows[0].GetProperty("studentGroupId").GetInt32());
     }
 
     [Fact]

@@ -67,6 +67,24 @@ public class StudentGroupDetailsTests
     }
 
     [Fact]
+    public async Task REQ_010_Details_of_a_retired_group()
+    {
+        using var factory = new ApiFactory();
+        await TestApi.SeedLoansAsync(factory, new LoanSeed("TELLO-07", "Group 9", new(2026, 3, 1), new(2026, 3, 2)));
+        var client = factory.CreateClient();
+        var before = await GetAsync(client, "Group 9");
+        var id = before.GetProperty("id").GetInt32();
+        Assert.False(before.GetProperty("retired").GetBoolean());
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync($"/api/student-groups/{id}/retire", null)).StatusCode);
+
+        var after = await client.GetFromJsonAsync<JsonElement>($"/api/student-groups/{id}");
+        Assert.Equal("Group 9", after.GetProperty("name").GetString());
+        Assert.True(after.GetProperty("retired").GetBoolean());
+        Assert.Single(after.GetProperty("recentLoans").EnumerateArray());
+    }
+
+    [Fact]
     public async Task REQ_003_Unknown_group_is_not_found()
     {
         using var factory = new ApiFactory();

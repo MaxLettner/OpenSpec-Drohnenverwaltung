@@ -45,4 +45,8 @@ export interface LoanHistoryRow {
   propellers: number;
   loanDate: string;
   returnDate: string;
+  /** Opens the group details from the History (manage-drones-and-groups design D4). */
+  studentGroupId: number;
+  /** Opens the drone details from the History. */
+  droneId: number;
 }
