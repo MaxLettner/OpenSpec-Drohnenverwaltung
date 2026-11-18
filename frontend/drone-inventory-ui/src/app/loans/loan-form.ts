@@ -6,6 +6,7 @@ import {
   ElementRef,
   computed,
   inject,
+  input,
   output,
   signal,
   viewChild,
@@ -180,6 +181,13 @@ export class LoanForm {
   /** Emits the created Loan once the backend has accepted it. */
   readonly loaned = output<Loan>();
 
+  /**
+   * A drone to choose when the form opens, e.g. from the Drones page (design D5). It is applied
+   * once, to the first drone list, and only when that drone is Available.
+   */
+  readonly initialDroneId = input<number | undefined>(undefined);
+  private initialDroneApplied = false;
+
   private readonly batteriesInput =
     viewChild.required<ElementRef<HTMLInputElement>>('batteriesInput');
   private readonly propellersInput =
@@ -308,11 +316,23 @@ export class LoanForm {
           if (selected !== null && !stillAvailable) {
             this.selectedDroneId.set(null);
           }
+          this.applyInitialDrone();
           chooseSingleOption(this.selectedDroneId, this.availableDrones());
         },
         // The error interceptor has already shown the message.
         error: () => this.droneState.set('failed'),
       });
+  }
+
+  private applyInitialDrone(): void {
+    if (this.initialDroneApplied) {
+      return;
+    }
+    this.initialDroneApplied = true;
+    const id = this.initialDroneId();
+    if (id !== undefined && this.availableDrones().some((drone) => drone.id === id)) {
+      this.selectedDroneId.set(id);
+    }
   }
 
   private loadStudentGroups(): void {

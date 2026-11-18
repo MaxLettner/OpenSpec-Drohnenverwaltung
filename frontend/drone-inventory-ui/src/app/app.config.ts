@@ -5,7 +5,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { errorToastInterceptor } from './shared/http/error-toast.interceptor';
 import { ThemeService } from './shared/theme/theme.service';
@@ -17,7 +17,8 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(ThemeService);
     }),
-    provideRouter(routes),
+    // Binds query parameters to inputs of routed pages; only LoansPage declares one (`droneId`).
+    provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([errorToastInterceptor])),
   ],
 };
