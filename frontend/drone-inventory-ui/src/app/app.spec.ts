@@ -125,23 +125,36 @@ describe('App shell (ui-theme)', () => {
     expect(TestBed.inject(Router).url).toBe('/');
   });
 
-  it('hands the pointer position to the card under it for its border highlight (design D7)', async () => {
+  it('hands the pointer position to every card for its border highlight, dialogs included (design D7)', async () => {
     const fixture = await openApp('/loans');
-    const card = document.createElement('div');
-    card.dataset['slot'] = 'card';
-    (fixture.nativeElement as HTMLElement).querySelector('main')!.append(card);
-    const box = card.getBoundingClientRect();
+    const near = document.createElement('div');
+    near.dataset['slot'] = 'card';
+    (fixture.nativeElement as HTMLElement).querySelector('main')!.append(near);
+    // A dialog lives in the CDK overlay outside the app.
+    const dialog = document.createElement('div');
+    dialog.dataset['slot'] = 'card';
+    document.body.append(dialog);
+    const nearBox = near.getBoundingClientRect();
+    const dialogBox = dialog.getBoundingClientRect();
 
-    card.dispatchEvent(
+    document.dispatchEvent(
       new PointerEvent('pointermove', {
         bubbles: true,
-        clientX: box.left + 30,
-        clientY: box.top + 12,
+        clientX: nearBox.left + 30,
+        clientY: nearBox.top + 12,
       }),
     );
 
-    expect(card.style.getPropertyValue('--pointer-x')).toBe('30px');
-    expect(card.style.getPropertyValue('--pointer-y')).toBe('12px');
+    expect(near.style.getPropertyValue('--pointer-x')).toBe('30px');
+    expect(near.style.getPropertyValue('--pointer-y')).toBe('12px');
+    expect(dialog.style.getPropertyValue('--pointer-x')).toBe(
+      `${nearBox.left + 30 - dialogBox.left}px`,
+    );
+    expect(document.documentElement.classList.contains('pointer-inside')).toBe(true);
+
+    document.dispatchEvent(new PointerEvent('pointerout', { relatedTarget: null }));
+    expect(document.documentElement.classList.contains('pointer-inside')).toBe(false);
+    dialog.remove();
   });
 
   it('marks History, not Loans, on the History page', async () => {

@@ -25,6 +25,8 @@ export interface DroneDetailsDialogData {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [DateDisplayPipe, RouterLink, HlmBadge, HlmButton],
   host: {
+    // Lets the card border highlight reach the dialog too (design D7).
+    'data-slot': 'card',
     class:
       'block max-h-[85vh] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border bg-card p-6 text-card-foreground shadow-lg',
   },
