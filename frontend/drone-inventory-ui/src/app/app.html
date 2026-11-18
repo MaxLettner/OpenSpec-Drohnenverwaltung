@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+<header class="site-header sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
   <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
     <span class="order-1 flex items-center gap-2 text-base font-semibold tracking-tight">
       <span class="size-2.5 rounded-full bg-primary" aria-hidden="true"></span>
@@ -10,11 +10,17 @@
         <a
           [routerLink]="link.path"
           routerLinkActive
+          #active="routerLinkActive"
           ariaCurrentWhenActive="page"
           [routerLinkActiveOptions]="{ exact: link.exact }"
-          class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground aria-[current=page]:bg-primary/15 aria-[current=page]:text-foreground"
-          >{{ link.label }}</a
+          class="relative isolate rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground aria-[current=page]:text-foreground"
         >
+          @if (active.isActive) {
+            <!-- One highlight on the page: a page change moves it to the new entry (design D3). -->
+            <span class="nav-highlight absolute inset-0 -z-10 rounded-md bg-primary/15" aria-hidden="true"></span>
+          }
+          {{ link.label }}
+        </a>
       }
     </nav>
 
@@ -47,7 +53,7 @@
   </div>
 </header>
 
-<main class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+<main class="page-content mx-auto max-w-5xl px-4 py-6 sm:px-6">
   <router-outlet />
 </main>
 
