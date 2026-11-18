@@ -61,6 +61,7 @@ describe('App shell (ui-theme)', () => {
       imports: [App],
       providers: [
         provideRouter([
+          { path: '', component: BlankPage, pathMatch: 'full' },
           { path: 'drones', component: BlankPage },
           { path: 'student-groups', component: BlankPage },
           { path: 'loans', component: BlankPage },
@@ -110,6 +111,18 @@ describe('App shell (ui-theme)', () => {
       .filter((link) => link.getAttribute('aria-current') === 'page')
       .map((link) => link.textContent?.trim());
     expect(current).toEqual(['Home']);
+  });
+
+  it('Go home from the header: the app name leads from Loans to the Home page (dashboard spec)', async () => {
+    const fixture = await openApp('/loans');
+    const name = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('header a'),
+    ).find((link) => link.textContent?.trim() === 'Drone Lending System')!;
+
+    name.click();
+    await fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/');
   });
 
   it('hands the pointer position to the card under it for its border highlight (design D7)', async () => {
