@@ -30,7 +30,8 @@ Deliberately excluded from this change, not to be implemented on the side:
 - No item-level inventory of batteries (BAT-001 …)
 - No advance reservations
 - No damage management, no return discrepancies
-- No reports, statistics or exports
+- No exports, printable reports or stored statistics. Exception: the Home page may
+  show live figures computed from the current data (`add-home-dashboard`).
 - No edit or delete operations for drones, groups or loans
 - No search, filtering or sorting of lists. Exception: the loan form may search its
   drone and student group options by name (`polish-loan-form`).
