@@ -18,3 +18,33 @@ export interface CreateDroneRequest {
   name: string;
   description?: string;
 }
+
+/** The active Loan in the drone details (`GET /api/drones/{id}`); dates are ISO `yyyy-MM-dd`. */
+export interface DroneActiveLoan {
+  id: number;
+  group: string;
+  loanDate: string;
+  daysOut: number;
+  batteries: number;
+  propellers: number;
+}
+
+/** A returned Loan in the drone details. */
+export interface DroneRecentLoan {
+  id: number;
+  group: string;
+  loanDate: string;
+  returnDate: string;
+  batteries: number;
+  propellers: number;
+}
+
+/** `GET /api/drones/{id}`: the drone with its active loan and its last 5 returned loans. */
+export interface DroneDetails {
+  id: number;
+  name: string;
+  description: string | null;
+  availability: Availability;
+  activeLoan: DroneActiveLoan | null;
+  recentLoans: DroneRecentLoan[];
+}
