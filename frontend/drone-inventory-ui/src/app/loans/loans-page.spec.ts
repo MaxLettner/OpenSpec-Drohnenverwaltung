@@ -3,6 +3,12 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Drone } from '../drones/drone.models';
 import { errorToastInterceptor } from '../shared/http/error-toast.interceptor';
+import {
+  chooseOption,
+  chosenOption,
+  offeredOptions,
+  optionList,
+} from '../shared/option-picker/option-picker.testing';
 import { ToastService } from '../shared/toast/toast.service';
 import { StudentGroup } from '../student-groups/student-group.models';
 import { ActiveLoanRow, Loan } from './loan.models';
@@ -107,12 +113,9 @@ describe('LoansPage (REQ-007, REQ-008)', () => {
     );
     fixture.detectChanges();
 
-    const select = (id: string) => element().querySelector<HTMLSelectElement>(`#${id}`)!;
     const input = (id: string) => element().querySelector<HTMLInputElement>(`#${id}`)!;
-    select('loan-drone').value = '2';
-    select('loan-drone').dispatchEvent(new Event('change', { bubbles: true }));
-    select('loan-group').value = '3';
-    select('loan-group').dispatchEvent(new Event('change', { bubbles: true }));
+    chooseOption(element(), 'loan-drone', 'TELLO-07');
+    chooseOption(element(), 'loan-group', 'Group 3');
     input('loan-batteries').value = '4';
     input('loan-batteries').dispatchEvent(new Event('input'));
     input('loan-propellers').value = '8';
@@ -290,11 +293,8 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
   let http: HttpTestingController;
 
   const element = () => fixture.nativeElement as HTMLElement;
-  const droneSelect = () => element().querySelector<HTMLSelectElement>('#loan-drone');
-  const groupSelect = () => element().querySelector<HTMLSelectElement>('#loan-group')!;
   const batteriesInput = () => element().querySelector<HTMLInputElement>('#loan-batteries')!;
-  const droneOptions = () =>
-    Array.from(droneSelect()?.querySelectorAll('option') ?? []).map((o) => o.textContent?.trim());
+  const droneOptions = () => offeredOptions(element(), 'loan-drone');
   const returnButton = () => element().querySelector<HTMLButtonElement>('tbody button')!;
   const submitButton = () => element().querySelector<HTMLButtonElement>('button[type="submit"]')!;
 
@@ -352,31 +352,30 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     });
   }
 
-  function choose(select: HTMLSelectElement, value: string): void {
-    select.value = value;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+  function choose(id: 'loan-drone' | 'loan-group', name: string): void {
+    chooseOption(element(), id, name);
     fixture.detectChanges();
   }
 
   it('Returned drone is offered again without reloading the page', () => {
     openPage([tello07('Loaned')]);
     expect(element().textContent).toContain('No drones available.');
-    expect(droneSelect()).toBeNull();
+    expect(optionList(element(), 'loan-drone')).toBeNull();
 
     returnTello07();
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available')]);
     fixture.detectChanges();
 
     expect(element().textContent).not.toContain('No drones available.');
-    expect(droneOptions()).toEqual(['Choose a drone', 'TELLO-07']);
+    expect(droneOptions()).toEqual(['TELLO-07']);
     // Only the drone list was requested again: the page was not reloaded.
     http.expectNone({ method: 'GET', url: '/api/loans/active' });
   });
 
   it('Entered values are kept while the returned drone is added', () => {
     openPage([tello07('Loaned'), tello08]);
-    choose(droneSelect()!, '8');
-    choose(groupSelect(), '1');
+    choose('loan-drone', 'TELLO-08');
+    choose('loan-group', 'Group 1');
     batteriesInput().value = '2';
     batteriesInput().dispatchEvent(new Event('input'));
     fixture.detectChanges();
@@ -385,10 +384,10 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available'), tello08]);
     fixture.detectChanges();
 
-    expect(droneSelect()!.value).toBe('8');
-    expect(groupSelect().value).toBe('1');
+    expect(chosenOption(element(), 'loan-drone')).toBe('TELLO-08');
+    expect(chosenOption(element(), 'loan-group')).toBe('Group 1');
     expect(batteriesInput().value).toBe('2');
-    expect(droneOptions()).toEqual(['Choose a drone', 'TELLO-07', 'TELLO-08']);
+    expect(droneOptions()).toEqual(['TELLO-07', 'TELLO-08']);
   });
 
   it('Rejected return changes nothing', () => {
@@ -412,8 +411,8 @@ describe('LoansPage: Offer a returned drone for a new loan (REQ-008, REQ-005)', 
     http.expectOne({ method: 'GET', url: '/api/drones' }).flush([tello07('Available')]);
     fixture.detectChanges();
 
-    choose(droneSelect()!, '7');
-    choose(groupSelect(), '1');
+    choose('loan-drone', 'TELLO-07');
+    choose('loan-group', 'Group 1');
     submitButton().click();
 
     const req = http.expectOne({ method: 'POST', url: '/api/loans' });

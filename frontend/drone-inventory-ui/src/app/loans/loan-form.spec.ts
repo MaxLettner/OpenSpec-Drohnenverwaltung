@@ -3,10 +3,18 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Drone } from '../drones/drone.models';
 import { errorToastInterceptor } from '../shared/http/error-toast.interceptor';
+import {
+  chooseOption,
+  chosenOption,
+  offeredOptions,
+  optionList,
+} from '../shared/option-picker/option-picker.testing';
 import { ToastService } from '../shared/toast/toast.service';
 import { StudentGroup } from '../student-groups/student-group.models';
 import { LoanForm } from './loan-form';
 import { Loan } from './loan.models';
+
+type PickerId = 'loan-drone' | 'loan-group';
 
 describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
   let fixture: ComponentFixture<LoanForm>;
@@ -14,8 +22,7 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
   let toasts: ToastService;
 
   const element = () => fixture.nativeElement as HTMLElement;
-  const droneSelect = () => element().querySelector<HTMLSelectElement>('#loan-drone');
-  const groupSelect = () => element().querySelector<HTMLSelectElement>('#loan-group');
+  const picker = (id: PickerId) => optionList(element(), id);
   const batteriesInput = () => element().querySelector<HTMLInputElement>('#loan-batteries')!;
   const propellersInput = () => element().querySelector<HTMLInputElement>('#loan-propellers')!;
   const submitButton = () => element().querySelector<HTMLButtonElement>('button[type="submit"]')!;
@@ -49,11 +56,12 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     ],
   };
 
-  /** Chooses an option of a select the way the user does, so that the component's handler runs. */
-  function choose(select: HTMLSelectElement, value: string): void {
-    select.value = value;
-    // A real change event bubbles from the inner <select> to the <hlm-native-select> host.
-    select.dispatchEvent(new Event('change', { bubbles: true }));
+  const offered = (id: PickerId) => offeredOptions(element(), id);
+  const chosen = (id: PickerId) => chosenOption(element(), id);
+
+  /** Clicks the option with this name the way the user does, so that the component's handler runs. */
+  function choose(id: PickerId, name: string): void {
+    chooseOption(element(), id, name);
     fixture.detectChanges();
   }
 
@@ -71,8 +79,8 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
 
   /** Chooses TELLO-07 for Group 3, the reference example. */
   function chooseReferenceDroneAndGroup(): void {
-    choose(droneSelect()!, '2');
-    choose(groupSelect()!, '3');
+    choose('loan-drone', 'TELLO-07');
+    choose('loan-group', 'Group 3');
   }
 
   /** Answers the drone and group lists that the form requests when it is created. */
@@ -81,10 +89,6 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(groups);
     fixture.detectChanges();
   }
-
-  /** Text of the options of the drone select, placeholder included. */
-  const droneOptions = () =>
-    Array.from(droneSelect()?.options ?? []).map((option) => option.textContent?.trim());
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -109,35 +113,35 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
 
     expect(element().textContent).not.toContain('Loading drones...');
     expect(element().textContent).not.toContain('Loading student groups...');
-    expect(droneSelect()).not.toBeNull();
-    expect(groupSelect()).not.toBeNull();
+    expect(picker('loan-drone')).not.toBeNull();
+    expect(picker('loan-group')).not.toBeNull();
   });
 
-  it('offers only the Available drones in the drone select (REQ-005)', () => {
+  it('offers only the Available drones (REQ-005)', () => {
     answerLists();
 
-    expect(droneOptions()).toEqual(['Choose a drone', 'TELLO-07']);
+    expect(offered('loan-drone')).toEqual(['TELLO-07']);
     expect(element().textContent).not.toContain('TELLO-02');
   });
 
-  it('shows "No drones available." in place of the drone select when every drone is loaned (REQ-005)', () => {
+  it('shows "No drones available." in place of the drone options when every drone is loaned (REQ-005)', () => {
     answerLists([loanedDrone]);
 
-    expect(droneSelect()).toBeNull();
+    expect(picker('loan-drone')).toBeNull();
     expect(element().textContent).toContain('No drones available.');
   });
 
-  it('shows "No drones available." in place of the drone select when there are no drones (REQ-005)', () => {
+  it('shows "No drones available." in place of the drone options when there are no drones (REQ-005)', () => {
     answerLists([]);
 
-    expect(droneSelect()).toBeNull();
+    expect(picker('loan-drone')).toBeNull();
     expect(element().textContent).toContain('No drones available.');
   });
 
-  it('shows "No student groups yet." in place of the group select (REQ-004)', () => {
+  it('shows "No student groups yet." in place of the group options (REQ-004)', () => {
     answerLists([availableDrone], []);
 
-    expect(groupSelect()).toBeNull();
+    expect(picker('loan-group')).toBeNull();
     expect(element().textContent).toContain('No student groups yet.');
   });
 
@@ -145,14 +149,11 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     answerLists();
     expect(submitButton().disabled).toBe(true);
 
-    choose(droneSelect()!, '2');
+    choose('loan-drone', 'TELLO-07');
     expect(submitButton().disabled).toBe(true);
 
-    choose(groupSelect()!, '3');
+    choose('loan-group', 'Group 3');
     expect(submitButton().disabled).toBe(false);
-
-    choose(droneSelect()!, '');
-    expect(submitButton().disabled).toBe(true);
   });
 
   it('sends the reference example with 4 batteries and 8 propellers and emits the loan (REQ-004, REQ-006)', () => {
@@ -210,15 +211,46 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     expect(emitted).toEqual(createdLoan);
   });
 
-  it('uses the shared Spartan styles for the card, selects, inputs and button', () => {
+  it('Drones are shown as options: name and description without a menu, loaned drones left out (REQ-004, REQ-005)', () => {
+    answerLists([
+      { ...availableDrone, description: 'right propeller guard damaged' },
+      { id: 3, name: 'TELLO-08', description: null, availability: 'Available' },
+      loanedDrone,
+    ]);
+
+    expect(element().querySelector('select')).toBeNull();
+    expect(offered('loan-drone')).toEqual(['TELLO-07', 'TELLO-08']);
+    expect(picker('loan-drone')!.textContent).toContain('right propeller guard damaged');
+    expect(element().textContent).not.toContain('TELLO-02');
+  });
+
+  it('Choose a drone and a group by clicking: both are marked and sent (REQ-004)', () => {
+    answerLists(
+      [availableDrone, { id: 3, name: 'TELLO-08', description: null, availability: 'Available' }],
+      [group1, group3],
+    );
+
+    choose('loan-drone', 'TELLO-07');
+    choose('loan-group', 'Group 3');
+    expect(chosen('loan-drone')).toBe('TELLO-07');
+    expect(chosen('loan-group')).toBe('Group 3');
+
+    submit();
+    const req = http.expectOne({ method: 'POST', url: '/api/loans' });
+    expect(req.request.body).toEqual({ droneId: 2, studentGroupId: 3 });
+    req.flush(createdLoan, { status: 201, statusText: 'Created' });
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([loanedDrone]);
+  });
+
+  it('uses the shared Spartan styles for the card, option lists, inputs and button', () => {
     answerLists();
 
     expect(element().querySelector('section[data-slot="card"]')).not.toBeNull();
     expect(element().querySelector('[data-slot="card-title"]')?.textContent?.trim()).toBe(
       'New loan',
     );
-    expect(droneSelect()!.getAttribute('data-slot')).toBe('native-select');
-    expect(groupSelect()!.getAttribute('data-slot')).toBe('native-select');
+    expect(picker('loan-drone')!.getAttribute('data-slot')).toBe('radio-group');
+    expect(picker('loan-group')!.getAttribute('data-slot')).toBe('radio-group');
     expect(batteriesInput().getAttribute('data-slot')).toBe('input');
     expect(propellersInput().getAttribute('data-slot')).toBe('input');
     expect(submitButton().getAttribute('data-slot')).toBe('button');
@@ -240,9 +272,9 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
       .flush([loanedDrone, { ...availableDrone, availability: 'Loaned' }]);
     fixture.detectChanges();
 
-    expect(droneSelect()).toBeNull();
+    expect(picker('loan-drone')).toBeNull();
     expect(element().textContent).toContain('No drones available.');
-    expect(groupSelect()!.value).toBe('');
+    expect(chosen('loan-group')).toBeNull();
     expect(batteriesInput().value).toBe('');
     expect(propellersInput().value).toBe('');
     expect(submitButton().disabled).toBe(true);
@@ -338,14 +370,14 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
 
     expect(toasts.toasts().map((toast) => toast.message)).toEqual(['The drone is not available.']);
     // The group and the quantities stay; the drone list is reloaded and TELLO-07 disappears.
-    expect(groupSelect()!.value).toBe('3');
+    expect(chosen('loan-group')).toBe('Group 3');
     expect(batteriesInput().value).toBe('4');
     http
       .expectOne({ method: 'GET', url: '/api/drones' })
       .flush([loanedDrone, { ...availableDrone, availability: 'Loaned' }]);
     fixture.detectChanges();
 
-    expect(droneSelect()).toBeNull();
+    expect(picker('loan-drone')).toBeNull();
     expect(element().textContent).toContain('No drones available.');
     expect(submitButton().disabled).toBe(true);
   });
@@ -370,8 +402,8 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'The student group does not exist.',
     ]);
-    expect(droneSelect()!.value).toBe('2');
-    expect(groupSelect()!.value).toBe('3');
+    expect(chosen('loan-drone')).toBe('TELLO-07');
+    expect(chosen('loan-group')).toBe('Group 3');
     expect(batteriesInput().value).toBe('4');
     expect(propellersInput().value).toBe('8');
     expect(submitButton().disabled).toBe(false);
@@ -396,8 +428,8 @@ describe('LoanForm (REQ-004, REQ-005, REQ-006)', () => {
     expect(toasts.toasts().map((toast) => toast.message)).toEqual([
       'One or more validation errors occurred. Quantity must be a whole number of 0 or more.',
     ]);
-    expect(droneSelect()!.value).toBe('2');
-    expect(groupSelect()!.value).toBe('3');
+    expect(chosen('loan-drone')).toBe('TELLO-07');
+    expect(chosen('loan-group')).toBe('Group 3');
     expect(batteriesInput().value).toBe('4');
     // A rejection does not reload the drone list.
     http.expectNone({ method: 'GET', url: '/api/drones' });

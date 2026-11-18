@@ -15,10 +15,10 @@ import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
-import { HlmNativeSelectImports } from '@spartan-ng/helm/native-select';
 import { Drone } from '../drones/drone.models';
 import { DroneService } from '../drones/drone.service';
 import { LoadState } from '../shared/load-state';
+import { OptionPicker } from '../shared/option-picker/option-picker';
 import { StudentGroup } from '../student-groups/student-group.models';
 import { StudentGroupService } from '../student-groups/student-group.service';
 import { CreateLoanRequest, Loan, LoanItem } from './loan.models';
@@ -45,15 +45,10 @@ function readQuantity(event: Event): Quantity {
   return Number.isInteger(value) && value >= 0 ? value : null;
 }
 
-/** Reads the id of the option chosen in a select; the placeholder option gives null. */
-function readOptionId(event: Event): number | null {
-  const value = (event.target as HTMLSelectElement).value;
-  return value === '' ? null : Number(value);
-}
-
 /**
  * Loans a drone to a student group with optional batteries and propellers (REQ-004, REQ-006).
- * Only drones that are Available are offered (REQ-005). An empty quantity sends no item of that
+ * Only drones that are Available are offered (REQ-005); drones and groups are chosen with the
+ * OptionPicker (a list for a few options, a search box for many). An empty quantity sends no item of that
  * type, a typed 0 sends an item with quantity 0. The button stays disabled until a drone and a
  * group are chosen and both quantities are whole numbers of 0 or more.
  * On success the fields are cleared, the drone list is reloaded and `loaned` tells the page to
@@ -64,7 +59,7 @@ function readOptionId(event: Event): number | null {
   selector: 'app-loan-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
-  imports: [HlmButton, HlmCardImports, HlmInput, HlmLabel, HlmNativeSelectImports],
+  imports: [HlmButton, HlmCardImports, HlmInput, HlmLabel, OptionPicker],
   template: `
     <section hlmCard>
       <div hlmCardHeader>
@@ -73,7 +68,7 @@ function readOptionId(event: Event): number | null {
       <div hlmCardContent>
         <form class="grid max-w-xl gap-4" novalidate (submit)="onSubmit($event)">
           <div class="grid gap-2">
-            <label hlmLabel for="loan-drone">Drone</label>
+            <label hlmLabel id="loan-drone-label" for="loan-drone">Drone</label>
             @switch (droneState()) {
               @case ('loading') {
                 <p class="text-sm text-muted-foreground">Loading drones...</p>
@@ -82,26 +77,20 @@ function readOptionId(event: Event): number | null {
                 @if (availableDrones().length === 0) {
                   <p class="text-sm text-muted-foreground">No drones available.</p>
                 } @else {
-                  <hlm-native-select
-                    class="w-full"
-                    [selectId]="'loan-drone'"
-                    [value]="selectedDroneId()?.toString() ?? ''"
-                    (change)="onDroneChange($event)"
-                  >
-                    <option value="" [selected]="selectedDroneId() === null">Choose a drone</option>
-                    @for (drone of availableDrones(); track drone.id) {
-                      <option [value]="drone.id" [selected]="drone.id === selectedDroneId()">
-                        {{ drone.name }}
-                      </option>
-                    }
-                  </hlm-native-select>
+                  <app-option-picker
+                    inputId="loan-drone"
+                    labelId="loan-drone-label"
+                    noMatchText="No drone matches."
+                    [options]="availableDrones()"
+                    [(chosenId)]="selectedDroneId"
+                  />
                 }
               }
             }
           </div>
 
           <div class="grid gap-2">
-            <label hlmLabel for="loan-group">Student group</label>
+            <label hlmLabel id="loan-group-label" for="loan-group">Student group</label>
             @switch (groupState()) {
               @case ('loading') {
                 <p class="text-sm text-muted-foreground">Loading student groups...</p>
@@ -110,19 +99,13 @@ function readOptionId(event: Event): number | null {
                 @if (groups().length === 0) {
                   <p class="text-sm text-muted-foreground">No student groups yet.</p>
                 } @else {
-                  <hlm-native-select
-                    class="w-full"
-                    [selectId]="'loan-group'"
-                    [value]="selectedGroupId()?.toString() ?? ''"
-                    (change)="onGroupChange($event)"
-                  >
-                    <option value="" [selected]="selectedGroupId() === null">Choose a group</option>
-                    @for (group of groups(); track group.id) {
-                      <option [value]="group.id" [selected]="group.id === selectedGroupId()">
-                        {{ group.name }}
-                      </option>
-                    }
-                  </hlm-native-select>
+                  <app-option-picker
+                    inputId="loan-group"
+                    labelId="loan-group-label"
+                    noMatchText="No student group matches."
+                    [options]="groups()"
+                    [(chosenId)]="selectedGroupId"
+                  />
                 }
               }
             }
@@ -243,14 +226,6 @@ export class LoanForm {
     this.loadDrones();
   }
 
-  protected onDroneChange(event: Event): void {
-    this.selectedDroneId.set(readOptionId(event));
-  }
-
-  protected onGroupChange(event: Event): void {
-    this.selectedGroupId.set(readOptionId(event));
-  }
-
   protected onBatteriesInput(event: Event): void {
     this.batteries.set(readQuantity(event));
   }
@@ -279,7 +254,7 @@ export class LoanForm {
         },
         error: (error: unknown) => {
           this.submitting.set(false);
-          // 409: the drone is no longer available. Reloading removes it from the drone select.
+          // 409: the drone is no longer available. Reloading removes it from the offered drones.
           // The error interceptor has already shown the message for every other status.
           if (error instanceof HttpErrorResponse && error.status === 409) {
             this.loadDrones();
