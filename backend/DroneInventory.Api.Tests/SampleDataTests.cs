@@ -128,6 +128,16 @@ public class SampleDataTests
     }
 
     [Fact]
+    public async Task Sample_data_is_on_by_default_in_Development()
+    {
+        // No SampleData setting of the test's own: only appsettings.Development.json decides.
+        using var folder = new TempDatabaseFolder();
+        using var development = new FileDatabaseFactory(folder.ConnectionString, "Development");
+
+        Assert.Equal(10, (await GetAsync(development.CreateClient(), "/api/drones")).GetArrayLength());
+    }
+
+    [Fact]
     public async Task Sample_data_disabled_leaves_the_database_empty()
     {
         using var factory = new ApiFactory { SeedSampleData = false };
